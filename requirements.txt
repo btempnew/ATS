@@ -1,0 +1,9 @@
+# Core async HTTP & DNS client dependencies for high-concurrency ATS discovery and verification
+
+aiohttp>=3.9.5,<4.0.0
+
+aiodns>=3.2.0,<4.0.0
+
+charset-normalizer>=3.3.2,<4.0.0
+
+certifi>=2024.2.2
