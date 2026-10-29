@@ -1,8 +1,13 @@
-name: Top 30 ATS Platforms Discovery & Verification (3-5 Year Window)
+name: US Job Companies Discovery & Verification Pipeline (v4.0 High-Yield)
 
 on:
   workflow_dispatch:
     inputs:
+      sources:
+        description: "Discovery engines (hf,seeds,pdns,commoncrawl,wayback)"
+        required: false
+        default: "hf,seeds,pdns,commoncrawl,wayback"
+        type: string
       from_date:
         description: "Start Date (YYYYMMDD) for 3-5 Year Window"
         required: false
@@ -13,38 +18,33 @@ on:
         required: false
         default: "20261231"
         type: string
-      sources:
-        description: "Discovery sources (ct,commoncrawl,wayback)"
-        required: false
-        default: "ct,commoncrawl,wayback"
-        type: string
       prefix_shard:
         description: "Enable 36-prefix alphanumeric sharding (a-z, 0-9) for Greenhouse/Ashby/Lever"
         required: false
         default: true
         type: boolean
       cc_indexes:
-        description: "Number of Common Crawl monthly indexes (4 covers 2021-2026 releases)"
+        description: "Number of Common Crawl monthly indexes"
         required: false
-        default: "4"
+        default: "3"
         type: string
       cc_pages:
-        description: "Max CDX pages per prefix"
+        description: "Max root-filtered CDX pages per pattern"
         required: false
-        default: "20"
+        default: "5"
         type: string
       wayback_limit:
         description: "Max URLs per Wayback query"
         required: false
-        default: "50000"
+        default: "40000"
         type: string
       concurrency:
-        description: "Max concurrent HTTP requests per runner"
+        description: "Global HTTP concurrency (per-host is automatically capped at 16-20 to prevent HTTP 429)"
         required: false
-        default: "150"
+        default: "80"
         type: string
       commit_exports:
-        description: "Commit exported CSV/JSONL files back to the repository"
+        description: "Commit exported US company CSV/JSONL files back to repo"
         required: false
         default: false
         type: boolean
@@ -57,34 +57,34 @@ permissions:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # JOB 1: Parallel Execution Across the Top 30 ATS Platforms (3-5 Years)
+  # JOB 1: Parallel Execution Across Top 24 US ATS Platforms (6 Shards)
   # ---------------------------------------------------------------------------
   discover-and-verify-shards:
-    name: "Shard: ${{ matrix.shard_name }}"
+    name: "US Shard: ${{ matrix.shard_name }}"
     runs-on: ubuntu-latest
-    timeout-minutes: 360 # 6 hours per runner (GitHub hard limit)
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
         include:
-          - shard_id: "greenhouse"
-            shard_name: "Greenhouse (US & EU)"
+          - shard_id: "greenhouse_us"
+            shard_name: "Greenhouse (US Tech & Startups)"
             platforms: "greenhouse"
-          - shard_id: "modern_tech"
+          - shard_id: "modern_tech_us"
             shard_name: "Ashby, Lever, Rippling, Workable, Dover, Gem"
             platforms: "ashby,lever,rippling,workable,dover,gem"
-          - shard_id: "mid_market_smb"
-            shard_name: "BambooHR, Recruitee, Breezy, Teamtailor, Pinpoint"
-            platforms: "bamboohr,recruitee,breezy,teamtailor,pinpoint"
-          - shard_id: "eu_and_smb2"
-            shard_name: "Personio, JazzHR, Trakstar, JOIN, Manatal"
-            platforms: "personio,jazzhr,trakstar,join,manatal"
-          - shard_id: "enterprise_giants"
-            shard_name: "Workday, SmartRecruiters, iCIMS, Jobvite, Taleo, SuccessFactors"
-            platforms: "workday,smartrecruiters,icims,jobvite,taleo,successfactors"
-          - shard_id: "enterprise_and_apac"
-            shard_name: "Oracle Cloud, Dayforce, UKG, Paylocity, Keka, Darwinbox, Zoho, Freshteam"
-            platforms: "oracle_recruiting,dayforce,ukg,paylocity,keka,darwinbox,zohorecruit,freshteam"
+          - shard_id: "smb_us"
+            shard_name: "BambooHR, JazzHR, Breezy HR, Trakstar Hire"
+            platforms: "bamboohr,jazzhr,breezy,trakstar"
+          - shard_id: "enterprise_giants_us"
+            shard_name: "Workday, iCIMS, SmartRecruiters, Jobvite"
+            platforms: "workday,icims,smartrecruiters,jobvite"
+          - shard_id: "payroll_ats_us"
+            shard_name: "Paylocity, Paycom, UKG (UltiPro), Dayforce"
+            platforms: "paylocity,paycom,ukg,dayforce"
+          - shard_id: "enterprise_and_hourly_us"
+            shard_name: "Oracle Taleo, SAP SuccessFactors, Fountain, Recruitee, Pinpoint"
+            platforms: "taleo,successfactors,fountain,recruitee,pinpoint"
 
     steps:
       - name: Checkout repository
@@ -96,7 +96,7 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install async dependencies
+      - name: Install async & Parquet dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -105,24 +105,24 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ats_shard_${{ matrix.shard_id }}.db
-          key: top30-shard-${{ matrix.shard_id }}-${{ github.ref_name }}-${{ github.run_id }}
+          key: us-v4-shard-${{ matrix.shard_id }}-${{ github.ref_name }}-${{ github.run_id }}
           restore-keys: |
-            top30-shard-${{ matrix.shard_id }}-${{ github.ref_name }}-
-            top30-shard-${{ matrix.shard_id }}-
+            us-v4-shard-${{ matrix.shard_id }}-${{ github.ref_name }}-
+            us-v4-shard-${{ matrix.shard_id }}-
 
       - name: Run offline self-test suite
         run: |
           python3 ats_company_discovery_engine.py self-test
 
-      - name: Discover Top 30 candidate boards (2021-2026 window)
+      - name: Step 1 - Multi-Engine Discovery (HF OpenApply + YC/SEC Seeds + 5x Passive DNS + Fixed CDX)
         run: |
           FROM_DATE="${{ inputs.from_date || '20210101' }}"
           TO_DATE="${{ inputs.to_date || '20261231' }}"
-          SOURCES="${{ inputs.sources || 'ct,commoncrawl,wayback' }}"
-          CC_INDEXES="${{ inputs.cc_indexes || '4' }}"
-          CC_PAGES="${{ inputs.cc_pages || '20' }}"
-          WAYBACK_LIMIT="${{ inputs.wayback_limit || '50000' }}"
-          CONCURRENCY="${{ inputs.concurrency || '150' }}"
+          SOURCES="${{ inputs.sources || 'hf,seeds,pdns,commoncrawl,wayback' }}"
+          CC_INDEXES="${{ inputs.cc_indexes || '3' }}"
+          CC_PAGES="${{ inputs.cc_pages || '5' }}"
+          WAYBACK_LIMIT="${{ inputs.wayback_limit || '40000' }}"
+          CONCURRENCY="${{ inputs.concurrency || '80' }}"
           PREFIX_FLAG=""
           if [ "${{ inputs.prefix_shard }}" = "true" ] || [ -z "${{ inputs.prefix_shard }}" ]; then
             PREFIX_FLAG="--prefix-shard"
@@ -140,18 +140,9 @@ jobs:
             --concurrency "${CONCURRENCY}" \
             ${PREFIX_FLAG}
 
-      - name: Probe seed company domains if domains.txt exists
-        if: hashFiles('domains.txt') != ''
+      - name: Step 2 - Rate-Limit-Safe Live API Verification & Checkpointed SQLite Save
         run: |
-          CONCURRENCY="${{ inputs.concurrency || '150' }}"
-          python3 ats_company_discovery_engine.py probe-slugs \
-            --input domains.txt \
-            --platforms "${{ matrix.platforms }}" \
-            --db "ats_shard_${{ matrix.shard_id }}.db"
-
-      - name: Verify candidate boards via live public ATS APIs & extract jobs
-        run: |
-          CONCURRENCY="${{ inputs.concurrency || '150' }}"
+          CONCURRENCY="${{ inputs.concurrency || '80' }}"
           python3 ats_company_discovery_engine.py verify \
             --db "ats_shard_${{ matrix.shard_id }}.db" \
             --platforms "${{ matrix.platforms }}" \
@@ -165,10 +156,10 @@ jobs:
           retention-days: 7
 
   # ---------------------------------------------------------------------------
-  # JOB 2: Global Cross-ATS Entity Resolution, Merge & CSV/JSONL Export
+  # JOB 2: Global Entity Resolution, Merge & US-Only CSV/JSONL Export
   # ---------------------------------------------------------------------------
   merge-and-export:
-    name: Merge Top 30 Shards & Export Lists
+    name: Merge Shards & Export US Company Lists
     needs: discover-and-verify-shards
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -195,7 +186,7 @@ jobs:
           path: ./shards
           merge-multiple: true
 
-      - name: Merge Top 30 SQLite shards & run global Entity Resolution
+      - name: Merge SQLite shards & resolve US entities globally
         run: |
           SHARD_FILES=$(ls ./shards/ats_shard_*.db | paste -sd "," -)
           echo "Merging shard databases: ${SHARD_FILES}"
@@ -203,7 +194,7 @@ jobs:
             --inputs "${SHARD_FILES}" \
             --output ats_companies.db
 
-      - name: Export Top 30 company CSVs, master JSONL & Markdown Summary
+      - name: Export US company CSVs, master JSONL & Markdown Summary
         run: |
           python3 ats_company_discovery_engine.py export \
             --db ats_companies.db \
@@ -211,10 +202,10 @@ jobs:
           cat ./exports/SUMMARY.md >> $GITHUB_STEP_SUMMARY
           ls -lh ./exports
 
-      - name: Upload Top 30 company lists & master SQLite DB
+      - name: Upload US company lists & master SQLite DB
         uses: actions/upload-artifact@v4
         with:
-          name: top-30-ats-companies-${{ github.run_number }}
+          name: us-job-companies-${{ github.run_number }}
           path: |
             exports/*.csv
             exports/*.jsonl
@@ -228,4 +219,4 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add exports/
-          git diff --staged --quiet || (git commit -m "chore(data): update Top 30 ATS company lists [skip ci]" && git push)
+          git diff --staged --quiet || (git commit -m "chore(data): update US company lists [skip ci]" && git push)
