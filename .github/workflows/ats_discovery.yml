@@ -1,4 +1,4 @@
-name: ATS Company Discovery & Verification Pipeline (Parallel Sharded Matrix)
+name: ATS Company Discovery & Verification Pipeline (Maximum Yield Mode)
 
 on:
   workflow_dispatch:
@@ -14,19 +14,24 @@ on:
         default: true
         type: boolean
       cc_indexes:
-        description: "Number of recent Common Crawl indexes to query"
+        description: "Number of Common Crawl monthly indexes to query (3-5 for maximum historical coverage)"
         required: false
-        default: "2"
+        default: "4"
         type: string
       cc_pages:
-        description: "Max CDX pages per ATS pattern/prefix"
+        description: "Max CDX pages per ATS pattern/prefix (20-30 for deep harvesting)"
         required: false
-        default: "5"
+        default: "20"
+        type: string
+      wayback_limit:
+        description: "Max collapsed URLs per Wayback CDX query"
+        required: false
+        default: "50000"
         type: string
       concurrency:
-        description: "Max concurrent async HTTP requests per runner"
+        description: "Max concurrent async HTTP requests per runner (120-150 for peak I/O throughput)"
         required: false
-        default: "80"
+        default: "150"
         type: string
       commit_exports:
         description: "Commit exported CSV/JSONL files back to the repository"
@@ -34,6 +39,7 @@ on:
         default: false
         type: boolean
 
+  # Scheduled run: Every Sunday at 02:00 UTC (6 parallel runners x 6 hours max runtime)
   schedule:
     - cron: "0 2 * * 0"
 
@@ -43,11 +49,12 @@ permissions:
 jobs:
   # ---------------------------------------------------------------------------
   # JOB 1: Parallel Discovery & Verification Across 6 ATS Platform Shards
+  # (Each shard runs on its own dedicated runner with the full 6-hour GitHub limit)
   # ---------------------------------------------------------------------------
   discover-and-verify-shards:
     name: "Shard: ${{ matrix.shard_name }}"
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 360 # Maximum allowed by GitHub Actions (6 hours per runner = 36 total compute hours)
     strategy:
       fail-fast: false
       matrix:
@@ -81,7 +88,7 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install dependencies
+      - name: Install high-performance async dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -99,12 +106,13 @@ jobs:
         run: |
           python3 ats_company_discovery_engine.py self-test
 
-      - name: Discover candidate boards for shard (${{ matrix.shard_id }})
+      - name: Deep Discovery (CT Logs + 4x Common Crawl Indexes + Wayback CDX)
         run: |
           SOURCES="${{ inputs.sources || 'ct,commoncrawl,wayback' }}"
-          CC_INDEXES="${{ inputs.cc_indexes || '2' }}"
-          CC_PAGES="${{ inputs.cc_pages || '5' }}"
-          CONCURRENCY="${{ inputs.concurrency || '80' }}"
+          CC_INDEXES="${{ inputs.cc_indexes || '4' }}"
+          CC_PAGES="${{ inputs.cc_pages || '20' }}"
+          WAYBACK_LIMIT="${{ inputs.wayback_limit || '50000' }}"
+          CONCURRENCY="${{ inputs.concurrency || '150' }}"
           PREFIX_FLAG=""
           if [ "${{ inputs.prefix_shard }}" = "true" ] || [ -z "${{ inputs.prefix_shard }}" ]; then
             PREFIX_FLAG="--prefix-shard"
@@ -116,21 +124,22 @@ jobs:
             --platforms "${{ matrix.platforms }}" \
             --cc-indexes "${CC_INDEXES}" \
             --cc-pages "${CC_PAGES}" \
+            --wayback-limit "${WAYBACK_LIMIT}" \
             --concurrency "${CONCURRENCY}" \
             ${PREFIX_FLAG}
 
       - name: Probe seed company domains if domains.txt exists
         if: hashFiles('domains.txt') != ''
         run: |
-          CONCURRENCY="${{ inputs.concurrency || '80' }}"
+          CONCURRENCY="${{ inputs.concurrency || '150' }}"
           python3 ats_company_discovery_engine.py probe-slugs \
             --input domains.txt \
             --platforms "${{ matrix.platforms }}" \
             --db "ats_shard_${{ matrix.shard_id }}.db"
 
-      - name: Verify candidate boards against live public ATS APIs
+      - name: Verify candidate boards against live public ATS APIs & extract jobs
         run: |
-          CONCURRENCY="${{ inputs.concurrency || '80' }}"
+          CONCURRENCY="${{ inputs.concurrency || '150' }}"
           python3 ats_company_discovery_engine.py verify \
             --db "ats_shard_${{ matrix.shard_id }}.db" \
             --platforms "${{ matrix.platforms }}" \
