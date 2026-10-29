@@ -1,0 +1,4 @@
+company_name,resolved_domain,ats_id,ats_display_name,slug,board_url,board_status,confidence_score,active_job_count,latest_posted_at,domain_resolution_method,locations,departments,detected_tech_stack,sample_job_titles
+Jobs at Therapiezentrum Wanzleben,therapiezentrum-wanzleben.de,join,JOIN,therapiezentrum-wanzleben,https://join.com/companies/therapiezentrum-wanzleben,active_empty,0.4,0,,email_domain_slug_match,,,,
+Jobs at zetcom group,zetcom.com,join,JOIN,zetcom,https://join.com/companies/zetcom,active_empty,0.4,0,,email_domain_slug_match,,,,
+Jobs at Tierärztliches Zentrum Birkenfeld,o4512011204034560.ingest.de.sentry.io,join,JOIN,t-klinik1,https://join.com/companies/t-klinik1,active_empty,0.25,0,,email_domain,,,,
