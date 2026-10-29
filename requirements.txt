@@ -1,4 +1,4 @@
-# Core async HTTP & DNS client dependencies for high-concurrency ATS discovery and verification
+# Core async HTTP, DNS, and fast Parquet/HuggingFace dataset dependencies
 
 aiohttp>=3.9.5,<4.0.0
 
@@ -7,3 +7,10 @@ aiodns>=3.2.0,<4.0.0
 charset-normalizer>=3.3.2,<4.0.0
 
 certifi>=2024.2.2
+
+duckdb>=1.0.0
+
+pyarrow>=15.0.0
+
+huggingface_hub>=0.23.0
+
