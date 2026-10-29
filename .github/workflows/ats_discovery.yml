@@ -1,0 +1,210 @@
+name: ATS Company Discovery & Verification Pipeline (Parallel Sharded Matrix)
+
+on:
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: "Discovery sources to run (ct,commoncrawl,wayback)"
+        required: false
+        default: "ct,commoncrawl,wayback"
+        type: string
+      prefix_shard:
+        description: "Enable 36-way alphanumeric prefix sharding (a-z, 0-9) for maximum Greenhouse/Ashby/Lever coverage"
+        required: false
+        default: true
+        type: boolean
+      cc_indexes:
+        description: "Number of recent Common Crawl indexes to query"
+        required: false
+        default: "2"
+        type: string
+      cc_pages:
+        description: "Max CDX pages per ATS pattern/prefix"
+        required: false
+        default: "5"
+        type: string
+      concurrency:
+        description: "Max concurrent async HTTP requests per runner"
+        required: false
+        default: "80"
+        type: string
+      commit_exports:
+        description: "Commit exported CSV/JSONL files back to the repository"
+        required: false
+        default: false
+        type: boolean
+
+  schedule:
+    - cron: "0 2 * * 0"
+
+permissions:
+  contents: write
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # JOB 1: Parallel Discovery & Verification Across 6 ATS Platform Shards
+  # ---------------------------------------------------------------------------
+  discover-and-verify-shards:
+    name: "Shard: ${{ matrix.shard_name }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard_id: "greenhouse"
+            shard_name: "Greenhouse (US & EU)"
+            platforms: "greenhouse"
+          - shard_id: "modern_tech"
+            shard_name: "Ashby, Lever, Rippling, Dover, Gem, Kula, Deel"
+            platforms: "ashby,lever,rippling,dover,gem,kula,deel,polymer"
+          - shard_id: "enterprise_core"
+            shard_name: "Workday, SmartRecruiters, iCIMS, Jobvite"
+            platforms: "workday,smartrecruiters,icims,jobvite"
+          - shard_id: "smb_global"
+            shard_name: "Workable, Recruitee, Breezy, BambooHR, JazzHR, Trakstar"
+            platforms: "workable,recruitee,breezy,bamboohr,jazzhr,trakstar,hirehive,manatal"
+          - shard_id: "eu_and_apac"
+            shard_name: "Personio, Teamtailor, Pinpoint, JOIN, Homerun, Keka, Darwinbox, Zoho, Freshteam"
+            platforms: "personio,teamtailor,pinpoint,join,homerun,comeet,jobylon,keka,darwinbox,zohorecruit,freshteam,pyjamahr"
+          - shard_id: "enterprise_long_tail"
+            shard_name: "Enterprise HCM & Long-Tail ATS (50+ Platforms)"
+            platforms: "fountain,dayforce,paylocity,paycom,ukg,taleo,oracle_recruiting,successfactors,eightfold,phenom,avature,adp,cornerstone,brassring,pageup,peopleadmin,silkroad,livehire,clearcompany,ceipal,umantis,reachmee,recruiterflow,recruitcrm,wizehire,occupop,varbi,catsone,crelate,loxo,bullhorn"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Restore cached SQLite shard database
+        uses: actions/cache@v4
+        with:
+          path: ats_shard_${{ matrix.shard_id }}.db
+          key: ats-shard-${{ matrix.shard_id }}-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            ats-shard-${{ matrix.shard_id }}-${{ github.ref_name }}-
+            ats-shard-${{ matrix.shard_id }}-
+
+      - name: Run offline self-test suite
+        run: |
+          python3 ats_company_discovery_engine.py self-test
+
+      - name: Discover candidate boards for shard (${{ matrix.shard_id }})
+        run: |
+          SOURCES="${{ inputs.sources || 'ct,commoncrawl,wayback' }}"
+          CC_INDEXES="${{ inputs.cc_indexes || '2' }}"
+          CC_PAGES="${{ inputs.cc_pages || '5' }}"
+          CONCURRENCY="${{ inputs.concurrency || '80' }}"
+          PREFIX_FLAG=""
+          if [ "${{ inputs.prefix_shard }}" = "true" ] || [ -z "${{ inputs.prefix_shard }}" ]; then
+            PREFIX_FLAG="--prefix-shard"
+          fi
+
+          python3 ats_company_discovery_engine.py discover \
+            --db "ats_shard_${{ matrix.shard_id }}.db" \
+            --sources "${SOURCES}" \
+            --platforms "${{ matrix.platforms }}" \
+            --cc-indexes "${CC_INDEXES}" \
+            --cc-pages "${CC_PAGES}" \
+            --concurrency "${CONCURRENCY}" \
+            ${PREFIX_FLAG}
+
+      - name: Probe seed company domains if domains.txt exists
+        if: hashFiles('domains.txt') != ''
+        run: |
+          CONCURRENCY="${{ inputs.concurrency || '80' }}"
+          python3 ats_company_discovery_engine.py probe-slugs \
+            --input domains.txt \
+            --platforms "${{ matrix.platforms }}" \
+            --db "ats_shard_${{ matrix.shard_id }}.db"
+
+      - name: Verify candidate boards against live public ATS APIs
+        run: |
+          CONCURRENCY="${{ inputs.concurrency || '80' }}"
+          python3 ats_company_discovery_engine.py verify \
+            --db "ats_shard_${{ matrix.shard_id }}.db" \
+            --platforms "${{ matrix.platforms }}" \
+            --concurrency "${CONCURRENCY}"
+
+      - name: Upload SQLite shard database artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sqlite-shard-${{ matrix.shard_id }}
+          path: ats_shard_${{ matrix.shard_id }}.db
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # JOB 2: Global Cross-ATS Entity Resolution, SQLite Merge & CSV/JSONL Export
+  # ---------------------------------------------------------------------------
+  merge-and-export:
+    name: Merge Shards, Resolve Entities Globally & Export Lists
+    needs: discover-and-verify-shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download all SQLite shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: sqlite-shard-*
+          path: ./shards
+          merge-multiple: true
+
+      - name: Merge SQLite shards & run global cross-ATS Entity Resolution
+        run: |
+          SHARD_FILES=$(ls ./shards/ats_shard_*.db | paste -sd "," -)
+          echo "Merging shard databases: ${SHARD_FILES}"
+          python3 ats_company_discovery_engine.py merge-dbs \
+            --inputs "${SHARD_FILES}" \
+            --output ats_companies.db
+
+      - name: Export platform-wise company CSVs, master JSONL & Markdown Summary
+        run: |
+          python3 ats_company_discovery_engine.py export \
+            --db ats_companies.db \
+            --output-dir ./exports
+          cat ./exports/SUMMARY.md >> $GITHUB_STEP_SUMMARY
+          ls -lh ./exports
+
+      - name: Upload final ATS company lists & master SQLite DB
+        uses: actions/upload-artifact@v4
+        with:
+          name: ats-company-lists-master-${{ github.run_number }}
+          path: |
+            exports/*.csv
+            exports/*.jsonl
+            exports/SUMMARY.md
+            ats_companies.db
+          retention-days: 30
+
+      - name: Commit updated exports to repository (Optional)
+        if: ${{ inputs.commit_exports == true }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add exports/
+          git diff --staged --quiet || (git commit -m "chore(data): update ATS company lists [skip ci]" && git push)
