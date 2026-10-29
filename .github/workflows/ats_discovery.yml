@@ -14,22 +14,22 @@ on:
         default: true
         type: boolean
       cc_indexes:
-        description: "Number of Common Crawl monthly indexes to query (3-5 for maximum historical coverage)"
+        description: "Number of Common Crawl monthly indexes to query (4-8 for historical crawl depth)"
         required: false
-        default: "4"
+        default: "6"
         type: string
       cc_pages:
-        description: "Max CDX pages per ATS pattern/prefix (20-30 for deep harvesting)"
+        description: "Max CDX pages per ATS pattern/prefix (20-40 for deep harvesting)"
         required: false
-        default: "20"
+        default: "25"
         type: string
       wayback_limit:
-        description: "Max collapsed URLs per Wayback CDX query"
+        description: "Max collapsed URLs per Wayback CDX query (15+ years of historical boards)"
         required: false
-        default: "50000"
+        default: "100000"
         type: string
       concurrency:
-        description: "Max concurrent async HTTP requests per runner (120-150 for peak I/O throughput)"
+        description: "Max concurrent async HTTP requests per runner"
         required: false
         default: "150"
         type: string
@@ -39,7 +39,6 @@ on:
         default: false
         type: boolean
 
-  # Scheduled run: Every Sunday at 02:00 UTC (6 parallel runners x 6 hours max runtime)
   schedule:
     - cron: "0 2 * * 0"
 
@@ -49,12 +48,11 @@ permissions:
 jobs:
   # ---------------------------------------------------------------------------
   # JOB 1: Parallel Discovery & Verification Across 6 ATS Platform Shards
-  # (Each shard runs on its own dedicated runner with the full 6-hour GitHub limit)
   # ---------------------------------------------------------------------------
   discover-and-verify-shards:
     name: "Shard: ${{ matrix.shard_name }}"
     runs-on: ubuntu-latest
-    timeout-minutes: 360 # Maximum allowed by GitHub Actions (6 hours per runner = 36 total compute hours)
+    timeout-minutes: 1000 # Configured to 1000 min (Note: GitHub-hosted free runners auto-cap at 360 min; self-hosted runs full 1000 min)
     strategy:
       fail-fast: false
       matrix:
@@ -106,12 +104,12 @@ jobs:
         run: |
           python3 ats_company_discovery_engine.py self-test
 
-      - name: Deep Discovery (CT Logs + 4x Common Crawl Indexes + Wayback CDX)
+      - name: Deep Discovery (CT Logs + Common Crawl + Wayback CDX)
         run: |
           SOURCES="${{ inputs.sources || 'ct,commoncrawl,wayback' }}"
-          CC_INDEXES="${{ inputs.cc_indexes || '4' }}"
-          CC_PAGES="${{ inputs.cc_pages || '20' }}"
-          WAYBACK_LIMIT="${{ inputs.wayback_limit || '50000' }}"
+          CC_INDEXES="${{ inputs.cc_indexes || '6' }}"
+          CC_PAGES="${{ inputs.cc_pages || '25' }}"
+          WAYBACK_LIMIT="${{ inputs.wayback_limit || '100000' }}"
           CONCURRENCY="${{ inputs.concurrency || '150' }}"
           PREFIX_FLAG=""
           if [ "${{ inputs.prefix_shard }}" = "true" ] || [ -z "${{ inputs.prefix_shard }}" ]; then
@@ -159,7 +157,7 @@ jobs:
     name: Merge Shards, Resolve Entities Globally & Export Lists
     needs: discover-and-verify-shards
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 180
 
     steps:
       - name: Checkout repository
