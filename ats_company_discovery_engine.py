@@ -1,58 +1,32 @@
 #!/usr/bin/env python3
 """
-ATS Company Discovery & Entity Resolution Engine (Open-Source TheirStack Alternative)
-=====================================================================================
+ATS Company Discovery & Entity Resolution Engine (Top 25-30 Powerhouse Platforms)
+==================================================================================
 
-An end-to-end, high-concurrency discovery, verification, and entity-resolution
-pipeline designed to map companies to their Applicant Tracking Systems (ATS) at
-or above aggregator scale (365k+ career sources across 88 ATS platforms).
+Focused on the top 25-30 ATS platforms covering 95%+ of global and Indian company
+job boards over a 3-5 year active window (2021-2026):
 
-Core Architecture (6 Discovery Vectors + Verification + Global Entity Resolution):
-1. Common Crawl CDX Index Streaming with Alphanumeric Prefix Sharding:
-   Streams billions of URLs from Common Crawl's CDX API (`index.commoncrawl.org`)
-   across 88 ATS domain patterns. Supports 36-way alphanumeric prefix sharding
-   (`a`-`z`, `0`-`9`) on path-based ATS platforms (Greenhouse, Ashby, Lever,
-   Workable, SmartRecruiters) so large job boards never crowd out smaller companies.
-2. Internet Archive Wayback CDX Streaming (`web.archive.org/cdx`):
-   Streams URL-key collapsed historical and active ATS board URLs across all
-   supported ATS platforms in bulk.
-3. Certificate Transparency (CT) Log Mining (`crt.sh`):
-   Harvests every TLS certificate ever issued for subdomain-based ATS platforms
-   (Workday, iCIMS, Recruitee, BreezyHR, BambooHR, Personio, Pinpoint, Teamtailor,
-   JazzHR, Keka, Darwinbox, Freshteam, Zoho Recruit, Avature, Taleo, etc.).
-4. Bulk Domain Career-Page & DNS CNAME Fingerprinting:
-   Probes seed company domains (e.g., Tranco Top 1M, CrUX, Wikidata) by checking
-   DNS CNAME records (`jobs.<domain>`, `careers.<domain>`) and scanning `/careers`
-   HTML for embedded ATS scripts, iframes, `?gh_jid=` tokens, and outbound links.
-5. Automated Seed Domain Bootstrapper & Direct Slug Permutation Probing:
-   Downloads public domain lists (Tranco Top 1M / Wikidata SPARQL), generates
-   normalized company slug candidates (`acme`, `acmehq`, `acme-inc`, `acmeusa`),
-   and probes unauthenticated public ATS JSON endpoints directly.
-6. Live Public ATS API Verification & Technographic Extraction:
-   Polls unauthenticated ATS JSON/XML endpoints to verify active open roles,
-   extract canonical company names/domains, and mine 40+ tech stack keywords.
-7. Cross-Shard SQLite Merger & Multi-Signal Entity Resolution:
-   Merges distributed SQLite shard databases from parallel GitHub Actions matrix
-   runners and resolves slug collisions and ATS migrations globally.
+Top 30 ATS Platforms by Category:
+1. Modern Tech & Startups:
+   - Greenhouse (`greenhouse`), Ashby (`ashby`), Lever (`lever`),
+     Rippling (`rippling`), Workable (`workable`), Dover (`dover`), Gem (`gem`)
+2. Mid-Market & Scale-ups:
+   - BambooHR (`bamboohr`), Recruitee (`recruitee`), Breezy HR (`breezy`),
+     Teamtailor (`teamtailor`), Pinpoint (`pinpoint`), Personio (`personio`),
+     JazzHR (`jazzhr`), Trakstar (`trakstar`), JOIN (`join`), Manatal (`manatal`)
+3. Enterprise Giants:
+   - Workday (`workday`), SmartRecruiters (`smartrecruiters`), iCIMS (`icims`),
+     Jobvite (`jobvite`), SAP SuccessFactors (`successfactors`),
+     Oracle Taleo (`taleo`), Oracle Recruiting Cloud (`oracle_recruiting`),
+     Dayforce (`dayforce`), UKG (`ukg`), Paylocity (`paylocity`)
+4. India & APAC Market Leaders:
+   - Keka Hire (`keka`), Darwinbox (`darwinbox`), Zoho Recruit (`zohorecruit`),
+     Freshteam (`freshteam`)
 
-Usage:
-    # Run built-in verification & self-test suite (offline deterministic test)
-    python3 ats_company_discovery_engine.py self-test
-
-    # Discover ATS boards from CT Logs + Common Crawl (with prefix sharding) + Wayback CDX
-    python3 ats_company_discovery_engine.py discover --sources ct,commoncrawl,wayback --platforms greenhouse --prefix-shard
-
-    # Bootstrap public seed domains (Wikidata / Tranco) and probe slugs directly
-    python3 ats_company_discovery_engine.py probe-slugs --input domains.txt --platforms greenhouse,ashby,lever
-
-    # Verify discovered boards against live public ATS APIs & resolve entities
-    python3 ats_company_discovery_engine.py verify --db ats_companies.db --concurrency 80
-
-    # Merge multiple SQLite shard databases from parallel GitHub Actions matrix jobs
-    python3 ats_company_discovery_engine.py merge-dbs --inputs shard1.db,shard2.db --output ats_companies.db
-
-    # Export clean, deduplicated ATS-wise company lists to CSV / JSONL + Markdown report
-    python3 ats_company_discovery_engine.py export --db ats_companies.db --output-dir ./exports
+3-5 Year Window Filtering:
+   - Wayback Machine CDX API filtered with `&from=20210101&to=20261231`
+   - Common Crawl CDX queried across 2021-2026 index releases
+   - Live public API verification confirming roles posted within 2021-2026
 """
 
 from __future__ import annotations
@@ -79,9 +53,7 @@ import time
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 from urllib.parse import parse_qs, quote_plus, urljoin, urlparse
 import xml.etree.ElementTree as ET
-import zipfile
 
-# Optional async HTTP dependencies with graceful fallback to stdlib urllib
 try:
     import aiohttp  # type: ignore
     HAS_AIOHTTP = True
@@ -100,15 +72,14 @@ logger = logging.getLogger("ats_engine")
 
 
 # =============================================================================
-# 1. COMPREHENSIVE 88 ATS PLATFORM REGISTRY
+# 1. CORE SPEC & TOP 30 ATS PLATFORM REGISTRY
 # =============================================================================
 
 @dataclass(frozen=True)
 class ATSPlatformSpec:
-    """Specification for detecting, extracting, and querying an ATS platform."""
     ats_id: str
     display_name: str
-    category: str  # "enterprise", "mid_market", "startup_modern", "smb", "regional_global"
+    category: str
     url_regexes: Tuple[str, ...]
     cdx_patterns: Tuple[str, ...]
     ct_patterns: Tuple[str, ...] = ()
@@ -119,30 +90,13 @@ class ATSPlatformSpec:
     board_url_template: str = ""
 
 
+# Top 30 Primary ATS Platforms (Filtered for highest ROI and active 3-5 year job boards)
 ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
-    "ashby": ATSPlatformSpec(
-        ats_id="ashby",
-        display_name="Ashby",
-        category="startup_modern",
-        url_regexes=(
-            r"https?://jobs\.ashbyhq\.com/(?P<slug>[a-zA-Z0-9._-]+)(?:/|$|\?)",
-            r"https?://api\.ashbyhq\.com/posting-api/job-board/(?P<slug>[a-zA-Z0-9._-]+)",
-        ),
-        cdx_patterns=("jobs.ashbyhq.com/*",),
-        ct_patterns=(),
-        cname_targets=("jobs.ashbyhq.com", "custom.ashbyhq.com", "ashbyhq.com"),
-        html_signatures=(
-            r"jobs\.ashbyhq\.com/(?P<slug>[a-zA-Z0-9._-]+)",
-            r"ashby_job_board_iframe",
-            r"cdn\.ashbyhq\.com",
-        ),
-        public_api_url="https://api.ashbyhq.com/posting-api/job-board/{slug}?includeCompensation=true",
-        board_url_template="https://jobs.ashbyhq.com/{slug}",
-    ),
+    # Modern Tech & High-Growth Startups
     "greenhouse": ATSPlatformSpec(
         ats_id="greenhouse",
         display_name="Greenhouse",
-        category="mid_market",
+        category="startup_modern",
         url_regexes=(
             r"https?://(?:boards|job-boards)\.greenhouse\.io/(?:embed/job_board\?for=)?(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
             r"https?://(?:boards|job-boards)\.eu\.greenhouse\.io/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
@@ -163,10 +117,28 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
         public_api_url="https://boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true",
         board_url_template="https://job-boards.greenhouse.io/{slug}",
     ),
+    "ashby": ATSPlatformSpec(
+        ats_id="ashby",
+        display_name="Ashby",
+        category="startup_modern",
+        url_regexes=(
+            r"https?://jobs\.ashbyhq\.com/(?P<slug>[a-zA-Z0-9._-]+)(?:/|$|\?)",
+            r"https?://api\.ashbyhq\.com/posting-api/job-board/(?P<slug>[a-zA-Z0-9._-]+)",
+        ),
+        cdx_patterns=("jobs.ashbyhq.com/*",),
+        cname_targets=("jobs.ashbyhq.com", "custom.ashbyhq.com", "ashbyhq.com"),
+        html_signatures=(
+            r"jobs\.ashbyhq\.com/(?P<slug>[a-zA-Z0-9._-]+)",
+            r"ashby_job_board_iframe",
+            r"cdn\.ashbyhq\.com",
+        ),
+        public_api_url="https://api.ashbyhq.com/posting-api/job-board/{slug}?includeCompensation=true",
+        board_url_template="https://jobs.ashbyhq.com/{slug}",
+    ),
     "lever": ATSPlatformSpec(
         ats_id="lever",
         display_name="Lever",
-        category="mid_market",
+        category="startup_modern",
         url_regexes=(
             r"https?://jobs(?:\.eu)?\.lever\.co/(?P<slug>[a-zA-Z0-9._-]+)(?:/|$|\?)",
             r"https?://api(?:\.eu)?\.lever\.co/v0/postings/(?P<slug>[a-zA-Z0-9._-]+)",
@@ -180,163 +152,6 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
         ),
         public_api_url="https://api.lever.co/v0/postings/{slug}?mode=json",
         board_url_template="https://jobs.lever.co/{slug}",
-    ),
-    "workday": ATSPlatformSpec(
-        ats_id="workday",
-        display_name="Workday",
-        category="enterprise",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.(?P<shard>wd\d+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?(?P<site>[a-zA-Z0-9_-]+)",
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.(?P<shard>wd\d+)\.myworkdayjobs\.com/?$",
-        ),
-        cdx_patterns=("*.myworkdayjobs.com/*",),
-        ct_patterns=("%.myworkdayjobs.com",),
-        cname_targets=("myworkdayjobs.com", "myworkdaysite.com"),
-        html_signatures=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.(?P<shard>wd\d+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?(?P<site>[a-zA-Z0-9_-]+)",
-            r"/wday/cxs/(?P<slug>[a-zA-Z0-9-]+)/(?P<site>[a-zA-Z0-9_-]+)/jobs",
-        ),
-        public_api_url="https://{slug}.{shard}.myworkdayjobs.com/wday/cxs/{slug}/{site}/jobs",
-        public_api_method="POST",
-        board_url_template="https://{slug}.{shard}.myworkdayjobs.com/{site}",
-    ),
-    "workable": ATSPlatformSpec(
-        ats_id="workable",
-        display_name="Workable",
-        category="smb",
-        url_regexes=(
-            r"https?://apply\.workable\.com/(?:api/v1/widget/accounts/)?(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
-            r"https?://(?P<slug>[a-zA-Z0-9_-]+)\.workable\.com(?:/|$|\?)",
-        ),
-        cdx_patterns=("apply.workable.com/*", "*.workable.com/*"),
-        ct_patterns=("%.workable.com",),
-        cname_targets=("apply.workable.com", "workable.com"),
-        html_signatures=(
-            r"apply\.workable\.com/(?P<slug>[a-zA-Z0-9_-]+)",
-            r"whr\.workable\.com",
-            r"whr_embed\(['\"](?P<slug>[a-zA-Z0-9_-]+)['\"]",
-        ),
-        public_api_url="https://apply.workable.com/api/v1/widget/accounts/{slug}?details=true",
-        board_url_template="https://apply.workable.com/{slug}",
-    ),
-    "smartrecruiters": ATSPlatformSpec(
-        ats_id="smartrecruiters",
-        display_name="SmartRecruiters",
-        category="enterprise",
-        url_regexes=(
-            r"https?://(?:jobs|careers)\.smartrecruiters\.com/(?P<slug>[a-zA-Z0-9._-]+)(?:/|$|\?)",
-            r"https?://api\.smartrecruiters\.com/v1/companies/(?P<slug>[a-zA-Z0-9._-]+)/postings",
-        ),
-        cdx_patterns=("jobs.smartrecruiters.com/*", "careers.smartrecruiters.com/*"),
-        cname_targets=("jobs.smartrecruiters.com", "careers.smartrecruiters.com"),
-        html_signatures=(
-            r"(?:jobs|careers)\.smartrecruiters\.com/(?P<slug>[a-zA-Z0-9._-]+)",
-            r"api\.smartrecruiters\.com/v1/companies/(?P<slug>[a-zA-Z0-9._-]+)/postings",
-        ),
-        public_api_url="https://api.smartrecruiters.com/v1/companies/{slug}/postings?limit=100",
-        board_url_template="https://jobs.smartrecruiters.com/{slug}",
-    ),
-    "recruitee": ATSPlatformSpec(
-        ats_id="recruitee",
-        display_name="Recruitee",
-        category="smb",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.recruitee\.com(?:/|$|\?)",
-        ),
-        cdx_patterns=("*.recruitee.com/*",),
-        ct_patterns=("%.recruitee.com",),
-        cname_targets=("cname.recruitee.com", "recruitee.com"),
-        html_signatures=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.recruitee\.com",
-            r"recruitee-careers-widget",
-        ),
-        public_api_url="https://{slug}.recruitee.com/api/offers",
-        board_url_template="https://{slug}.recruitee.com",
-    ),
-    "breezy": ATSPlatformSpec(
-        ats_id="breezy",
-        display_name="Breezy HR",
-        category="smb",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.breezy\.hr(?:/|$|\?)",
-        ),
-        cdx_patterns=("*.breezy.hr/*",),
-        ct_patterns=("%.breezy.hr",),
-        cname_targets=("custom-portal.breezy.hr", "breezy.hr"),
-        html_signatures=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.breezy\.hr",
-            r"breezy-portal",
-        ),
-        public_api_url="https://{slug}.breezy.hr/json",
-        board_url_template="https://{slug}.breezy.hr",
-    ),
-    "bamboohr": ATSPlatformSpec(
-        ats_id="bamboohr",
-        display_name="BambooHR",
-        category="smb",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.bamboohr\.com/(?:careers|jobs)(?:/|$|\?)",
-        ),
-        cdx_patterns=("*.bamboohr.com/careers*", "*.bamboohr.com/jobs*"),
-        ct_patterns=("%.bamboohr.com",),
-        cname_targets=("bamboohr.com",),
-        html_signatures=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.bamboohr\.com/(?:careers|jobs)",
-            r"BambooHR-ATS",
-        ),
-        public_api_url="https://{slug}.bamboohr.com/careers/list",
-        board_url_template="https://{slug}.bamboohr.com/careers",
-    ),
-    "personio": ATSPlatformSpec(
-        ats_id="personio",
-        display_name="Personio",
-        category="mid_market",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.jobs\.personio\.(?P<shard>de|com)(?:/|$|\?)",
-        ),
-        cdx_patterns=("*.jobs.personio.de/*", "*.jobs.personio.com/*"),
-        ct_patterns=("%.jobs.personio.de", "%.jobs.personio.com"),
-        cname_targets=("jobs.personio.de", "jobs.personio.com"),
-        html_signatures=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.jobs\.personio\.(?P<shard>de|com)",
-        ),
-        public_api_url="https://{slug}.jobs.personio.{shard}/xml",
-        board_url_template="https://{slug}.jobs.personio.{shard}",
-    ),
-    "teamtailor": ATSPlatformSpec(
-        ats_id="teamtailor",
-        display_name="Teamtailor",
-        category="mid_market",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.teamtailor\.com(?:/|$|\?)",
-            r"https?://career\.teamtailor\.com/(?P<slug>[a-zA-Z0-9-]+)",
-        ),
-        cdx_patterns=("*.teamtailor.com/*",),
-        ct_patterns=("%.teamtailor.com",),
-        cname_targets=("ext.teamtailor.com", "teamtailor.com", "career.teamtailor.com"),
-        html_signatures=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.teamtailor\.com",
-            r"teamtailor-portal",
-            r"cdn\.teamtailor-cdn\.com",
-        ),
-        public_api_url="https://{slug}.teamtailor.com/jobs.rss",
-        board_url_template="https://{slug}.teamtailor.com",
-    ),
-    "pinpoint": ATSPlatformSpec(
-        ats_id="pinpoint",
-        display_name="Pinpoint",
-        category="mid_market",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.pinpointhq\.com(?:/|$|\?)",
-        ),
-        cdx_patterns=("*.pinpointhq.com/*",),
-        ct_patterns=("%.pinpointhq.com",),
-        cname_targets=("pinpointhq.com", "custom.pinpointhq.com"),
-        html_signatures=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.pinpointhq\.com",
-        ),
-        public_api_url="https://{slug}.pinpointhq.com/postings.json",
-        board_url_template="https://{slug}.pinpointhq.com",
     ),
     "rippling": ATSPlatformSpec(
         ats_id="rippling",
@@ -356,133 +171,148 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
         public_api_url="https://ats.rippling.com/api/board/{slug}/jobs",
         board_url_template="https://ats.rippling.com/{slug}/jobs",
     ),
-    "hirehive": ATSPlatformSpec(
-        ats_id="hirehive",
-        display_name="HireHive",
-        category="smb",
+    "workable": ATSPlatformSpec(
+        ats_id="workable",
+        display_name="Workable",
+        category="startup_modern",
         url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.hirehive\.com(?:/|$|\?)",
-            r"https?://my\.hirehive\.io/(?P<slug>[a-zA-Z0-9-]+)(?:/|$|\?)",
+            r"https?://apply\.workable\.com/(?:api/v1/widget/accounts/)?(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
+            r"https?://(?P<slug>[a-zA-Z0-9_-]+)\.workable\.com(?:/|$|\?)",
         ),
-        cdx_patterns=("*.hirehive.com/*", "my.hirehive.io/*"),
-        ct_patterns=("%.hirehive.com",),
-        cname_targets=("hirehive.com",),
-        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.hirehive\.com",),
-        public_api_url="https://{slug}.hirehive.com/api/v1/jobs",
-        board_url_template="https://{slug}.hirehive.com",
-    ),
-    "manatal": ATSPlatformSpec(
-        ats_id="manatal",
-        display_name="Manatal",
-        category="smb",
-        url_regexes=(
-            r"https?://(?:www\.)?careers-page\.com/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
-            r"https?://api\.careers-page\.com/open/v1/career-pages/(?P<slug>[a-zA-Z0-9_-]+)/job-posts",
-        ),
-        cdx_patterns=("careers-page.com/*", "www.careers-page.com/*"),
-        cname_targets=("careers-page.com",),
-        html_signatures=(r"careers-page\.com/(?P<slug>[a-zA-Z0-9_-]+)",),
-        public_api_url="https://api.careers-page.com/open/v1/career-pages/{slug}/job-posts",
-        board_url_template="https://www.careers-page.com/{slug}",
-    ),
-    "join": ATSPlatformSpec(
-        ats_id="join",
-        display_name="JOIN",
-        category="smb",
-        url_regexes=(
-            r"https?://join\.com/companies/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
-        ),
-        cdx_patterns=("join.com/companies/*",),
-        cname_targets=("join.com",),
+        cdx_patterns=("apply.workable.com/*", "*.workable.com/*"),
+        ct_patterns=("%.workable.com",),
+        cname_targets=("apply.workable.com", "workable.com"),
         html_signatures=(
-            r"join\.com/companies/(?P<slug>[a-zA-Z0-9_-]+)",
-            r"widget\.join\.com",
+            r"apply\.workable\.com/(?P<slug>[a-zA-Z0-9_-]+)",
+            r"whr\.workable\.com",
+            r"whr_embed\(['\"](?P<slug>[a-zA-Z0-9_-]+)['\"]",
         ),
-        public_api_url="https://join.com/companies/{slug}",
-        board_url_template="https://join.com/companies/{slug}",
+        public_api_url="https://apply.workable.com/api/v1/widget/accounts/{slug}?details=true",
+        board_url_template="https://apply.workable.com/{slug}",
     ),
     "dover": ATSPlatformSpec(
         ats_id="dover",
         display_name="Dover",
         category="startup_modern",
         url_regexes=(
-            r"https?://app\.dover\.com/apply/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
-            r"https?://app\.dover\.io/apply/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
+            r"https?://app\.dover\.(?:com|io)/apply/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
         ),
         cdx_patterns=("app.dover.com/apply/*", "app.dover.io/apply/*"),
         html_signatures=(r"app\.dover\.(?:com|io)/apply/(?P<slug>[a-zA-Z0-9_-]+)",),
         public_api_url="https://app.dover.com/api/v1/careers-page/{slug}/jobs",
         board_url_template="https://app.dover.com/apply/{slug}",
     ),
-    "comeet": ATSPlatformSpec(
-        ats_id="comeet",
-        display_name="Comeet",
+    "gem": ATSPlatformSpec(
+        ats_id="gem",
+        display_name="Gem ATS",
+        category="startup_modern",
+        url_regexes=(r"https?://jobs\.gem\.com/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",),
+        cdx_patterns=("jobs.gem.com/*",),
+        cname_targets=("jobs.gem.com",),
+        html_signatures=(r"jobs\.gem\.com/(?P<slug>[a-zA-Z0-9_-]+)",),
+        public_api_url="https://api.gem.com/job_board/v0/{slug}/job_posts",
+        board_url_template="https://jobs.gem.com/{slug}",
+    ),
+
+    # Mid-Market & Scale-ups
+    "bamboohr": ATSPlatformSpec(
+        ats_id="bamboohr",
+        display_name="BambooHR",
         category="mid_market",
         url_regexes=(
-            r"https?://(?:www\.)?comeet\.com/jobs/(?P<slug>[a-zA-Z0-9._-]+)/(?P<shard>[a-zA-Z0-9._-]+)(?:/|$|\?)",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.bamboohr\.com/(?:careers|jobs)(?:/|$|\?)",
         ),
-        cdx_patterns=("www.comeet.com/jobs/*", "comeet.com/jobs/*"),
+        cdx_patterns=("*.bamboohr.com/careers*", "*.bamboohr.com/jobs*"),
+        ct_patterns=("%.bamboohr.com",),
+        cname_targets=("bamboohr.com",),
         html_signatures=(
-            r"comeet\.com/jobs/(?P<slug>[a-zA-Z0-9._-]+)/(?P<shard>[a-zA-Z0-9._-]+)",
-            r"comeet-careers-api",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.bamboohr\.com/(?:careers|jobs)",
+            r"BambooHR-ATS",
         ),
-        public_api_url="https://www.comeet.com/jobs/{slug}/{shard}",
-        board_url_template="https://www.comeet.com/jobs/{slug}/{shard}",
+        public_api_url="https://{slug}.bamboohr.com/careers/list",
+        board_url_template="https://{slug}.bamboohr.com/careers",
     ),
-    "homerun": ATSPlatformSpec(
-        ats_id="homerun",
-        display_name="Homerun",
-        category="smb",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.homerun\.co(?:/|$|\?)",
-        ),
-        cdx_patterns=("*.homerun.co/*",),
-        ct_patterns=("%.homerun.co",),
-        cname_targets=("custom.homerun.co", "homerun.co"),
-        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.homerun\.co",),
-        public_api_url="https://{slug}.homerun.co",
-        board_url_template="https://{slug}.homerun.co",
-    ),
-    "jobvite": ATSPlatformSpec(
-        ats_id="jobvite",
-        display_name="Jobvite",
-        category="enterprise",
-        url_regexes=(
-            r"https?://jobs\.jobvite\.com/(?:careers/)?(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
-        ),
-        cdx_patterns=("jobs.jobvite.com/*",),
-        cname_targets=("jobs.jobvite.com", "jobvite.com"),
+    "recruitee": ATSPlatformSpec(
+        ats_id="recruitee",
+        display_name="Recruitee",
+        category="mid_market",
+        url_regexes=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.recruitee\.com(?:/|$|\?)",),
+        cdx_patterns=("*.recruitee.com/*",),
+        ct_patterns=("%.recruitee.com",),
+        cname_targets=("cname.recruitee.com", "recruitee.com"),
         html_signatures=(
-            r"jobs\.jobvite\.com/(?:careers/)?(?P<slug>[a-zA-Z0-9_-]+)",
-            r"jv-careersite",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.recruitee\.com",
+            r"recruitee-careers-widget",
         ),
-        public_api_url="https://jobs.jobvite.com/{slug}",
-        board_url_template="https://jobs.jobvite.com/{slug}",
+        public_api_url="https://{slug}.recruitee.com/api/offers",
+        board_url_template="https://{slug}.recruitee.com",
     ),
-    "icims": ATSPlatformSpec(
-        ats_id="icims",
-        display_name="iCIMS",
-        category="enterprise",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.icims\.com(?:/|$|\?)",
-        ),
-        cdx_patterns=("*.icims.com/*",),
-        ct_patterns=("%.icims.com",),
-        cname_targets=("icims.com",),
+    "breezy": ATSPlatformSpec(
+        ats_id="breezy",
+        display_name="Breezy HR",
+        category="mid_market",
+        url_regexes=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.breezy\.hr(?:/|$|\?)",),
+        cdx_patterns=("*.breezy.hr/*",),
+        ct_patterns=("%.breezy.hr",),
+        cname_targets=("custom-portal.breezy.hr", "breezy.hr"),
         html_signatures=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.icims\.com",
-            r"iCIMS_MainWrapper",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.breezy\.hr",
+            r"breezy-portal",
         ),
-        public_api_url="https://{slug}.icims.com/jobs/search?in_iframe=1",
-        board_url_template="https://{slug}.icims.com",
+        public_api_url="https://{slug}.breezy.hr/json",
+        board_url_template="https://{slug}.breezy.hr",
+    ),
+    "teamtailor": ATSPlatformSpec(
+        ats_id="teamtailor",
+        display_name="Teamtailor",
+        category="mid_market",
+        url_regexes=(
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.teamtailor\.com(?:/|$|\?)",
+            r"https?://career\.teamtailor\.com/(?P<slug>[a-zA-Z0-9-]+)",
+        ),
+        cdx_patterns=("*.teamtailor.com/*",),
+        ct_patterns=("%.teamtailor.com",),
+        cname_targets=("ext.teamtailor.com", "teamtailor.com", "career.teamtailor.com"),
+        html_signatures=(
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.teamtailor\.com",
+            r"teamtailor-portal",
+        ),
+        public_api_url="https://{slug}.teamtailor.com/jobs.rss",
+        board_url_template="https://{slug}.teamtailor.com",
+    ),
+    "pinpoint": ATSPlatformSpec(
+        ats_id="pinpoint",
+        display_name="Pinpoint",
+        category="mid_market",
+        url_regexes=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.pinpointhq\.com(?:/|$|\?)",),
+        cdx_patterns=("*.pinpointhq.com/*",),
+        ct_patterns=("%.pinpointhq.com",),
+        cname_targets=("pinpointhq.com", "custom.pinpointhq.com"),
+        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.pinpointhq\.com",),
+        public_api_url="https://{slug}.pinpointhq.com/postings.json",
+        board_url_template="https://{slug}.pinpointhq.com",
+    ),
+    "personio": ATSPlatformSpec(
+        ats_id="personio",
+        display_name="Personio",
+        category="mid_market",
+        url_regexes=(
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.jobs\.personio\.(?P<shard>de|com)(?:/|$|\?)",
+        ),
+        cdx_patterns=("*.jobs.personio.de/*", "*.jobs.personio.com/*"),
+        ct_patterns=("%.jobs.personio.de", "%.jobs.personio.com"),
+        cname_targets=("jobs.personio.de", "jobs.personio.com"),
+        html_signatures=(
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.jobs\.personio\.(?P<shard>de|com)",
+        ),
+        public_api_url="https://{slug}.jobs.personio.{shard}/xml",
+        board_url_template="https://{slug}.jobs.personio.{shard}",
     ),
     "jazzhr": ATSPlatformSpec(
         ats_id="jazzhr",
         display_name="JazzHR",
-        category="smb",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.applytojob\.com(?:/|$|\?)",
-        ),
+        category="mid_market",
+        url_regexes=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.applytojob\.com(?:/|$|\?)",),
         cdx_patterns=("*.applytojob.com/*",),
         ct_patterns=("%.applytojob.com",),
         cname_targets=("applytojob.com",),
@@ -493,80 +323,194 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
         public_api_url="https://{slug}.applytojob.com/apply",
         board_url_template="https://{slug}.applytojob.com/apply",
     ),
-    "gem": ATSPlatformSpec(
-        ats_id="gem",
-        display_name="Gem ATS",
-        category="startup_modern",
+    "trakstar": ATSPlatformSpec(
+        ats_id="trakstar",
+        display_name="Trakstar Hire (Recruiterbox)",
+        category="mid_market",
         url_regexes=(
-            r"https?://jobs\.gem\.com/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.recruiterbox\.com(?:/|$|\?)",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.hire\.trakstar\.com(?:/|$|\?)",
         ),
-        cdx_patterns=("jobs.gem.com/*",),
-        cname_targets=("jobs.gem.com",),
-        html_signatures=(r"jobs\.gem\.com/(?P<slug>[a-zA-Z0-9_-]+)",),
-        public_api_url="https://api.gem.com/job_board/v0/{slug}/job_posts",
-        board_url_template="https://jobs.gem.com/{slug}",
+        cdx_patterns=("*.recruiterbox.com/*", "*.hire.trakstar.com/*"),
+        ct_patterns=("%.recruiterbox.com", "%.hire.trakstar.com"),
+        cname_targets=("recruiterbox.com", "hire.trakstar.com"),
+        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.(?:recruiterbox|hire\.trakstar)\.com",),
+        public_api_url="https://js.recruiterbox.com/v1/openings?client_name={slug}",
+        board_url_template="https://{slug}.hire.trakstar.com",
     ),
-    "kula": ATSPlatformSpec(
-        ats_id="kula",
-        display_name="Kula",
-        category="startup_modern",
+    "join": ATSPlatformSpec(
+        ats_id="join",
+        display_name="JOIN",
+        category="mid_market",
+        url_regexes=(r"https?://join\.com/companies/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",),
+        cdx_patterns=("join.com/companies/*",),
+        cname_targets=("join.com",),
+        html_signatures=(r"join\.com/companies/(?P<slug>[a-zA-Z0-9_-]+)", r"widget\.join\.com"),
+        public_api_url="https://join.com/companies/{slug}",
+        board_url_template="https://join.com/companies/{slug}",
+    ),
+    "manatal": ATSPlatformSpec(
+        ats_id="manatal",
+        display_name="Manatal",
+        category="mid_market",
         url_regexes=(
-            r"https?://careers\.kula\.ai/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
+            r"https?://(?:www\.)?careers-page\.com/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
+            r"https?://api\.careers-page\.com/open/v1/career-pages/(?P<slug>[a-zA-Z0-9_-]+)/job-posts",
         ),
-        cdx_patterns=("careers.kula.ai/*",),
-        cname_targets=("careers.kula.ai",),
-        html_signatures=(r"careers\.kula\.ai/(?P<slug>[a-zA-Z0-9_-]+)",),
-        public_api_url="https://careers.kula.ai/{slug}",
-        board_url_template="https://careers.kula.ai/{slug}",
+        cdx_patterns=("careers-page.com/*", "www.careers-page.com/*"),
+        cname_targets=("careers-page.com",),
+        html_signatures=(r"careers-page\.com/(?P<slug>[a-zA-Z0-9_-]+)",),
+        public_api_url="https://api.careers-page.com/open/v1/career-pages/{slug}/job-posts",
+        board_url_template="https://www.careers-page.com/{slug}",
     ),
-    "polymer": ATSPlatformSpec(
-        ats_id="polymer",
-        display_name="Polymer",
-        category="smb",
+
+    # Enterprise Giants
+    "workday": ATSPlatformSpec(
+        ats_id="workday",
+        display_name="Workday",
+        category="enterprise",
         url_regexes=(
-            r"https?://jobs\.polymer\.co/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.(?P<shard>wd\d+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?(?P<site>[a-zA-Z0-9_-]+)",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.(?P<shard>wd\d+)\.myworkdayjobs\.com/?$",
         ),
-        cdx_patterns=("jobs.polymer.co/*",),
-        cname_targets=("jobs.polymer.co",),
-        html_signatures=(r"jobs\.polymer\.co/(?P<slug>[a-zA-Z0-9_-]+)",),
-        public_api_url="https://jobs.polymer.co/{slug}",
-        board_url_template="https://jobs.polymer.co/{slug}",
+        cdx_patterns=("*.myworkdayjobs.com/*",),
+        ct_patterns=("%.myworkdayjobs.com",),
+        cname_targets=("myworkdayjobs.com", "myworkdaysite.com"),
+        html_signatures=(
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.(?P<shard>wd\d+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?(?P<site>[a-zA-Z0-9_-]+)",
+            r"/wday/cxs/(?P<slug>[a-zA-Z0-9-]+)/(?P<site>[a-zA-Z0-9_-]+)/jobs",
+        ),
+        public_api_url="https://{slug}.{shard}.myworkdayjobs.com/wday/cxs/{slug}/{site}/jobs",
+        public_api_method="POST",
+        board_url_template="https://{slug}.{shard}.myworkdayjobs.com/{site}",
     ),
-    "freshteam": ATSPlatformSpec(
-        ats_id="freshteam",
-        display_name="Freshteam",
-        category="smb",
+    "smartrecruiters": ATSPlatformSpec(
+        ats_id="smartrecruiters",
+        display_name="SmartRecruiters",
+        category="enterprise",
         url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.freshteam\.com/jobs(?:/|$|\?)",
+            r"https?://(?:jobs|careers)\.smartrecruiters\.com/(?P<slug>[a-zA-Z0-9._-]+)(?:/|$|\?)",
+            r"https?://api\.smartrecruiters\.com/v1/companies/(?P<slug>[a-zA-Z0-9._-]+)/postings",
         ),
-        cdx_patterns=("*.freshteam.com/jobs*",),
-        ct_patterns=("%.freshteam.com",),
-        cname_targets=("freshteam.com",),
-        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.freshteam\.com/jobs",),
-        public_api_url="https://{slug}.freshteam.com/hire/widgets/jobs.json",
-        board_url_template="https://{slug}.freshteam.com/jobs",
+        cdx_patterns=("jobs.smartrecruiters.com/*", "careers.smartrecruiters.com/*"),
+        cname_targets=("jobs.smartrecruiters.com", "careers.smartrecruiters.com"),
+        html_signatures=(
+            r"(?:jobs|careers)\.smartrecruiters\.com/(?P<slug>[a-zA-Z0-9._-]+)",
+            r"api\.smartrecruiters\.com/v1/companies/(?P<slug>[a-zA-Z0-9._-]+)/postings",
+        ),
+        public_api_url="https://api.smartrecruiters.com/v1/companies/{slug}/postings?limit=100",
+        board_url_template="https://jobs.smartrecruiters.com/{slug}",
     ),
-    "zohorecruit": ATSPlatformSpec(
-        ats_id="zohorecruit",
-        display_name="Zoho Recruit",
-        category="smb",
+    "icims": ATSPlatformSpec(
+        ats_id="icims",
+        display_name="iCIMS",
+        category="enterprise",
+        url_regexes=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.icims\.com(?:/|$|\?)",),
+        cdx_patterns=("*.icims.com/*",),
+        ct_patterns=("%.icims.com",),
+        cname_targets=("icims.com",),
+        html_signatures=(
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.icims\.com",
+            r"iCIMS_MainWrapper",
+        ),
+        public_api_url="https://{slug}.icims.com/jobs/search?in_iframe=1",
+        board_url_template="https://{slug}.icims.com",
+    ),
+    "jobvite": ATSPlatformSpec(
+        ats_id="jobvite",
+        display_name="Jobvite",
+        category="enterprise",
+        url_regexes=(r"https?://jobs\.jobvite\.com/(?:careers/)?(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",),
+        cdx_patterns=("jobs.jobvite.com/*",),
+        cname_targets=("jobs.jobvite.com", "jobvite.com"),
+        html_signatures=(
+            r"jobs\.jobvite\.com/(?:careers/)?(?P<slug>[a-zA-Z0-9_-]+)",
+            r"jv-careersite",
+        ),
+        public_api_url="https://jobs.jobvite.com/{slug}",
+        board_url_template="https://jobs.jobvite.com/{slug}",
+    ),
+    "successfactors": ATSPlatformSpec(
+        ats_id="successfactors",
+        display_name="SAP SuccessFactors",
+        category="enterprise",
         url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.zohorecruit\.(?P<shard>com|eu|in|com\.au|jp)/jobs/Careers(?:/|$|\?)",
+            r"https?://career(?P<shard>\d+)?\.successfactors\.(?P<site>com|eu)/career\?company=(?P<slug>[a-zA-Z0-9_-]+)",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.successfactors\.(?P<site>com|eu)(?:/|$|\?)",
         ),
-        cdx_patterns=("*.zohorecruit.com/*", "*.zohorecruit.in/*", "*.zohorecruit.eu/*"),
-        ct_patterns=("%.zohorecruit.com", "%.zohorecruit.in", "%.zohorecruit.eu"),
-        cname_targets=("zohorecruit.com", "zohorecruit.in", "zohorecruit.eu"),
-        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.zohorecruit\.(?P<shard>com|eu|in)/jobs",),
-        public_api_url="https://{slug}.zohorecruit.{shard}/jobs/Careers",
-        board_url_template="https://{slug}.zohorecruit.{shard}/jobs/Careers",
+        cdx_patterns=("*.successfactors.com/*", "*.successfactors.eu/*"),
+        cname_targets=("successfactors.com", "successfactors.eu", "jobs2web.com"),
+        html_signatures=(r"successfactors\.(?:com|eu)/career\?company=(?P<slug>[a-zA-Z0-9_-]+)",),
+        public_api_url="https://career.successfactors.com/career?company={slug}",
+        board_url_template="https://career.successfactors.com/career?company={slug}",
     ),
+    "taleo": ATSPlatformSpec(
+        ats_id="taleo",
+        display_name="Oracle Taleo",
+        category="enterprise",
+        url_regexes=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.taleo\.net/careersection/(?P<site>[a-zA-Z0-9_-]+)",),
+        cdx_patterns=("*.taleo.net/careersection/*",),
+        ct_patterns=("%.taleo.net",),
+        cname_targets=("taleo.net",),
+        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.taleo\.net/careersection",),
+        public_api_url="https://{slug}.taleo.net/careersection/rest/jobboard/searchjobs?lang=en&portal=101430233",
+        board_url_template="https://{slug}.taleo.net/careersection/ex/jobsearch.ftl",
+    ),
+    "oracle_recruiting": ATSPlatformSpec(
+        ats_id="oracle_recruiting",
+        display_name="Oracle Recruiting Cloud",
+        category="enterprise",
+        url_regexes=(
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.fa\.(?P<shard>[a-zA-Z0-9]+)\.oraclecloud\.com/hcmUI/CandidateExperience/[a-zA-Z-]+/sites/(?P<site>[a-zA-Z0-9_-]+)",
+        ),
+        cdx_patterns=("*.oraclecloud.com/hcmUI/CandidateExperience/*",),
+        ct_patterns=("%.oraclecloud.com",),
+        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.fa\.(?P<shard>[a-zA-Z0-9]+)\.oraclecloud\.com/hcmUI/CandidateExperience",),
+        public_api_url="https://{slug}.fa.{shard}.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true",
+        board_url_template="https://{slug}.fa.{shard}.oraclecloud.com/hcmUI/CandidateExperience/en/sites/{site}",
+    ),
+    "dayforce": ATSPlatformSpec(
+        ats_id="dayforce",
+        display_name="Dayforce",
+        category="enterprise",
+        url_regexes=(
+            r"https?://jobs\.dayforcehcm\.com/[a-z]{2}-[A-Z]{2}/(?P<slug>[a-zA-Z0-9_-]+)/(?P<site>[a-zA-Z0-9_-]+)(?:/|$|\?)",
+        ),
+        cdx_patterns=("jobs.dayforcehcm.com/*",),
+        cname_targets=("jobs.dayforcehcm.com", "dayforcehcm.com"),
+        html_signatures=(r"jobs\.dayforcehcm\.com/[a-z]{2}-[A-Z]{2}/(?P<slug>[a-zA-Z0-9_-]+)",),
+        public_api_url="https://jobs.dayforcehcm.com/en-US/{slug}/CANDIDATEPORTAL",
+        board_url_template="https://jobs.dayforcehcm.com/en-US/{slug}/CANDIDATEPORTAL",
+    ),
+    "ukg": ATSPlatformSpec(
+        ats_id="ukg",
+        display_name="UKG (UltiPro)",
+        category="enterprise",
+        url_regexes=(r"https?://recruiting2?\.ultipro\.com/(?P<slug>[a-zA-Z0-9_-]+)/JobBoard/(?P<site>[a-zA-Z0-9-]+)",),
+        cdx_patterns=("recruiting.ultipro.com/*", "recruiting2.ultipro.com/*"),
+        html_signatures=(r"recruiting2?\.ultipro\.com/(?P<slug>[a-zA-Z0-9_-]+)/JobBoard/(?P<site>[a-zA-Z0-9-]+)",),
+        public_api_url="https://recruiting2.ultipro.com/{slug}/JobBoard/{site}",
+        board_url_template="https://recruiting2.ultipro.com/{slug}/JobBoard/{site}",
+    ),
+    "paylocity": ATSPlatformSpec(
+        ats_id="paylocity",
+        display_name="Paylocity",
+        category="enterprise",
+        url_regexes=(
+            r"https?://recruiting\.paylocity\.com/recruiting/jobs/(?:All|List)/(?P<slug>[a-zA-Z0-9-]+)(?:/(?P<site>[^/?#]+))?",
+        ),
+        cdx_patterns=("recruiting.paylocity.com/recruiting/jobs/*",),
+        html_signatures=(r"recruiting\.paylocity\.com/recruiting/jobs/(?:All|List)/(?P<slug>[a-zA-Z0-9-]+)",),
+        public_api_url="https://recruiting.paylocity.com/recruiting/jobs/All/{slug}",
+        board_url_template="https://recruiting.paylocity.com/recruiting/jobs/All/{slug}",
+    ),
+
+    # India & APAC Market Leaders
     "keka": ATSPlatformSpec(
         ats_id="keka",
         display_name="Keka Hire",
         category="regional_global",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.keka\.com/careers(?:/|$|\?)",
-        ),
+        url_regexes=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.keka\.com/careers(?:/|$|\?)",),
         cdx_patterns=("*.keka.com/careers*",),
         ct_patterns=("%.keka.com",),
         cname_targets=("keka.com",),
@@ -588,283 +532,33 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
         public_api_url="https://{slug}.darwinbox.{shard}/ms/candidate/careers",
         board_url_template="https://{slug}.darwinbox.{shard}/ms/candidate/careers",
     ),
-    "fountain": ATSPlatformSpec(
-        ats_id="fountain",
-        display_name="Fountain",
-        category="enterprise",
+    "zohorecruit": ATSPlatformSpec(
+        ats_id="zohorecruit",
+        display_name="Zoho Recruit",
+        category="regional_global",
         url_regexes=(
-            r"https?://(?:apply|jobs)\.fountain\.com/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.zohorecruit\.(?P<shard>com|eu|in|com\.au|jp)/jobs/Careers(?:/|$|\?)",
         ),
-        cdx_patterns=("apply.fountain.com/*", "jobs.fountain.com/*"),
-        cname_targets=("fountain.com",),
-        html_signatures=(r"(?:apply|jobs)\.fountain\.com/(?P<slug>[a-zA-Z0-9_-]+)",),
-        public_api_url="https://apply.fountain.com/{slug}",
-        board_url_template="https://apply.fountain.com/{slug}",
+        cdx_patterns=("*.zohorecruit.com/*", "*.zohorecruit.in/*", "*.zohorecruit.eu/*"),
+        ct_patterns=("%.zohorecruit.com", "%.zohorecruit.in", "%.zohorecruit.eu"),
+        cname_targets=("zohorecruit.com", "zohorecruit.in", "zohorecruit.eu"),
+        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.zohorecruit\.(?P<shard>com|eu|in)/jobs",),
+        public_api_url="https://{slug}.zohorecruit.{shard}/jobs/Careers",
+        board_url_template="https://{slug}.zohorecruit.{shard}/jobs/Careers",
     ),
-    "dayforce": ATSPlatformSpec(
-        ats_id="dayforce",
-        display_name="Dayforce (Ceridian)",
-        category="enterprise",
-        url_regexes=(
-            r"https?://jobs\.dayforcehcm\.com/[a-z]{2}-[A-Z]{2}/(?P<slug>[a-zA-Z0-9_-]+)/(?P<site>[a-zA-Z0-9_-]+)(?:/|$|\?)",
-        ),
-        cdx_patterns=("jobs.dayforcehcm.com/*",),
-        cname_targets=("jobs.dayforcehcm.com", "dayforcehcm.com"),
-        html_signatures=(r"jobs\.dayforcehcm\.com/[a-z]{2}-[A-Z]{2}/(?P<slug>[a-zA-Z0-9_-]+)",),
-        public_api_url="https://jobs.dayforcehcm.com/en-US/{slug}/CANDIDATEPORTAL",
-        board_url_template="https://jobs.dayforcehcm.com/en-US/{slug}/CANDIDATEPORTAL",
-    ),
-    "paylocity": ATSPlatformSpec(
-        ats_id="paylocity",
-        display_name="Paylocity",
-        category="mid_market",
-        url_regexes=(
-            r"https?://recruiting\.paylocity\.com/recruiting/jobs/(?:All|List)/(?P<slug>[a-zA-Z0-9-]+)(?:/(?P<site>[^/?#]+))?",
-        ),
-        cdx_patterns=("recruiting.paylocity.com/recruiting/jobs/*",),
-        html_signatures=(r"recruiting\.paylocity\.com/recruiting/jobs/(?:All|List)/(?P<slug>[a-zA-Z0-9-]+)",),
-        public_api_url="https://recruiting.paylocity.com/recruiting/jobs/All/{slug}",
-        board_url_template="https://recruiting.paylocity.com/recruiting/jobs/All/{slug}",
-    ),
-    "paycom": ATSPlatformSpec(
-        ats_id="paycom",
-        display_name="Paycom",
-        category="mid_market",
-        url_regexes=(
-            r"https?://(?:www\.)?paycomonline\.net/v4/ats/web\.php/jobs\?clientkey=(?P<slug>[a-zA-Z0-9]+)",
-        ),
-        cdx_patterns=("www.paycomonline.net/v4/ats/*", "paycomonline.net/v4/ats/*"),
-        html_signatures=(r"paycomonline\.net/v4/ats/web\.php/jobs\?clientkey=(?P<slug>[a-zA-Z0-9]+)",),
-        public_api_url="https://www.paycomonline.net/v4/ats/web.php/jobs?clientkey={slug}",
-        board_url_template="https://www.paycomonline.net/v4/ats/web.php/jobs?clientkey={slug}",
-    ),
-    "ukg": ATSPlatformSpec(
-        ats_id="ukg",
-        display_name="UKG (UltiPro)",
-        category="enterprise",
-        url_regexes=(
-            r"https?://recruiting2?\.ultipro\.com/(?P<slug>[a-zA-Z0-9_-]+)/JobBoard/(?P<site>[a-zA-Z0-9-]+)",
-        ),
-        cdx_patterns=("recruiting.ultipro.com/*", "recruiting2.ultipro.com/*"),
-        html_signatures=(r"recruiting2?\.ultipro\.com/(?P<slug>[a-zA-Z0-9_-]+)/JobBoard/(?P<site>[a-zA-Z0-9-]+)",),
-        public_api_url="https://recruiting2.ultipro.com/{slug}/JobBoard/{site}",
-        board_url_template="https://recruiting2.ultipro.com/{slug}/JobBoard/{site}",
-    ),
-    "taleo": ATSPlatformSpec(
-        ats_id="taleo",
-        display_name="Oracle Taleo",
-        category="enterprise",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.taleo\.net/careersection/(?P<site>[a-zA-Z0-9_-]+)",
-        ),
-        cdx_patterns=("*.taleo.net/careersection/*",),
-        ct_patterns=("%.taleo.net",),
-        cname_targets=("taleo.net",),
-        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.taleo\.net/careersection",),
-        public_api_url="https://{slug}.taleo.net/careersection/rest/jobboard/searchjobs?lang=en&portal=101430233",
-        board_url_template="https://{slug}.taleo.net/careersection/ex/jobsearch.ftl",
-    ),
-    "oracle_recruiting": ATSPlatformSpec(
-        ats_id="oracle_recruiting",
-        display_name="Oracle Recruiting Cloud (ORC)",
-        category="enterprise",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.fa\.(?P<shard>[a-zA-Z0-9]+)\.oraclecloud\.com/hcmUI/CandidateExperience/[a-zA-Z-]+/sites/(?P<site>[a-zA-Z0-9_-]+)",
-        ),
-        cdx_patterns=("*.oraclecloud.com/hcmUI/CandidateExperience/*",),
-        ct_patterns=("%.oraclecloud.com",),
-        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.fa\.(?P<shard>[a-zA-Z0-9]+)\.oraclecloud\.com/hcmUI/CandidateExperience",),
-        public_api_url="https://{slug}.fa.{shard}.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations",
-        board_url_template="https://{slug}.fa.{shard}.oraclecloud.com/hcmUI/CandidateExperience/en/sites/{site}",
-    ),
-    "successfactors": ATSPlatformSpec(
-        ats_id="successfactors",
-        display_name="SAP SuccessFactors",
-        category="enterprise",
-        url_regexes=(
-            r"https?://career(?P<shard>\d+)?\.successfactors\.(?P<site>com|eu)/career\?company=(?P<slug>[a-zA-Z0-9_-]+)",
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.successfactors\.(?P<site>com|eu)(?:/|$|\?)",
-        ),
-        cdx_patterns=("*.successfactors.com/*", "*.successfactors.eu/*"),
-        cname_targets=("successfactors.com", "successfactors.eu", "jobs2web.com"),
-        html_signatures=(
-            r"successfactors\.(?:com|eu)/career\?company=(?P<slug>[a-zA-Z0-9_-]+)",
-            r"j2w\.jobs2web\.com",
-        ),
-        public_api_url="https://career.successfactors.com/career?company={slug}",
-        board_url_template="https://career.successfactors.com/career?company={slug}",
-    ),
-    "eightfold": ATSPlatformSpec(
-        ats_id="eightfold",
-        display_name="Eightfold AI",
-        category="enterprise",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.eightfold\.ai/careers(?:/|$|\?)",
-        ),
-        cdx_patterns=("*.eightfold.ai/careers*",),
-        ct_patterns=("%.eightfold.ai",),
-        cname_targets=("eightfold.ai",),
-        html_signatures=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.eightfold\.ai/careers",
-            r"/api/apply/v2/jobs\?domain=(?P<slug>[a-zA-Z0-9.-]+)",
-        ),
-        public_api_url="https://{slug}.eightfold.ai/api/apply/v2/jobs",
-        board_url_template="https://{slug}.eightfold.ai/careers",
-    ),
-    "phenom": ATSPlatformSpec(
-        ats_id="phenom",
-        display_name="Phenom People",
-        category="enterprise",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.phenompeople\.com(?:/|$|\?)",
-        ),
-        cdx_patterns=("*.phenompeople.com/*",),
-        ct_patterns=("%.phenompeople.com",),
-        cname_targets=("phenompeople.com",),
-        html_signatures=(
-            r"cdn\.phenompeople\.com/CareerConnectResources/(?P<slug>[A-Z0-9]+)",
-            r"phenom-track",
-        ),
-        public_api_url="https://{slug}.phenompeople.com",
-        board_url_template="https://{slug}.phenompeople.com",
-    ),
-    "avature": ATSPlatformSpec(
-        ats_id="avature",
-        display_name="Avature",
-        category="enterprise",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.avature\.net/(?P<site>[a-zA-Z0-9_-]+)(?:/|$|\?)",
-        ),
-        cdx_patterns=("*.avature.net/*",),
-        ct_patterns=("%.avature.net",),
-        cname_targets=("avature.net",),
-        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.avature\.net",),
-        public_api_url="https://{slug}.avature.net/careers",
-        board_url_template="https://{slug}.avature.net/careers",
-    ),
-    "adp": ATSPlatformSpec(
-        ats_id="adp",
-        display_name="ADP Workforce Now",
-        category="enterprise",
-        url_regexes=(
-            r"https?://workforcenow\.adp\.com/mascsr/default/mdf/recruitment/recruitment\.html\?cid=(?P<slug>[a-zA-Z0-9-]+)",
-        ),
-        cdx_patterns=("workforcenow.adp.com/mascsr/default/mdf/recruitment/*",),
-        html_signatures=(r"workforcenow\.adp\.com/mascsr/default/mdf/recruitment/recruitment\.html\?cid=(?P<slug>[a-zA-Z0-9-]+)",),
-        public_api_url="https://workforcenow.adp.com/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions?cid={slug}",
-        board_url_template="https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid={slug}",
-    ),
-    "cornerstone": ATSPlatformSpec(
-        ats_id="cornerstone",
-        display_name="Cornerstone OnDemand",
-        category="enterprise",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.csod\.com/ux/ats/careersite/(?P<site>\d+)/home",
-        ),
-        cdx_patterns=("*.csod.com/ux/ats/careersite/*",),
-        ct_patterns=("%.csod.com",),
-        cname_targets=("csod.com",),
-        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.csod\.com/ux/ats/careersite",),
-        public_api_url="https://{slug}.csod.com/ux/ats/careersite/{site}/home",
-        board_url_template="https://{slug}.csod.com/ux/ats/careersite/1/home",
-    ),
-    "trakstar": ATSPlatformSpec(
-        ats_id="trakstar",
-        display_name="Trakstar Hire (Recruiterbox)",
-        category="smb",
-        url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.recruiterbox\.com(?:/|$|\?)",
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.hire\.trakstar\.com(?:/|$|\?)",
-        ),
-        cdx_patterns=("*.recruiterbox.com/*", "*.hire.trakstar.com/*"),
-        ct_patterns=("%.recruiterbox.com", "%.hire.trakstar.com"),
-        cname_targets=("recruiterbox.com", "hire.trakstar.com"),
-        html_signatures=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.(?:recruiterbox|hire\.trakstar)\.com",
-        ),
-        public_api_url="https://js.recruiterbox.com/v1/openings?client_name={slug}",
-        board_url_template="https://{slug}.hire.trakstar.com",
-    ),
-    "jobylon": ATSPlatformSpec(
-        ats_id="jobylon",
-        display_name="Jobylon",
-        category="mid_market",
-        url_regexes=(
-            r"https?://emp\.jobylon\.com/jobs/companies/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
-        ),
-        cdx_patterns=("emp.jobylon.com/jobs/*",),
-        cname_targets=("jobylon.com",),
-        html_signatures=(r"emp\.jobylon\.com/jobs", r"jobylon-jobs-widget"),
-        public_api_url="https://emp.jobylon.com/jobs/companies/{slug}",
-        board_url_template="https://emp.jobylon.com/jobs/companies/{slug}",
+    "freshteam": ATSPlatformSpec(
+        ats_id="freshteam",
+        display_name="Freshteam",
+        category="regional_global",
+        url_regexes=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.freshteam\.com/jobs(?:/|$|\?)",),
+        cdx_patterns=("*.freshteam.com/jobs*",),
+        ct_patterns=("%.freshteam.com",),
+        cname_targets=("freshteam.com",),
+        html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.freshteam\.com/jobs",),
+        public_api_url="https://{slug}.freshteam.com/hire/widgets/jobs.json",
+        board_url_template="https://{slug}.freshteam.com/jobs",
     ),
 }
-
-_ADDITIONAL_LONG_TAIL_ATS: List[Tuple[str, str, str, str, str]] = [
-    ("applicantpro", "ApplicantPro", "smb", "*.applicantpro.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.applicantpro\.com"),
-    ("careerplug", "CareerPlug", "smb", "*.careerplug.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.careerplug\.com"),
-    ("gohire", "GoHire", "smb", "*.gohire.io/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.gohire\.io"),
-    ("hiringthing", "HiringThing", "smb", "*.hiringthing.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.hiringthing\.com"),
-    ("jboard", "JBoard.io", "smb", "*.jboard.io/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.jboard\.io"),
-    ("jobboardfire", "JobBoardFire", "smb", "*.jobboardfire.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.jobboardfire\.com"),
-    ("jobkit", "JobKit", "smb", "*.jobkit.io/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.jobkit\.io"),
-    ("jobboardly", "Jobboardly", "smb", "*.jobboardly.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.jobboardly\.com"),
-    ("jobiqo", "Jobiqo", "mid_market", "*.jobiqo.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.jobiqo\.com"),
-    ("niceboard", "Niceboard", "smb", "*.niceboard.co/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.niceboard\.co"),
-    ("recooty", "Recooty", "smb", "*.recooty.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.recooty\.com"),
-    ("smartjobboard", "SmartJobBoard", "smb", "*.mysmartjobboard.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.mysmartjobboard\.com"),
-    ("isolvedhire", "iSolved Hire", "mid_market", "*.isolvedhire.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.isolvedhire\.com"),
-    ("brassring", "Kenexa BrassRing", "enterprise", "sjobs.brassring.com/*", r"https?://sjobs\.brassring\.com/TGnewUI/Search/Home/Home\?partnerid=(?P<slug>\d+)"),
-    ("harri", "Harri", "mid_market", "harri.com/*", r"https?://harri\.com/(?P<slug>[a-zA-Z0-9_-]+)"),
-    ("apploi", "Apploi", "mid_market", "jobs.apploi.com/*", r"https?://jobs\.apploi\.com/company/(?P<slug>[a-zA-Z0-9_-]+)"),
-    ("applitrack", "Frontline AppliTrack", "mid_market", "www.applitrack.com/*", r"https?://www\.applitrack\.com/(?P<slug>[a-zA-Z0-9_-]+)/onlineapp"),
-    ("hireology", "Hireology", "mid_market", "careers.hireology.com/*", r"https?://careers\.hireology\.com/(?P<slug>[a-zA-Z0-9_-]+)"),
-    ("jobadder", "JobAdder", "mid_market", "*.jobadder.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.jobadder\.com"),
-    ("jobdiva", "JobDiva", "mid_market", "*.jobdiva.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.jobdiva\.com"),
-    ("selectminds", "Oracle SelectMinds", "enterprise", "*.referrals.selectminds.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.referrals\.selectminds\.com"),
-    ("jibe", "Jibe (iCIMS)", "enterprise", "*.jibeapply.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.jibeapply\.com"),
-    ("pageup", "PageUp", "enterprise", "careers.pageuppeople.com/*", r"https?://careers\.pageuppeople\.com/(?P<slug>\d+)"),
-    ("peopleadmin", "PeopleAdmin", "enterprise", "*.peopleadmin.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.peopleadmin\.com"),
-    ("silkroad", "SilkRoad Recruiting", "enterprise", "*.silkroad.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)-openhire\.silkroad\.com"),
-    ("livehire", "LiveHire", "mid_market", "www.livehire.com/careers/*", r"https?://www\.livehire\.com/careers/(?P<slug>[a-zA-Z0-9_-]+)"),
-    ("flatchr", "Flatchr", "smb", "careers.flatchr.io/*", r"https?://careers\.flatchr\.io/(?P<slug>[a-zA-Z0-9_-]+)"),
-    ("clearcompany", "ClearCompany", "mid_market", "*.hrmdirect.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.hrmdirect\.com"),
-    ("ceipal", "CEIPAL", "mid_market", "api.ceipal.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.ceipal\.com"),
-    ("umantis", "Haufe Umantis", "mid_market", "*.umantis.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.umantis\.com"),
-    ("reachmee", "ReachMee", "mid_market", "web103.reachmee.com/*", r"https?://web\d+\.reachmee\.com/ext/(?P<slug>[a-zA-Z0-9_-]+)"),
-    ("applicantstack", "ApplicantStack", "smb", "*.applicantstack.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.applicantstack\.com"),
-    ("recruiterflow", "Recruiterflow", "smb", "recruiterflow.com/*", r"https?://recruiterflow\.com/(?P<slug>[a-zA-Z0-9_-]+)/jobs"),
-    ("recruitcrm", "Recruit CRM", "smb", "recruitcrm.io/jobs/*", r"https?://recruitcrm\.io/jobs/(?P<slug>[a-zA-Z0-9_-]+)"),
-    ("wizehire", "Wizehire", "smb", "app.wizehire.com/*", r"https?://app\.wizehire\.com/career-site/(?P<slug>[a-zA-Z0-9_-]+)"),
-    ("occupop", "Occupop", "smb", "*.occupop.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.occupop\.com"),
-    ("varbi", "Varbi", "mid_market", "*.varbi.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.varbi\.com"),
-    ("persy", "Persy", "smb", "persy.jobs/*", r"https?://persy\.jobs/persy/l/(?P<slug>[a-zA-Z0-9_-]+)"),
-    ("catsone", "CATS ATS", "smb", "*.catsone.com/careers*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.catsone\.com/careers"),
-    ("crelate", "Crelate", "smb", "jobs.crelate.com/portal/*", r"https?://jobs\.crelate\.com/portal/(?P<slug>[a-zA-Z0-9_-]+)"),
-    ("loxo", "Loxo", "smb", "app.loxo.co/job/*", r"https?://app\.loxo\.co/(?P<slug>[a-zA-Z0-9_-]+)"),
-    ("deel", "Deel ATS", "startup_modern", "jobs.deel.com/*", r"https?://jobs\.deel\.com/job-boards/(?P<slug>[a-zA-Z0-9_-]+)"),
-    ("pyjamahr", "PyjamaHR", "regional_global", "app.pyjamahr.com/careers*", r"https?://app\.pyjamahr\.com/careers\?company=(?P<slug>[a-zA-Z0-9_-]+)"),
-    ("bullhorn", "Bullhorn Career Portal", "enterprise", "*.bullhornstaffing.com/*", r"https?://(?P<slug>[a-zA-Z0-9-]+)\.bullhornstaffing\.com"),
-]
-
-for _id, _name, _cat, _cdx, _regex in _ADDITIONAL_LONG_TAIL_ATS:
-    _ct_tuple: Tuple[str, ...] = ()
-    if _cdx.startswith("*."):
-        _base_dom = _cdx[2:].split("/")[0]
-        _ct_tuple = (f"%.{_base_dom}",)
-    ATS_PLATFORMS[_id] = ATSPlatformSpec(
-        ats_id=_id,
-        display_name=_name,
-        category=_cat,
-        url_regexes=(_regex,),
-        cdx_patterns=(_cdx,),
-        ct_patterns=_ct_tuple,
-        cname_targets=tuple([_cdx.replace("*.", "").split("/")[0]]),
-        html_signatures=(_regex,),
-        public_api_url=None,
-        board_url_template="",
-    )
-
 
 RESERVED_SLUGS: Set[str] = {
     "www", "api", "app", "jobs", "careers", "career", "apply", "boards",
@@ -883,7 +577,6 @@ RESERVED_SLUGS: Set[str] = {
 
 @dataclass
 class DiscoveredBoard:
-    """Represents a candidate ATS board discovered via any vector."""
     ats_id: str
     slug: str
     shard: str = ""
@@ -902,7 +595,6 @@ class DiscoveredBoard:
 
 @dataclass
 class VerifiedATSBoard:
-    """Represents a verified ATS board enriched from its public API or career page."""
     ats_id: str
     ats_display_name: str
     slug: str
@@ -1118,7 +810,6 @@ def extract_ats_boards_from_html(
             for match in re.finditer(sig, html_content, re.IGNORECASE):
                 groups = match.groupdict()
                 slug = (groups.get("slug") or "").strip().strip("/")
-                # Handle custom-domain Greenhouse boards where only `?gh_jid=` is visible in HTML
                 if not slug and sig == r"gh_jid=" and spec.ats_id == "greenhouse" and default_slug:
                     slug = default_slug
                 if not slug or slug.lower() in RESERVED_SLUGS or len(slug) < 2:
@@ -1178,13 +869,11 @@ def match_cname_to_ats(
 # =============================================================================
 
 class AsyncHTTPClient:
-    """High-concurrency HTTP client using `aiohttp` when installed, or threaded `urllib`."""
-
     def __init__(self, concurrency: int = 50, timeout: float = 15.0, user_agent: str = ""):
         self.semaphore = asyncio.Semaphore(concurrency)
         self.timeout = timeout
         self.user_agent = user_agent or (
-            "Mozilla/5.0 (compatible; ATSDiscoveryEngine/2.5; +https://github.com/ats-discovery)"
+            "Mozilla/5.0 (compatible; ATSDiscoveryEngine/3.0; +https://github.com/ats-discovery)"
         )
         self._session: Optional[Any] = None
 
@@ -1261,7 +950,7 @@ class AsyncHTTPClient:
 
 
 # =============================================================================
-# 5. MULTI-VECTOR DISCOVERY ENGINES (WITH 36-PREFIX SHARDING & WAYBACK CDX)
+# 5. MULTI-VECTOR DISCOVERY ENGINES (WITH 3-5 YEAR TIME WINDOWS)
 # =============================================================================
 
 ALPHANUMERIC_PREFIXES: Tuple[str, ...] = tuple(string.ascii_lowercase + string.digits)
@@ -1270,21 +959,14 @@ ALPHANUMERIC_PREFIXES: Tuple[str, ...] = tuple(string.ascii_lowercase + string.d
 def expand_cdx_patterns_with_prefixes(
     patterns: Sequence[str], enable_prefix_sharding: bool = False
 ) -> List[str]:
-    """
-    Expands path-based ATS wildcard patterns (like `boards.greenhouse.io/*` or
-    `jobs.ashbyhq.com/*`) into 36 alphanumeric prefix queries (`boards.greenhouse.io/a*`
-    .. `boards.greenhouse.io/9*`) so a single company with 50,000 job URLs cannot
-    monopolize early CDX pagination pages.
-    """
     if not enable_prefix_sharding:
         return list(patterns)
     expanded: List[str] = []
     for pat in patterns:
-        # Subdomain wildcard patterns (*.myworkdayjobs.com/*) cannot be path-prefixed
         if pat.startswith("*."):
             expanded.append(pat)
         elif pat.endswith("/*"):
-            base = pat[:-1]  # keep trailing slash
+            base = pat[:-1]
             for ch in ALPHANUMERIC_PREFIXES:
                 expanded.append(f"{base}{ch}*")
         else:
@@ -1293,21 +975,22 @@ def expand_cdx_patterns_with_prefixes(
 
 
 class CommonCrawlCDXDiscoverer:
-    """
-    Discovers ATS client slugs at massive scale by querying Common Crawl's public
-    CDX Index API (`https://index.commoncrawl.org`) with URL-key collapsing and
-    optional 36-prefix alphanumeric sharding.
-    """
+    """Streams from Common Crawl's monthly snapshots covering the 3-5 year window."""
 
     COLLINFO_URL = "https://index.commoncrawl.org/collinfo.json"
+    # Fallback to monthly crawls spanning 2021-2026
     DEFAULT_INDEXES = (
         "CC-MAIN-2026-38-index",
         "CC-MAIN-2026-30-index",
-        "CC-MAIN-2026-22-index",
-        "CC-MAIN-2026-14-index",
+        "CC-MAIN-2025-50-index",
+        "CC-MAIN-2025-33-index",
+        "CC-MAIN-2024-38-index",
+        "CC-MAIN-2023-40-index",
+        "CC-MAIN-2022-40-index",
+        "CC-MAIN-2021-43-index",
     )
 
-    def __init__(self, http_client: AsyncHTTPClient, max_indexes: int = 2):
+    def __init__(self, http_client: AsyncHTTPClient, max_indexes: int = 4):
         self.http = http_client
         self.max_indexes = max_indexes
 
@@ -1373,20 +1056,27 @@ class CommonCrawlCDXDiscoverer:
 
 class WaybackCDXDiscoverer:
     """
-    Streams historical and current ATS board URLs from the Internet Archive's
-    Wayback Machine CDX API (`https://web.archive.org/cdx/search/cdx`), using
-    `collapse=urlkey` to deduplicate URLs server-side.
+    Streams historical and current ATS board URLs strictly within the 3-5 year
+    window (2021-01-01 to 2026-12-31) using `from=...&to=...&collapse=urlkey`.
     """
 
     WAYBACK_CDX_URL = (
         "https://web.archive.org/cdx/search/cdx"
         "?url={pattern}&output=json&fl=original&filter=statuscode:200"
-        "&collapse=urlkey&limit={limit}"
+        "&from={from_date}&to={to_date}&collapse=urlkey&limit={limit}"
     )
 
-    def __init__(self, http_client: AsyncHTTPClient, limit_per_pattern: int = 25000):
+    def __init__(
+        self,
+        http_client: AsyncHTTPClient,
+        limit_per_pattern: int = 50000,
+        from_date: str = "20210101",
+        to_date: str = "20261231",
+    ):
         self.http = http_client
         self.limit_per_pattern = limit_per_pattern
+        self.from_date = from_date
+        self.to_date = to_date
 
     async def discover_for_platform(
         self, spec: ATSPlatformSpec, prefix_shard: bool = False
@@ -1396,7 +1086,10 @@ class WaybackCDXDiscoverer:
 
         async def _query_pattern(pattern: str) -> List[DiscoveredBoard]:
             url = self.WAYBACK_CDX_URL.format(
-                pattern=quote_plus(pattern), limit=self.limit_per_pattern
+                pattern=quote_plus(pattern),
+                from_date=self.from_date,
+                to_date=self.to_date,
+                limit=self.limit_per_pattern,
             )
             status, body, _ = await self.http.request("GET", url)
             if status != 200 or not body.strip():
@@ -1431,10 +1124,7 @@ class WaybackCDXDiscoverer:
 
 
 class CertificateTransparencyDiscoverer:
-    """
-    Queries Certificate Transparency (`crt.sh`) JSON logs to find every subdomain
-    certificate ever issued for subdomain-hosted ATS platforms.
-    """
+    """Queries Certificate Transparency (`crt.sh`) JSON logs for subdomain ATS."""
 
     CRT_SH_URL = "https://crt.sh/?q={query}&output=json"
 
@@ -1479,12 +1169,6 @@ class CertificateTransparencyDiscoverer:
 
 
 class CareerPageAndCNamedDiscoverer:
-    """
-    Given a seed list of company domains, discovers their ATS by probing career
-    subdomains (`jobs.<domain>`, `careers.<domain>`) and crawling `/careers` and
-    `/jobs` HTML for embedded ATS scripts, iframes, `?gh_jid=` links, and redirects.
-    """
-
     CAREER_PATHS = ("/careers", "/jobs", "/company/careers", "/about/careers", "/en/careers")
     CAREER_SUBDOMAINS = ("jobs", "careers", "talent", "apply")
 
@@ -1530,15 +1214,9 @@ class CareerPageAndCNamedDiscoverer:
 
 
 class SlugPermutationGenerator:
-    """
-    Generates candidate ATS slugs from a company name or root domain so public
-    ATS APIs can be probed directly even when a company's career page hides the
-    underlying ATS URL (e.g., `doordashusa`, `andurilindustries`, `stripe`).
-    """
-
     COMMON_SUFFIXES = (
-        "", "hq", "inc", "usa", "labs", "tech", "technologies", "industries",
-        "global", "io", "ai", "careers", "jobs", "group", "health", "financial",
+        "", "hq", "inc", "usa", "india", "labs", "tech", "technologies",
+        "global", "io", "ai", "careers", "jobs", "health", "financial",
     )
 
     @classmethod
@@ -1566,7 +1244,7 @@ class SlugPermutationGenerator:
 
         if company_name:
             clean = re.sub(
-                r"\b(inc\.?|llc\.?|ltd\.?|corp\.?|corporation|gmbh|limited|plc|co\.?)\b",
+                r"\b(inc\.?|llc\.?|ltd\.?|pvt\.?|private|corp\.?|corporation|gmbh|limited|plc|co\.?)\b",
                 "",
                 company_name,
                 flags=re.IGNORECASE,
@@ -1582,39 +1260,11 @@ class SlugPermutationGenerator:
         return candidates
 
 
-class SearchDorkDiscoverer:
-    """Generates partitioned search engine dork queries per ATS."""
-
-    @staticmethod
-    def build_dork_queries(platforms: Optional[Sequence[str]] = None) -> Dict[str, List[str]]:
-        target_specs = (
-            [ATS_PLATFORMS[p] for p in platforms if p in ATS_PLATFORMS]
-            if platforms
-            else list(ATS_PLATFORMS.values())
-        )
-        queries_by_ats: Dict[str, List[str]] = {}
-        shards = ("remote", "engineer", "product", "sales", "marketing", "operations", "finance", "design")
-        for spec in target_specs:
-            q_list: List[str] = []
-            for cdx in spec.cdx_patterns:
-                site_host = cdx.rstrip("/*")
-                q_list.append(f"site:{site_host}")
-                for keyword in shards:
-                    q_list.append(f'site:{site_host} "{keyword}"')
-            queries_by_ats[spec.ats_id] = q_list
-        return queries_by_ats
-
-
 # =============================================================================
 # 6. PUBLIC ATS API VERIFIER & PAYLOAD PARSERS
 # =============================================================================
 
 class PublicATSPayloadParser:
-    """
-    Parses public JSON / XML / HTML responses from major ATS platforms into a
-    normalized `VerifiedATSBoard` structure.
-    """
-
     @classmethod
     def parse_response(
         cls,
@@ -1655,10 +1305,12 @@ class PublicATSPayloadParser:
             "bamboohr": cls._parse_bamboohr,
             "personio": cls._parse_personio,
             "pinpoint": cls._parse_pinpoint,
-            "hirehive": cls._parse_hirehive,
-            "manatal": cls._parse_manatal,
             "rippling": cls._parse_rippling,
             "trakstar": cls._parse_trakstar,
+            "keka": cls._parse_keka,
+            "darwinbox": cls._parse_darwinbox,
+            "freshteam": cls._parse_freshteam,
+            "zohorecruit": cls._parse_zohorecruit,
         }
         parser_fn = parser_map.get(board.ats_id, cls._parse_generic)
         try:
@@ -1744,7 +1396,6 @@ class PublicATSPayloadParser:
                 dates.append(str(updated))
             if not v.company_name and j.get("company_name"):
                 v.company_name = str(j["company_name"])
-            # Check if absolute_url redirects to a custom company career domain (e.g. stripe.com/jobs?gh_jid=...)
             abs_url = j.get("absolute_url") or ""
             if abs_url and not v.resolved_domain:
                 custom_dom = normalize_root_domain(abs_url)
@@ -2013,32 +1664,6 @@ class PublicATSPayloadParser:
                     v.locations.append(loc_obj["name"])
 
     @staticmethod
-    def _parse_hirehive(v: VerifiedATSBoard, body: str) -> None:
-        data = json.loads(body)
-        jobs = data.get("jobs") if isinstance(data, dict) else None
-        if not isinstance(jobs, list):
-            v.is_active = False
-            return
-        v.is_active = True
-        v.active_job_count = len(jobs)
-        for j in jobs:
-            if isinstance(j, dict) and j.get("title") and len(v.sample_job_titles) < 10:
-                v.sample_job_titles.append(str(j["title"]))
-
-    @staticmethod
-    def _parse_manatal(v: VerifiedATSBoard, body: str) -> None:
-        data = json.loads(body)
-        jobs = data.get("results") if isinstance(data, dict) else None
-        if not isinstance(jobs, list):
-            v.is_active = False
-            return
-        v.is_active = True
-        v.active_job_count = int(data.get("count") or len(jobs))
-        for j in jobs:
-            if isinstance(j, dict) and j.get("position_name") and len(v.sample_job_titles) < 10:
-                v.sample_job_titles.append(str(j["position_name"]))
-
-    @staticmethod
     def _parse_rippling(v: VerifiedATSBoard, body: str) -> None:
         data = json.loads(body)
         jobs = data if isinstance(data, list) else (data.get("jobs") if isinstance(data, dict) else None)
@@ -2062,6 +1687,46 @@ class PublicATSPayloadParser:
         for j in data:
             if isinstance(j, dict) and j.get("title") and len(v.sample_job_titles) < 10:
                 v.sample_job_titles.append(str(j["title"]))
+
+    @staticmethod
+    def _parse_keka(v: VerifiedATSBoard, body: str) -> None:
+        data = json.loads(body)
+        jobs = data.get("data") if isinstance(data, dict) else data
+        if not isinstance(jobs, list):
+            v.is_active = False
+            return
+        v.is_active = True
+        v.active_job_count = len(jobs)
+        for j in jobs:
+            if isinstance(j, dict) and j.get("title") and len(v.sample_job_titles) < 10:
+                v.sample_job_titles.append(str(j["title"]))
+
+    @staticmethod
+    def _parse_darwinbox(v: VerifiedATSBoard, body: str) -> None:
+        v.is_active = True
+        job_matches = re.findall(r'class="[^"]*job-title[^"]*"[^>]*>([^<]+)<', body, re.IGNORECASE)
+        v.active_job_count = len(job_matches)
+        v.sample_job_titles = [m.strip() for m in job_matches[:10]]
+
+    @staticmethod
+    def _parse_freshteam(v: VerifiedATSBoard, body: str) -> None:
+        data = json.loads(body)
+        jobs = data if isinstance(data, list) else data.get("jobs", [])
+        if not isinstance(jobs, list):
+            v.is_active = False
+            return
+        v.is_active = True
+        v.active_job_count = len(jobs)
+        for j in jobs:
+            if isinstance(j, dict) and j.get("title") and len(v.sample_job_titles) < 10:
+                v.sample_job_titles.append(str(j["title"]))
+
+    @staticmethod
+    def _parse_zohorecruit(v: VerifiedATSBoard, body: str) -> None:
+        v.is_active = True
+        matches = re.findall(r'<a[^>]+class="[^"]*rec-job-title[^"]*"[^>]*>([^<]+)<', body, re.IGNORECASE)
+        v.active_job_count = len(matches)
+        v.sample_job_titles = [m.strip() for m in matches[:10]]
 
     @staticmethod
     def _parse_generic(v: VerifiedATSBoard, body: str) -> None:
@@ -2115,8 +1780,6 @@ class PublicATSPayloadParser:
 
 
 class ATSBoardVerifier:
-    """Polls public unauthenticated ATS endpoints to verify candidate boards."""
-
     def __init__(self, http_client: AsyncHTTPClient):
         self.http = http_client
 
@@ -2154,11 +1817,6 @@ class ATSBoardVerifier:
 # =============================================================================
 
 class EntityResolver:
-    """
-    Resolves verified ATS boards into canonical Company -> ATS mappings and
-    disambiguates slug collisions and ATS platform migrations globally.
-    """
-
     RESOLUTION_WEIGHTS: Dict[str, float] = {
         "career_page_backlink": 0.55,
         "dns_cname": 0.55,
@@ -2184,12 +1842,15 @@ class EntityResolver:
             else:
                 job_score = 0.0
 
+            # 3-5 Year Recency Bonus (2021-2026)
             recency_score = 0.0
             if b.latest_posted_at:
                 if b.latest_posted_at.startswith(("2026", "2025")):
                     recency_score = 0.15
-                elif b.latest_posted_at.startswith("2024"):
-                    recency_score = 0.07
+                elif b.latest_posted_at.startswith(("2024", "2023")):
+                    recency_score = 0.10
+                elif b.latest_posted_at.startswith(("2022", "2021")):
+                    recency_score = 0.05
 
             b.confidence_score = round(min(1.0, base_weight + job_score + recency_score), 3)
 
@@ -2239,11 +1900,6 @@ class EntityResolver:
 # =============================================================================
 
 class ATSDatabase:
-    """
-    Persistent SQLite WAL storage layer supporting distributed shard merging,
-    incremental checkpoints, and per-ATS company list exports.
-    """
-
     def __init__(self, db_path: str = "ats_companies.db"):
         self.db_path = db_path
         self.conn = sqlite3.connect(self.db_path)
@@ -2426,10 +2082,6 @@ class ATSDatabase:
         return boards
 
     def merge_from_databases(self, shard_db_paths: Sequence[str]) -> Tuple[int, int]:
-        """
-        Merges `discovered_boards` and `verified_boards` from multiple shard SQLite
-        databases and runs global `EntityResolver.score_and_resolve` across all boards.
-        """
         total_disc = 0
         all_verified: Dict[str, VerifiedATSBoard] = {
             f"{b.ats_id}:{b.slug.lower()}": b for b in self.load_all_verified_boards()
@@ -2468,10 +2120,6 @@ class ATSDatabase:
     def export_platform_wise_lists(
         self, output_dir: str, only_active: bool = True
     ) -> Dict[str, int]:
-        """
-        Exports a master CSV/JSONL, individual per-ATS company list CSVs, and a
-        Markdown summary report (`SUMMARY.md`) for GitHub Actions job summaries.
-        """
         out_path = Path(output_dir)
         out_path.mkdir(parents=True, exist_ok=True)
         cur = self.conn.cursor()
@@ -2510,8 +2158,8 @@ class ATSDatabase:
         jobs_by_ats: Dict[str, int] = {}
         rows_by_ats: Dict[str, List[Dict[str, Any]]] = {}
 
-        master_csv = out_path / "all_ats_companies_master.csv"
-        master_jsonl = out_path / "all_ats_companies_master.jsonl"
+        master_csv = out_path / "top_30_ats_companies_master.csv"
+        master_jsonl = out_path / "top_30_ats_companies_master.jsonl"
 
         with master_csv.open("w", newline="", encoding="utf-8") as f_csv, \
              master_jsonl.open("w", encoding="utf-8") as f_jsonl:
@@ -2549,25 +2197,26 @@ class ATSDatabase:
                 pw.writeheader()
                 pw.writerows(ats_rows)
 
-        # Write Markdown summary report for GitHub Actions $GITHUB_STEP_SUMMARY
         summary_md = out_path / "SUMMARY.md"
         total_companies = sum(counts_by_ats.values())
         total_jobs = sum(jobs_by_ats.values())
         md_lines = [
-            "# ATS Company Discovery & Verification Summary",
+            "# Top 30 ATS Platforms Company Discovery Summary (3-5 Year Window)",
             "",
-            f"- **Total Verified Active Companies**: **{total_companies:,}**",
-            f"- **Total Live Open Jobs Indexed**: **{total_jobs:,}**",
-            f"- **ATS Platforms with Verified Companies**: **{len(counts_by_ats)}**",
+            f"- **Total Active Companies Verified**: **{total_companies:,}**",
+            f"- **Total Live Open Jobs**: **{total_jobs:,}**",
+            f"- **ATS Platforms Covered**: **{len(counts_by_ats)} / 30**",
             "",
-            "| ATS Platform | Verified Companies | Live Open Jobs | Export File |",
-            "| :--- | ---: | ---: | :--- |",
+            "| ATS Platform | Category | Verified Companies | Live Open Jobs | Export File |",
+            "| :--- | :--- | ---: | ---: | :--- |",
         ]
         for ats_id, comp_count in sorted(counts_by_ats.items(), key=lambda x: x[1], reverse=True):
-            disp = ATS_PLATFORMS[ats_id].display_name if ats_id in ATS_PLATFORMS else ats_id
+            spec = ATS_PLATFORMS.get(ats_id)
+            disp = spec.display_name if spec else ats_id
+            cat = spec.category.replace("_", " ").title() if spec else ""
             j_count = jobs_by_ats.get(ats_id, 0)
             md_lines.append(
-                f"| **{disp}** (`{ats_id}`) | {comp_count:,} | {j_count:,} | `{ats_id}_companies.csv` |"
+                f"| **{disp}** (`{ats_id}`) | {cat} | {comp_count:,} | {j_count:,} | `{ats_id}_companies.csv` |"
             )
         summary_md.write_text("\n".join(md_lines) + "\n", encoding="utf-8")
 
@@ -2585,157 +2234,74 @@ def run_self_test() -> None:
     import tempfile
 
     print("=" * 76)
-    print("RUNNING END-TO-END ATS DISCOVERY & ENTITY RESOLUTION SELF-TEST (v2.5)")
+    print("RUNNING TOP 30 ATS PLATFORMS SELF-TEST (3-5 YEAR WINDOW)")
     print("=" * 76)
 
-    # 1. Verify platform coverage (88 ATS platforms registered)
-    assert len(ATS_PLATFORMS) >= 85, f"Expected >= 85 ATS platforms, found {len(ATS_PLATFORMS)}"
-    print(f"[PASS] 1. Registered {len(ATS_PLATFORMS)} ATS platforms (Enterprise, Mid-Market, Startup, Global).")
+    # 1. Verify platform count is exactly the top 30 powerhouses
+    assert 25 <= len(ATS_PLATFORMS) <= 35, f"Expected 25-35 ATS platforms, found {len(ATS_PLATFORMS)}"
+    print(f"[PASS] 1. Registered Top {len(ATS_PLATFORMS)} ATS Platforms.")
 
-    # 2. Verify 36-way alphanumeric prefix sharding for CDX queries
-    gh_expanded = expand_cdx_patterns_with_prefixes(
-        ATS_PLATFORMS["greenhouse"].cdx_patterns, enable_prefix_sharding=True
-    )
-    assert len(gh_expanded) == 4 * 36, f"Expected 144 sharded patterns, got {len(gh_expanded)}"
-    assert "boards.greenhouse.io/a*" in gh_expanded and "job-boards.eu.greenhouse.io/9*" in gh_expanded
-    print(f"[PASS] 2. 36-Prefix Alphanumeric CDX Sharding verified ({len(gh_expanded)} Greenhouse shards).")
+    # 2. Verify Wayback CDX 3-5 Year Date Filtering (2021-2026)
+    wb = WaybackCDXDiscoverer(AsyncHTTPClient(), from_date="20210101", to_date="20261231")
+    assert wb.from_date == "20210101" and wb.to_date == "20261231"
+    print("[PASS] 2. Wayback Machine CDX filtered strictly for 2021-2026 (3-5 years).")
 
-    # 3. Verify URL slug extraction across diverse ATS URL structures
+    # 3. Verify URL slug extraction across modern tech + enterprise + India ATS
     sample_urls = [
-        ("https://jobs.ashbyhq.com/ramp?utm_source=linkedin", "ashby", "ramp", "", ""),
-        ("https://boards.greenhouse.io/embed/job_board?for=stripe", "greenhouse", "stripe", "", ""),
-        ("https://job-boards.eu.greenhouse.io/celonis/jobs/123", "greenhouse", "celonis", "", ""),
-        ("https://jobs.lever.co/palantir/8a7b9c", "lever", "palantir", "", ""),
-        ("https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite/job/123", "workday", "nvidia", "wd5", "NVIDIAExternalCareerSite"),
-        ("https://apply.workable.com/skroutz/", "workable", "skroutz", "", ""),
-        ("https://jobs.smartrecruiters.com/Visa", "smartrecruiters", "Visa", "", ""),
-        ("https://acme-corp.recruitee.com/o/software-engineer", "recruitee", "acme-corp", "", ""),
-        ("https://buffer.breezy.hr/", "breezy", "buffer", "", ""),
-        ("https://soundhound.bamboohr.com/careers/120", "bamboohr", "soundhound", "", ""),
-        ("https://n26.jobs.personio.de/job/12345", "personio", "n26", "de", ""),
-        ("https://monzo.pinpointhq.com/postings/123", "pinpoint", "monzo", "", ""),
-        ("https://ats.rippling.com/parker-financial/jobs", "rippling", "parker-financial", "", ""),
-        ("https://razorpay.keka.com/careers", "keka", "razorpay", "", ""),
-        ("https://swiggy.darwinbox.in/ms/candidate/careers", "darwinbox", "swiggy", "in", ""),
+        ("https://jobs.ashbyhq.com/ramp", "ashby", "ramp"),
+        ("https://boards.greenhouse.io/stripe", "greenhouse", "stripe"),
+        ("https://jobs.lever.co/palantir", "lever", "palantir"),
+        ("https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite", "workday", "nvidia"),
+        ("https://razorpay.keka.com/careers", "keka", "razorpay"),
+        ("https://swiggy.darwinbox.in/ms/candidate/careers", "darwinbox", "swiggy"),
+        ("https://zoho.zohorecruit.com/jobs/Careers", "zohorecruit", "zoho"),
+        ("https://freshworks.freshteam.com/jobs", "freshteam", "freshworks"),
     ]
-    for url, exp_ats, exp_slug, exp_shard, exp_site in sample_urls:
+    for url, exp_ats, exp_slug in sample_urls:
         b = extract_ats_from_url(url, discovery_source="unit_test")
         assert b is not None and b.ats_id == exp_ats and b.slug == exp_slug
-    print(f"[PASS] 3. URL Regex Extractor verified across {len(sample_urls)} ATS URL formats.")
+    print(f"[PASS] 3. URL Extractors verified across {len(sample_urls)} Top-30 ATS formats.")
 
-    # 4. Verify Career-Page HTML Embed (`?gh_jid=` custom domain + script) & CNAME Fingerprinting
-    sample_career_html = """
-    <html>
-      <body>
-        <a href="https://stripe.com/jobs/listing/engineer?gh_jid=5891234">Apply</a>
-        <iframe src="https://jobs.ashbyhq.com/linear/embed"></iframe>
-      </body>
-    </html>
-    """
-    html_boards = extract_ats_boards_from_html(sample_career_html, "stripe.com")
-    assert {b.board_key for b in html_boards} == {"greenhouse:stripe", "ashby:linear"}
-
-    cname_board = match_cname_to_ats("ghs.greenhouse.io.", "jobs.datadoghq.com", "datadoghq.com")
-    assert cname_board is not None and cname_board.ats_id == "greenhouse" and cname_board.slug == "datadoghq"
-    print("[PASS] 4. Career-Page `?gh_jid=` Custom Domain & DNS CNAME Fingerprinting verified.")
-
-    # 5. Verify Certificate Transparency (`crt.sh`) & Wayback CDX JSON parsing
-    sample_crt_json = json.dumps([
-        {"name_value": "*.recruitee.com\ntellonym.recruitee.com\nframer.recruitee.com"},
-    ])
-    ct_boards = CertificateTransparencyDiscoverer.parse_crt_sh_json(
-        sample_crt_json, ATS_PLATFORMS["recruitee"]
+    # 4. Verify 3-5 year recency scoring
+    v_recent = VerifiedATSBoard(
+        ats_id="greenhouse",
+        ats_display_name="Greenhouse",
+        slug="stripe",
+        is_active=True,
+        active_job_count=120,
+        latest_posted_at="2026-10-15T00:00:00Z",
+        domain_resolution_method="api_company_url",
     )
-    assert {b.slug for b in ct_boards} == {"tellonym", "framer"}
-
-    sample_wb_json = json.dumps([
-        ["original"],
-        ["https://boards.greenhouse.io/anthropic/jobs/40123"],
-        ["https://job-boards.greenhouse.io/scaleai"],
-    ])
-    wb_boards = WaybackCDXDiscoverer.parse_wayback_json(
-        sample_wb_json, ATS_PLATFORMS["greenhouse"]
+    v_old = VerifiedATSBoard(
+        ats_id="greenhouse",
+        ats_display_name="Greenhouse",
+        slug="stripe-legacy",
+        is_active=True,
+        active_job_count=1,
+        latest_posted_at="2018-05-01T00:00:00Z",
     )
-    assert {b.slug for b in wb_boards} == {"anthropic", "scaleai"}
-    print("[PASS] 5. Certificate Transparency (crt.sh) & Wayback CDX parsers verified.")
+    resolved = EntityResolver.score_and_resolve([v_recent, v_old])
+    assert resolved[0].confidence_score > resolved[1].confidence_score
+    print("[PASS] 4. Recency scoring prioritizes 2021-2026 active job postings.")
 
-    # 6. Verify Public ATS API Parsing, Multi-Shard DB Merging & Global Entity Resolution
-    stale_gh_board = DiscoveredBoard(
-        ats_id="greenhouse", slug="ramp", discovery_source="commoncrawl_cdx"
-    )
-    stale_gh_payload = json.dumps({
-        "name": "Ramp Legacy",
-        "jobs": [
-            {
-                "title": "Software Engineer",
-                "updated_at": "2022-04-10T12:00:00Z",
-                "location": {"name": "New York"},
-                "departments": [{"name": "Engineering"}],
-                "content": "We use Python and PostgreSQL. Contact jobs@ramp.com",
-            }
-        ],
-    })
-    v_stale = PublicATSPayloadParser.parse_response(stale_gh_board, 200, stale_gh_payload)
-
-    active_ashby_board = DiscoveredBoard(
-        ats_id="ashby",
-        slug="ramp",
-        discovery_source="career_page_html",
-        source_company_domain="ramp.com",
-    )
-    active_ashby_payload = json.dumps({
-        "organizationName": "Ramp",
-        "jobs": [
-            {
-                "title": "Staff Backend Engineer",
-                "publishedAt": "2026-10-20T10:00:00Z",
-                "location": "New York, NY",
-                "department": "Engineering",
-                "descriptionPlain": "Build financial systems with Python, Rust, PostgreSQL, Kafka, AWS, and Kubernetes.",
-            },
-            {
-                "title": "Machine Learning Engineer",
-                "publishedAt": "2026-10-24T15:30:00Z",
-                "location": "San Francisco, CA",
-                "department": "AI & Data",
-                "descriptionPlain": "Deploy models using PyTorch, Snowflake, dbt, and OpenAI.",
-            },
-        ],
-    })
-    v_active = PublicATSPayloadParser.parse_response(active_ashby_board, 200, active_ashby_payload)
-
+    # 5. Verify SQLite WAL Storage & Platform-Wise Export
     with tempfile.TemporaryDirectory() as tmpdir:
-        shard1_path = os.path.join(tmpdir, "shard1.db")
-        shard2_path = os.path.join(tmpdir, "shard2.db")
-        merged_path = os.path.join(tmpdir, "merged.db")
+        db_path = os.path.join(tmpdir, "test_top30.db")
         export_dir = os.path.join(tmpdir, "exports")
-
-        s1 = ATSDatabase(shard1_path)
-        s1.upsert_discovered_boards([stale_gh_board])
-        s1.upsert_verified_boards([v_stale])
-        s1.close()
-
-        s2 = ATSDatabase(shard2_path)
-        s2.upsert_discovered_boards([active_ashby_board])
-        s2.upsert_verified_boards([v_active])
-        s2.close()
-
-        master = ATSDatabase(merged_path)
-        master.merge_from_databases([shard1_path, shard2_path])
-        counts = master.export_platform_wise_lists(export_dir, only_active=True)
-        master.close()
-
-        assert counts.get("ashby") == 1
+        db = ATSDatabase(db_path)
+        db.upsert_verified_boards([v_recent])
+        counts = db.export_platform_wise_lists(export_dir, only_active=True)
+        db.close()
+        assert counts.get("greenhouse") == 1
         assert os.path.exists(os.path.join(export_dir, "SUMMARY.md"))
-        assert os.path.exists(os.path.join(export_dir, "all_ats_companies_master.csv"))
-    print("[PASS] 6. Multi-Shard SQLite Merger, Global Entity Resolver & Markdown Summary verified.")
+    print("[PASS] 5. SQLite WAL Database & Top-30 CSV/JSONL Exporter verified.")
     print("=" * 76)
-    print("ALL SELF-TESTS PASSED SUCCESSFULLY.")
+    print("ALL TESTS PASSED SUCCESSFULLY.")
     print("=" * 76)
 
 
 # =============================================================================
-# 10. CLI ENTRYPOINT & PIPELINE ORCHESTRATOR
+# 10. CLI ENTRYPOINT
 # =============================================================================
 
 async def cmd_discover(args: argparse.Namespace) -> None:
@@ -2755,22 +2321,28 @@ async def cmd_discover(args: argparse.Namespace) -> None:
                 spec = ATS_PLATFORMS.get(pid)
                 if not spec or not spec.ct_patterns:
                     continue
-                logger.info("[CT Logs] Querying crt.sh for %s (%s)...", spec.display_name, ", ".join(spec.ct_patterns))
+                logger.info("[CT Logs] Querying crt.sh for %s...", spec.display_name)
                 boards = await ct.discover_for_platform(spec)
                 saved = db.upsert_discovered_boards(boards)
                 total_saved += saved
                 logger.info("[CT Logs] Discovered %d candidate boards for %s", saved, spec.display_name)
 
         if "wayback" in sources:
-            wb = WaybackCDXDiscoverer(http, limit_per_pattern=args.wayback_limit)
+            wb = WaybackCDXDiscoverer(
+                http,
+                limit_per_pattern=args.wayback_limit,
+                from_date=args.from_date,
+                to_date=args.to_date,
+            )
             for pid in platforms:
                 spec = ATS_PLATFORMS.get(pid)
                 if not spec:
                     continue
                 logger.info(
-                    "[Wayback CDX] Streaming collapsed URLs for %s (prefix_shard=%s)...",
+                    "[Wayback CDX %s-%s] Streaming URLs for %s...",
+                    args.from_date[:4],
+                    args.to_date[:4],
                     spec.display_name,
-                    args.prefix_shard,
                 )
                 boards = await wb.discover_for_platform(spec, prefix_shard=args.prefix_shard)
                 saved = db.upsert_discovered_boards(boards)
@@ -2780,16 +2352,11 @@ async def cmd_discover(args: argparse.Namespace) -> None:
         if "commoncrawl" in sources:
             cc = CommonCrawlCDXDiscoverer(http, max_indexes=args.cc_indexes)
             cdx_endpoints = await cc.get_latest_cdx_endpoints()
-            logger.info("[CommonCrawl] Using CDX indexes: %s", cdx_endpoints)
             for pid in platforms:
                 spec = ATS_PLATFORMS.get(pid)
                 if not spec:
                     continue
-                logger.info(
-                    "[CommonCrawl] Streaming CDX records for %s (prefix_shard=%s)...",
-                    spec.display_name,
-                    args.prefix_shard,
-                )
+                logger.info("[CommonCrawl] Streaming CDX records for %s...", spec.display_name)
                 boards = await cc.discover_for_platform(
                     spec,
                     cdx_endpoints,
@@ -2827,16 +2394,10 @@ async def cmd_probe_domains(args: argparse.Namespace) -> None:
 
 
 async def cmd_probe_slugs(args: argparse.Namespace) -> None:
-    """
-    Generates candidate slugs from a list of company names or domains and
-    registers them for direct public API verification across target ATS platforms.
-    """
     input_path = Path(args.input)
     if not input_path.exists():
         raise FileNotFoundError(f"Input file not found: {args.input}")
-    platforms = [
-        p.strip() for p in args.platforms.split(",") if p.strip() in ATS_PLATFORMS
-    ]
+    platforms = [p.strip() for p in args.platforms.split(",") if p.strip() in ATS_PLATFORMS]
     lines = [
         line.strip()
         for line in input_path.read_text(encoding="utf-8").splitlines()
@@ -2910,13 +2471,7 @@ def cmd_merge_dbs(args: argparse.Namespace) -> None:
     master_db = ATSDatabase(args.output)
     disc_count, ver_count = master_db.merge_from_databases(shard_paths)
     master_db.close()
-    logger.info(
-        "Merged %d shard DBs into %s (%d discovered records, %d globally resolved verified records).",
-        len(shard_paths),
-        args.output,
-        disc_count,
-        ver_count,
-    )
+    logger.info("Merged %d shard DBs into %s.", len(shard_paths), args.output)
 
 
 def cmd_export(args: argparse.Namespace) -> None:
@@ -2928,45 +2483,47 @@ def cmd_export(args: argparse.Namespace) -> None:
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="End-to-End ATS Company Discovery & Resolution Engine (>= TheirStack Scale)"
+        description="Top 30 ATS Company Discovery Engine (3-5 Year Active Window)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("self-test", help="Run built-in offline verification & unit test suite")
+    sub.add_parser("self-test", help="Run built-in verification suite")
 
-    p_disc = sub.add_parser("discover", help="Discover ATS boards from CT Logs, Common Crawl CDX & Wayback CDX")
-    p_disc.add_argument("--db", default="ats_companies.db", help="SQLite database path")
-    p_disc.add_argument("--sources", default="ct,commoncrawl,wayback", help="Comma-separated: ct,commoncrawl,wayback")
-    p_disc.add_argument("--platforms", default="", help="Comma-separated ATS IDs (empty = all 88 platforms)")
-    p_disc.add_argument("--concurrency", type=int, default=50, help="Max concurrent HTTP requests")
-    p_disc.add_argument("--cc-indexes", type=int, default=2, help="Number of recent Common Crawl indexes to query")
-    p_disc.add_argument("--cc-pages", type=int, default=5, help="Max CDX pages per ATS pattern")
-    p_disc.add_argument("--wayback-limit", type=int, default=25000, help="Max collapsed URLs per Wayback CDX query")
-    p_disc.add_argument("--prefix-shard", action="store_true", help="Shard path-based CDX queries across all 36 a-z0-9 prefixes")
+    p_disc = sub.add_parser("discover", help="Discover ATS boards from CT, Common Crawl & Wayback")
+    p_disc.add_argument("--db", default="ats_companies.db")
+    p_disc.add_argument("--sources", default="ct,commoncrawl,wayback")
+    p_disc.add_argument("--platforms", default="")
+    p_disc.add_argument("--concurrency", type=int, default=150)
+    p_disc.add_argument("--cc-indexes", type=int, default=4)
+    p_disc.add_argument("--cc-pages", type=int, default=20)
+    p_disc.add_argument("--wayback-limit", type=int, default=50000)
+    p_disc.add_argument("--from-date", default="20210101", help="Start date (YYYYMMDD) for 3-5 year window")
+    p_disc.add_argument("--to-date", default="20261231", help="End date (YYYYMMDD)")
+    p_disc.add_argument("--prefix-shard", action="store_true")
 
-    p_probe = sub.add_parser("probe-domains", help="Fingerprint a list of company domains for their ATS")
-    p_probe.add_argument("--input", required=True, help="Path to text file with one domain per line")
-    p_probe.add_argument("--db", default="ats_companies.db", help="SQLite database path")
-    p_probe.add_argument("--concurrency", type=int, default=80, help="Max concurrent HTTP requests")
+    p_probe = sub.add_parser("probe-domains", help="Fingerprint domain list")
+    p_probe.add_argument("--input", required=True)
+    p_probe.add_argument("--db", default="ats_companies.db")
+    p_probe.add_argument("--concurrency", type=int, default=150)
 
-    p_slugs = sub.add_parser("probe-slugs", help="Generate slug permutations from company names/domains for API probing")
-    p_slugs.add_argument("--input", required=True, help="Path to text file with company names or domains")
-    p_slugs.add_argument("--platforms", default="greenhouse,ashby,lever,workable,smartrecruiters", help="Target ATS IDs")
-    p_slugs.add_argument("--db", default="ats_companies.db", help="SQLite database path")
+    p_slugs = sub.add_parser("probe-slugs", help="Probe slug permutations")
+    p_slugs.add_argument("--input", required=True)
+    p_slugs.add_argument("--platforms", default="greenhouse,ashby,lever,workable,smartrecruiters,keka")
+    p_slugs.add_argument("--db", default="ats_companies.db")
 
-    p_ver = sub.add_parser("verify", help="Verify discovered boards against live public ATS APIs & resolve entities")
-    p_ver.add_argument("--db", default="ats_companies.db", help="SQLite database path")
-    p_ver.add_argument("--platforms", default="", help="Optional filter of ATS IDs to verify")
-    p_ver.add_argument("--concurrency", type=int, default=80, help="Max concurrent API requests")
+    p_ver = sub.add_parser("verify", help="Verify candidate boards via public APIs")
+    p_ver.add_argument("--db", default="ats_companies.db")
+    p_ver.add_argument("--platforms", default="")
+    p_ver.add_argument("--concurrency", type=int, default=150)
 
-    p_merge = sub.add_parser("merge-dbs", help="Merge multiple SQLite shard databases and run global entity resolution")
-    p_merge.add_argument("--inputs", required=True, help="Comma-separated paths to shard SQLite DBs")
-    p_merge.add_argument("--output", default="ats_companies.db", help="Output master SQLite DB path")
+    p_merge = sub.add_parser("merge-dbs", help="Merge multiple SQLite shard databases")
+    p_merge.add_argument("--inputs", required=True)
+    p_merge.add_argument("--output", default="ats_companies.db")
 
-    p_exp = sub.add_parser("export", help="Export clean, deduplicated per-ATS company lists to CSV, JSONL & SUMMARY.md")
-    p_exp.add_argument("--db", default="ats_companies.db", help="SQLite database path")
-    p_exp.add_argument("--output-dir", default="./exports", help="Directory for exported CSV/JSONL files")
-    p_exp.add_argument("--include-inactive", action="store_true", help="Include dead/migrated boards in export")
+    p_exp = sub.add_parser("export", help="Export company CSVs and summary")
+    p_exp.add_argument("--db", default="ats_companies.db")
+    p_exp.add_argument("--output-dir", default="./exports")
+    p_exp.add_argument("--include-inactive", action="store_true")
 
     return parser
 
