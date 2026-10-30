@@ -105,6 +105,10 @@ def setup_duckdb_connection(temp_dir: str = "/tmp/duckdb_ext") -> duckdb.DuckDBP
     os.makedirs(temp_dir, exist_ok=True)
     con = duckdb.connect()
     con.execute(f"SET extension_directory = '{temp_dir}'")
+    try:
+        con.execute("INSTALL httpfs;")
+    except Exception:
+        pass
     con.execute("LOAD httpfs")
     con.execute("SET threads = 2;")  # Conservative thread limit to prevent CloudFront 503 SlowDown
     con.execute("SET http_retries = 30;")
@@ -113,15 +117,37 @@ def setup_duckdb_connection(temp_dir: str = "/tmp/duckdb_ext") -> duckdb.DuckDBP
 
 
 def load_file_list(crawl: str, paths_file: Optional[str] = None) -> List[str]:
-    external_prefix = f"https://data.commoncrawl.org/cc-index/table/cc-main/warc/crawl={crawl}/subset=warc/"
-    if not paths_file:
-        paths_file = f"whirlwind-python/{crawl}.warc.paths.gz"
-    if not os.path.exists(paths_file):
-        raise FileNotFoundError(f"Could not find path index: {paths_file}")
+    import urllib.request
+    if paths_file and os.path.exists(paths_file):
+        with gzip.open(paths_file, mode="rt", encoding="utf8") as fd:
+            lines = [line.strip() for line in fd if line.strip()]
+        if lines and lines[0].startswith("http"):
+            return lines
+        elif lines and lines[0].startswith("cc-index/"):
+            return [f"https://data.commoncrawl.org/{l}" for l in lines]
+        external_prefix = f"https://data.commoncrawl.org/cc-index/table/cc-main/warc/crawl={crawl}/subset=warc/"
+        return [external_prefix + line for line in lines]
         
-    with gzip.open(paths_file, mode="rt", encoding="utf8") as fd:
-        files = [external_prefix + line.strip() for line in fd if line.strip()]
-    return files
+    # Dynamically fetch from Common Crawl official table manifest
+    manifest_url = f"https://data.commoncrawl.org/crawl-data/{crawl}/cc-index-table.paths.gz"
+    print(f"Fetching remote shard manifest from: {manifest_url}...")
+    req = urllib.request.Request(
+        manifest_url,
+        headers={"User-Agent": "Mozilla/5.0 (compatible; ATSDiscoveryBot/1.0)"}
+    )
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        decompressed = gzip.decompress(resp.read()).decode("utf-8")
+
+    shard_urls = [
+        f"https://data.commoncrawl.org/{line.strip()}"
+        for line in decompressed.splitlines()
+        if "subset=warc" in line and line.strip().endswith(".parquet")
+    ]
+    if not shard_urls:
+        raise ValueError(f"No WARC parquet shards found in manifest for crawl '{crawl}'")
+
+    print(f"Discovered {len(shard_urls)} Parquet shards for {crawl}")
+    return shard_urls
 
 
 def run_ats_extraction(

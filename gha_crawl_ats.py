@@ -14,8 +14,9 @@ import sys
 import time
 import gzip
 import argparse
+import urllib.request
 from pathlib import Path
-from typing import List, Set, Dict
+from typing import List, Set, Dict, Optional
 
 import duckdb
 from ats_definitions import ATS_REGISTRY
@@ -25,19 +26,56 @@ def setup_duckdb(ext_dir: str = "/tmp/duckdb_ext") -> duckdb.DuckDBPyConnection:
     os.makedirs(ext_dir, exist_ok=True)
     con = duckdb.connect()
     con.execute(f"SET extension_directory = '{ext_dir}'")
-    con.execute("LOAD httpfs")
+    try:
+        con.execute("INSTALL httpfs;")
+    except Exception:
+        pass
+    con.execute("LOAD httpfs;")
     con.execute("SET threads = 2;")
     con.execute("SET http_retries = 20;")
     con.execute("SET http_keep_alive = true;")
     return con
 
 
-def get_crawl_shards(crawl: str, paths_file: str) -> List[str]:
-    prefix = f"https://data.commoncrawl.org/cc-index/table/cc-main/warc/crawl={crawl}/subset=warc/"
-    if not os.path.exists(paths_file):
-        raise FileNotFoundError(f"Missing paths file: {paths_file}")
-    with gzip.open(paths_file, "rt", encoding="utf-8") as f:
-        return [prefix + line.strip() for line in f if line.strip()]
+def get_crawl_shards(crawl: str, paths_file: Optional[str] = None) -> List[str]:
+    """
+    Retrieves the list of Parquet shard URLs for a Common Crawl index.
+    If a local paths_file exists on disk, reads it.
+    Otherwise, automatically downloads and parses `cc-index-table.paths.gz`
+    directly from Common Crawl over HTTPS without requiring any local files.
+    """
+    if paths_file and os.path.exists(paths_file):
+        print(f"Reading shard paths from local file: {paths_file}")
+        with gzip.open(paths_file, "rt", encoding="utf-8") as f:
+            lines = [line.strip() for line in f if line.strip()]
+        if lines and lines[0].startswith("http"):
+            return lines
+        elif lines and lines[0].startswith("cc-index/"):
+            return [f"https://data.commoncrawl.org/{l}" for l in lines]
+        else:
+            prefix = f"https://data.commoncrawl.org/cc-index/table/cc-main/warc/crawl={crawl}/subset=warc/"
+            return [prefix + l for l in lines]
+
+    # Dynamically fetch from Common Crawl official table manifest
+    manifest_url = f"https://data.commoncrawl.org/crawl-data/{crawl}/cc-index-table.paths.gz"
+    print(f"Fetching remote shard manifest from: {manifest_url}...")
+    req = urllib.request.Request(
+        manifest_url,
+        headers={"User-Agent": "Mozilla/5.0 (compatible; ATSDiscoveryBot/1.0)"}
+    )
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        decompressed = gzip.decompress(resp.read()).decode("utf-8")
+
+    shard_urls = [
+        f"https://data.commoncrawl.org/{line.strip()}"
+        for line in decompressed.splitlines()
+        if "subset=warc" in line and line.strip().endswith(".parquet")
+    ]
+    if not shard_urls:
+        raise ValueError(f"No WARC parquet shards found in manifest for crawl '{crawl}'. Check crawl ID.")
+
+    print(f"Discovered {len(shard_urls)} Parquet shards for {crawl}")
+    return shard_urls
 
 
 def query_shard_for_ats(con: duckdb.DuckDBPyConnection, parquet_url: str) -> List[tuple]:
@@ -106,8 +144,8 @@ def query_shard_for_ats(con: duckdb.DuckDBPyConnection, parquet_url: str) -> Lis
 
 
 def run_gha_crawler(
-    crawl: str = "CC-MAIN-2024-22",
-    paths_file: str = "whirlwind-python/CC-MAIN-2024-22.warc.paths.gz",
+    crawl: str = "CC-MAIN-2026-43",
+    paths_file: Optional[str] = None,
     start_shard: int = 0,
     max_shards: int = 5,
     greenhouse_file: str = "greenhouse_companies.txt"
@@ -182,8 +220,8 @@ def run_gha_crawler(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="GitHub Actions Common Crawl ATS Runner")
-    parser.add_argument("--crawl", default="CC-MAIN-2024-22", help="Crawl ID")
-    parser.add_argument("--paths-file", default="whirlwind-python/CC-MAIN-2024-22.warc.paths.gz")
+    parser.add_argument("--crawl", default="CC-MAIN-2026-43", help="Crawl ID (e.g. CC-MAIN-2026-43)")
+    parser.add_argument("--paths-file", default=None, help="Optional local paths.gz file")
     parser.add_argument("--start", type=int, default=0, help="Start shard index")
     parser.add_argument("--shards", type=int, default=5, help="Number of shards to process")
     parser.add_argument("--greenhouse-file", default="greenhouse_companies.txt")

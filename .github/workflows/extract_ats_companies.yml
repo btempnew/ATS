@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       crawl:
-        description: 'Common Crawl ID (e.g. CC-MAIN-2024-22 or CC-MAIN-2026-43)'
+        description: 'Common Crawl ID (e.g. CC-MAIN-2026-43 or CC-MAIN-2024-22)'
         required: true
-        default: 'CC-MAIN-2024-22'
+        default: 'CC-MAIN-2026-43'
       start_shard:
         description: 'Starting shard index (0 to 299)'
         required: true
@@ -46,7 +46,7 @@ jobs:
         run: |
           START=${{ github.event.inputs.start_shard || '0' }}
           SHARDS=${{ github.event.inputs.num_shards || '10' }}
-          CRAWL=${{ github.event.inputs.crawl || 'CC-MAIN-2024-22' }}
+          CRAWL=${{ github.event.inputs.crawl || 'CC-MAIN-2026-43' }}
 
           echo "Running crawl $CRAWL from shard $START ($SHARDS shards)..."
           python gha_crawl_ats.py \
