@@ -1,0 +1,165 @@
+name: Harvest Live ATS Jobs
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'ATS Platform to harvest (or "all" for multi-ATS routing)'
+        required: true
+        default: 'greenhouse'
+        type: choice
+        options:
+          - greenhouse
+          - lever
+          - ashby
+          - smartrecruiters
+          - workable
+          - recruitee
+          - breezy
+          - rippling
+          - bamboohr
+          - pinpoint
+          - all
+      input_file:
+        description: 'Input companies file (CSV or TXT)'
+        required: true
+        default: 'exports/us_companies_by_ats_master.csv'
+      limit:
+        description: 'Max companies to scan (0 for all in file)'
+        required: true
+        default: '500'
+      offset:
+        description: 'Starting offset in companies list'
+        required: true
+        default: '0'
+      concurrency:
+        description: 'Async concurrency limit (max 50 recommended)'
+        required: true
+        default: '40'
+      only_us:
+        description: 'Only capture US and US-Remote jobs'
+        required: true
+        type: boolean
+        default: true
+      full_content:
+        description: 'Pull full HTML job descriptions'
+        required: true
+        type: boolean
+        default: false
+
+  # Optional automated daily job refresh at 06:00 UTC
+  schedule:
+    - cron: '0 6 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  harvest-jobs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install aiohttp requests
+
+      - name: Run Universal ATS Job Extractor
+        run: |
+          PLATFORM="${{ github.event.inputs.platform || 'greenhouse' }}"
+          INPUT_FILE="${{ github.event.inputs.input_file || 'exports/us_companies_by_ats_master.csv' }}"
+          LIMIT="${{ github.event.inputs.limit || '500' }}"
+          OFFSET="${{ github.event.inputs.offset || '0' }}"
+          CONCURRENCY="${{ github.event.inputs.concurrency || '40' }}"
+          ONLY_US="${{ github.event.inputs.only_us }}"
+          FULL_CONTENT="${{ github.event.inputs.full_content }}"
+
+          FLAGS="--platform $PLATFORM --input $INPUT_FILE --output-db live_jobs.db --export-csv live_jobs.csv --limit $LIMIT --offset $OFFSET --concurrency $CONCURRENCY"
+
+          if [ "$ONLY_US" = "true" ] || [ -z "$ONLY_US" ]; then
+            FLAGS="$FLAGS --only-us"
+          fi
+
+          if [ "$FULL_CONTENT" = "true" ]; then
+            FLAGS="$FLAGS --full-content"
+          fi
+
+          echo "Executing: python extract_live_jobs.py $FLAGS"
+          python extract_live_jobs.py $FLAGS
+
+      - name: Generate Extraction Summary
+        if: always()
+        run: |
+          python -c '
+          import os, sqlite3
+
+          db_file = "live_jobs.db"
+          if not os.path.exists(db_file):
+              print("No database generated.")
+              exit(0)
+
+          conn = sqlite3.connect(db_file)
+          cur = conn.cursor()
+
+          cur.execute("SELECT COUNT(*) FROM live_jobs;")
+          total_jobs = cur.fetchone()[0]
+
+          cur.execute("SELECT COUNT(posted_at) FROM live_jobs WHERE posted_at != \"\";")
+          with_ts = cur.fetchone()[0]
+
+          ts_rate = ((with_ts / total_jobs) * 100) if total_jobs > 0 else 0
+
+          cur.execute("""
+              SELECT platform, COUNT(*), COUNT(CASE WHEN is_us = 1 THEN 1 END), COUNT(CASE WHEN posted_at != \"\" THEN 1 END)
+              FROM live_jobs
+              GROUP BY platform
+              ORDER BY COUNT(*) DESC;
+          """)
+          rows = cur.fetchall()
+
+          cur.execute("SELECT title, company_name, location, posted_at, apply_url FROM live_jobs WHERE posted_at != \"\" ORDER BY posted_at DESC LIMIT 5;")
+          recent = cur.fetchall()
+          conn.close()
+
+          summary = []
+          summary.append("## 🚀 Live ATS Job Extraction Summary\n")
+          summary.append(f"- **Total Live Jobs Harvested:** `{total_jobs:,}`")
+          summary.append(f"- **Timestamp Capture Rate:** `{with_ts:,}` / `{total_jobs:,}` (**{ts_rate:.1f}%**)\n")
+          summary.append("### Breakdown by Platform\n")
+          summary.append("| Platform | Total Jobs | US Jobs | With Post Timestamp |")
+          summary.append("|---|---|---|---|")
+          for p, tot, us, ts in rows:
+              summary.append(f"| **{p.title()}** | `{tot:,}` | `{us:,}` | `{ts:,}` |")
+
+          if recent:
+              summary.append("\n### 🕒 Most Recently Posted Live Jobs\n")
+              summary.append("| Title | Company | Location | Posted At (UTC) |")
+              summary.append("|---|---|---|---|")
+              for t, c, l, p, u in recent:
+                  summary.append(f"| [{t}]({u}) | {c} | {l} | `{p}` |")
+
+          summary_text = "\n".join(summary)
+          print(summary_text)
+
+          step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if step_summary:
+              with open(step_summary, "a", encoding="utf-8") as f:
+                  f.write(summary_text + "\n")
+          '
+
+      - name: Upload Harvested Datasets as Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-ats-jobs-dataset
+          path: |
+            live_jobs.db
+            live_jobs.csv
+          retention-days: 90

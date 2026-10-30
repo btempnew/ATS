@@ -1,0 +1,3 @@
+company_name,resolved_domain,ats_id,ats_display_name,slug,board_url,us_job_count,active_job_count,latest_posted_at,confidence_score,us_locations,detected_tech_stack,sample_job_titles
+Liveops,,fountain,Fountain,liveops,https://apply.fountain.com/liveops,0,0,,0.55,,,
+External,,fountain,Fountain,external,https://apply.fountain.com/External,0,0,,0.55,,,

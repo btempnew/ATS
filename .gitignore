@@ -5,6 +5,12 @@ __pycache__/
 *$py.class
 *.parquet
 
+# Databases & Large Blobs
+*.db
+*.sqlite
+*.sqlite3
+*.jsonl
+
 # macOS
 .DS_Store
 

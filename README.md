@@ -94,3 +94,55 @@ If you want to extract **all** companies across all ATS platforms for an entire 
 2. Run the SQL script in `athena_queries.sql`.
 3. Export the resulting table to CSV or S3.
 
+---
+
+## 5. Live Job Harvesting & Post Time Extraction
+
+### Universal Multi-Platform Live Job Extractor (`extract_live_jobs.py`)
+
+Extracts live job openings with exact publication timestamps (`posted_at` in ISO 8601 UTC) across all major ATS platforms:
+- **Greenhouse** (`first_published`, `updated_at`)
+- **Lever** (`createdAt` epoch ms converted to UTC ISO 8601)
+- **Ashby** (`publishedAt` ISO 8601 UTC)
+- **SmartRecruiters** (`releasedDate` ISO 8601 UTC)
+- **Workable** (`published_on`, `created_at` ISO 8601)
+- **Recruitee** (`published_at`, `created_at`, `updated_at`)
+- **Breezy HR** (`published_date` ISO 8601 UTC)
+- **Rippling**, **BambooHR**, **Pinpoint**
+
+#### Command-Line Usage:
+```bash
+# 1. Test single company immediately:
+python extract_live_jobs.py --platform greenhouse --slug speechify
+python extract_live_jobs.py --platform lever --slug bloomwellcare
+python extract_live_jobs.py --platform ashby --slug anyone-ai
+python extract_live_jobs.py --platform workable --slug capgemini-insurance
+
+# 2. Extract US jobs across all companies from master CSV:
+python extract_live_jobs.py \
+  --platform all \
+  --input exports/us_companies_by_ats_master.csv \
+  --output-db live_jobs.db \
+  --export-csv live_jobs.csv \
+  --limit 500 \
+  --only-us
+
+# 3. Pull full HTML descriptions for Greenhouse:
+python extract_live_jobs.py \
+  --platform greenhouse \
+  --input greenhouse_companies_us_active.txt \
+  --full-content \
+  --output-db greenhouse_jobs.db
+```
+
+### GitHub Actions Automated Workflows
+
+1. **`Extract ATS Companies (Common Crawl)`** (`.github/workflows/extract_ats_companies.yml`):
+   - Fast DuckDB Parquet scanning directly over Common Crawl S3/CloudFront.
+   - Automatically populates company lists across 13 ATS platforms.
+2. **`Harvest Live ATS Jobs`** (`.github/workflows/harvest_live_jobs.yml`):
+   - Runs automated high-concurrency job harvesting on GitHub Actions runners.
+   - Captures exact publication times (`posted_at`) and generates detailed markdown summary tables in `$GITHUB_STEP_SUMMARY`.
+   - Automatically publishes downloadable SQLite (`live_jobs.db`) and CSV (`live_jobs.csv`) workflow artifacts with 90-day retention.
+
+
