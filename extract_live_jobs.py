@@ -31,7 +31,7 @@ import argparse
 import sqlite3
 import html
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
 from typing import List, Dict, Any, Optional, Tuple
 
@@ -772,6 +772,8 @@ async def run_extractor(
     concurrency: int = 50,
     full_content: bool = False,
     only_us: bool = False,
+    days: int = 0,
+    keyword: Optional[str] = None,
     batch_size: int = 150,
 ):
     init_db(output_db)
@@ -779,11 +781,22 @@ async def run_extractor(
     total_jobs_saved = 0
     jobs_with_post_time = 0
 
+    cutoff_dt = None
+    if days > 0:
+        cutoff_dt = datetime.now(timezone.utc) - timedelta(days=days)
+
+    kw_clean = keyword.lower().strip() if keyword else ""
+
     print(f"Starting job extraction across {total_companies:,} companies...")
-    print(f"  • Concurrency: {concurrency} (Rate-limited $\\le 10$ req/host)")
+    print(f"  • Concurrency: {concurrency} (Rate-limited <= 10 req/host)")
     print(f"  • Database: {output_db}")
     print(f"  • Full Content (HTML): {full_content}")
-    print(f"  • Only US Filter: {only_us}\n")
+    print(f"  • Only US Filter: {only_us}")
+    if days > 0:
+        print(f"  • Recency Filter: Last {days} days (>= {cutoff_dt.isoformat()})")
+    if kw_clean:
+        print(f"  • Keyword Filter: '{kw_clean}'")
+    print()
 
     async with AsyncHTTPClient(concurrency=concurrency, per_host_concurrency=10) as http:
         for idx in range(0, total_companies, batch_size):
@@ -804,6 +817,22 @@ async def run_extractor(
                     for j in res:
                         if only_us and not j["is_us"]:
                             continue
+
+                        # Check recency filter
+                        if cutoff_dt and j.get("posted_at"):
+                            try:
+                                j_dt = datetime.fromisoformat(j["posted_at"].replace("Z", "+00:00"))
+                                if j_dt < cutoff_dt:
+                                    continue
+                            except Exception:
+                                pass
+
+                        # Check keyword filter
+                        if kw_clean:
+                            search_corpus = f"{j.get('title', '')} {j.get('department', '')} {j.get('location', '')}".lower()
+                            if kw_clean not in search_corpus:
+                                continue
+
                         batch_jobs.append(j)
                         if j["posted_at"]:
                             jobs_with_post_time += 1
@@ -814,7 +843,7 @@ async def run_extractor(
 
             progress = min(idx + batch_size, total_companies)
             pct = (progress / total_companies) * 100
-            print(f"[{progress:,}/{total_companies:,} ({pct:.1f}%)] Scanned | Live Jobs Saved: {total_jobs_saved:,} | Timestamp Capture Rate: {jobs_with_post_time}/{total_jobs_saved if total_jobs_saved else 1} ({((jobs_with_post_time / max(1, total_jobs_saved)) * 100):.1f}%)")
+            print(f"[{progress:,}/{total_companies:,} ({pct:.1f}%)] Scanned | Live Jobs Saved: {total_jobs_saved:,} | Timestamp Capture Rate: {jobs_with_post_time}/{max(1, total_jobs_saved)} ({((jobs_with_post_time / max(1, total_jobs_saved)) * 100):.1f}%)")
 
     print(f"\nExtraction completed successfully!")
     print(f"Total live jobs in '{output_db}': {total_jobs_saved:,}")
@@ -835,6 +864,8 @@ def main():
     parser.add_argument("--concurrency", type=int, default=40, help="Max async requests concurrency")
     parser.add_argument("--full-content", action="store_true", help="Download complete job descriptions")
     parser.add_argument("--only-us", action="store_true", help="Only save US / US-Remote jobs")
+    parser.add_argument("--days", type=int, default=0, help="Filter jobs posted within last N days (0 = all time)")
+    parser.add_argument("--keyword", type=str, default="", help="Filter job title/department/location by keyword")
 
     args = parser.parse_args()
 
@@ -849,14 +880,38 @@ def main():
         async def run_single():
             async with AsyncHTTPClient(concurrency=10) as http:
                 jobs = await handler(http, args.slug, args.full_content)
-                print(f"\nExtracted {len(jobs)} live jobs for {platform.upper()}:{args.slug}")
-                for j in jobs[:10]:
+                filtered = []
+                cutoff_dt = datetime.now(timezone.utc) - timedelta(days=args.days) if args.days > 0 else None
+                kw = args.keyword.lower().strip()
+
+                for j in jobs:
+                    if args.only_us and not j["is_us"]:
+                        continue
+                    if cutoff_dt and j.get("posted_at"):
+                        try:
+                            j_dt = datetime.fromisoformat(j["posted_at"].replace("Z", "+00:00"))
+                            if j_dt < cutoff_dt:
+                                continue
+                        except Exception:
+                            pass
+                    if kw:
+                        sc = f"{j.get('title', '')} {j.get('department', '')} {j.get('location', '')}".lower()
+                        if kw not in sc:
+                            continue
+                    filtered.append(j)
+
+                print(f"\nExtracted {len(filtered)} matching live jobs for {platform.upper()}:{args.slug}")
+                for j in filtered[:10]:
                     print(f"  • {j['title']} | Loc: {j['location']} (US={j['is_us']})")
                     print(f"    Posted: {j['posted_at'] or 'N/A'} | Apply: {j['apply_url']}")
+
                 if args.output_db:
                     init_db(args.output_db)
-                    save_jobs_batch(args.output_db, jobs)
+                    save_jobs_batch(args.output_db, filtered)
                     print(f"Saved to {args.output_db}")
+
+                if args.export_csv:
+                    export_sqlite_to_csv(args.output_db, args.export_csv, only_us=args.only_us)
 
         asyncio.run(run_single())
         return
@@ -906,6 +961,8 @@ def main():
             concurrency=args.concurrency,
             full_content=args.full_content,
             only_us=args.only_us,
+            days=args.days,
+            keyword=args.keyword,
         )
     )
 

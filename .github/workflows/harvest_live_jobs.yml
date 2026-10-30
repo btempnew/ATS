@@ -4,11 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       platform:
-        description: 'ATS Platform to harvest (or "all" for multi-ATS routing)'
+        description: '🎯 ATS Platform to harvest'
         required: true
-        default: 'greenhouse'
         type: choice
+        default: 'all'
         options:
+          - all
           - greenhouse
           - lever
           - ashby
@@ -19,35 +20,92 @@ on:
           - rippling
           - bamboohr
           - pinpoint
-          - all
-      input_file:
-        description: 'Input companies file (CSV or TXT)'
+      company_source:
+        description: '📁 Companies Dataset Preset'
         required: true
+        type: choice
         default: 'exports/us_companies_by_ats_master.csv'
+        options:
+          - 'exports/us_companies_by_ats_master.csv'
+          - 'greenhouse_companies_us_active.txt'
+          - 'exports/us_greenhouse_companies.csv'
+          - 'exports/us_lever_companies.csv'
+          - 'exports/us_ashby_companies.csv'
+          - 'exports/us_smartrecruiters_companies.csv'
+          - 'exports/us_workable_companies.csv'
+          - 'exports/us_workday_companies.csv'
+          - 'exports/us_rippling_companies.csv'
+          - 'exports/us_bamboohr_companies.csv'
+          - 'exports/us_recruitee_companies.csv'
+          - 'exports/us_breezy_companies.csv'
+          - 'exports/us_pinpoint_companies.csv'
+          - 'custom'
+      custom_input_path:
+        description: '📝 Custom File Path (used only if "company_source" is custom)'
+        required: false
+        type: string
+        default: ''
+      single_slug:
+        description: '⚡ Single Company Quick Test (e.g. "speechify", "netflix", "stripe" - overrides file)'
+        required: false
+        type: string
+        default: ''
       limit:
-        description: 'Max companies to scan (0 for all in file)'
+        description: '🔢 Max Companies to Scan (0 for entire file)'
         required: true
+        type: string
         default: '500'
       offset:
-        description: 'Starting offset in companies list'
+        description: '⏭️ Starting Offset Index (for chunked runs: 0, 500, 1000...)'
         required: true
+        type: string
         default: '0'
-      concurrency:
-        description: 'Async concurrency limit (max 50 recommended)'
+      posted_within_days:
+        description: '📅 Recency Filter (Keep jobs posted within last N days)'
         required: true
-        default: '40'
+        type: choice
+        default: '0'
+        options:
+          - '0'
+          - '1'
+          - '3'
+          - '7'
+          - '14'
+          - '30'
+          - '60'
+          - '90'
+      title_keyword:
+        description: '🔍 Keyword Filter (e.g. "Software", "AI", "Engineer", "Data" - blank for all)'
+        required: false
+        type: string
+        default: ''
       only_us:
-        description: 'Only capture US and US-Remote jobs'
+        description: '🇺🇸 Only Keep US & US-Remote Postings'
         required: true
         type: boolean
         default: true
       full_content:
-        description: 'Pull full HTML job descriptions'
+        description: '📄 Fetch Full HTML Job Description (slower; uncheck for fast indexing)'
+        required: true
+        type: boolean
+        default: false
+      concurrency:
+        description: '⚡ Async Concurrency (Max concurrent HTTP workers)'
+        required: true
+        type: choice
+        default: '40'
+        options:
+          - '20'
+          - '40'
+          - '60'
+          - '80'
+      commit_to_git:
+        description: '💾 Commit live_jobs.csv directly back to GitHub repository'
         required: true
         type: boolean
         default: false
 
-  # Optional automated daily job refresh at 06:00 UTC
+  # Optional daily automated job harvest at 06:00 UTC
   schedule:
     - cron: '0 6 * * *'
 
@@ -74,15 +132,38 @@ jobs:
 
       - name: Run Universal ATS Job Extractor
         run: |
-          PLATFORM="${{ github.event.inputs.platform || 'greenhouse' }}"
-          INPUT_FILE="${{ github.event.inputs.input_file || 'exports/us_companies_by_ats_master.csv' }}"
+          PLATFORM="${{ github.event.inputs.platform || 'all' }}"
+          SOURCE="${{ github.event.inputs.company_source || 'exports/us_companies_by_ats_master.csv' }}"
+          CUSTOM="${{ github.event.inputs.custom_input_path }}"
+          SLUG="${{ github.event.inputs.single_slug }}"
           LIMIT="${{ github.event.inputs.limit || '500' }}"
           OFFSET="${{ github.event.inputs.offset || '0' }}"
+          DAYS="${{ github.event.inputs.posted_within_days || '0' }}"
+          KEYWORD="${{ github.event.inputs.title_keyword }}"
           CONCURRENCY="${{ github.event.inputs.concurrency || '40' }}"
           ONLY_US="${{ github.event.inputs.only_us }}"
           FULL_CONTENT="${{ github.event.inputs.full_content }}"
 
-          FLAGS="--platform $PLATFORM --input $INPUT_FILE --output-db live_jobs.db --export-csv live_jobs.csv --limit $LIMIT --offset $OFFSET --concurrency $CONCURRENCY"
+          INPUT_FILE="$SOURCE"
+          if [ "$SOURCE" = "custom" ] && [ -n "$CUSTOM" ]; then
+            INPUT_FILE="$CUSTOM"
+          fi
+
+          if [ -n "$SLUG" ]; then
+            echo "Running Single Slug Mode: Platform=$PLATFORM, Slug=$SLUG"
+            FLAGS="--platform $PLATFORM --slug $SLUG --output-db live_jobs.db --export-csv live_jobs.csv"
+          else
+            echo "Running Batch Mode: Source=$INPUT_FILE, Platform=$PLATFORM, Limit=$LIMIT, Offset=$OFFSET"
+            FLAGS="--platform $PLATFORM --input $INPUT_FILE --output-db live_jobs.db --export-csv live_jobs.csv --limit $LIMIT --offset $OFFSET --concurrency $CONCURRENCY"
+          fi
+
+          if [ "$DAYS" != "0" ] && [ -n "$DAYS" ]; then
+            FLAGS="$FLAGS --days $DAYS"
+          fi
+
+          if [ -n "$KEYWORD" ]; then
+            FLAGS="$FLAGS --keyword \"$KEYWORD\""
+          fi
 
           if [ "$ONLY_US" = "true" ] || [ -z "$ONLY_US" ]; then
             FLAGS="$FLAGS --only-us"
@@ -125,7 +206,7 @@ jobs:
           """)
           rows = cur.fetchall()
 
-          cur.execute("SELECT title, company_name, location, posted_at, apply_url FROM live_jobs WHERE posted_at != \"\" ORDER BY posted_at DESC LIMIT 5;")
+          cur.execute("SELECT title, company_name, location, posted_at, apply_url FROM live_jobs WHERE posted_at != \"\" ORDER BY posted_at DESC LIMIT 10;")
           recent = cur.fetchall()
           conn.close()
 
@@ -154,6 +235,13 @@ jobs:
               with open(step_summary, "a", encoding="utf-8") as f:
                   f.write(summary_text + "\n")
           '
+
+      - name: Commit and Push Results to Repository
+        if: ${{ github.event.inputs.commit_to_git == 'true' }}
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated: update live_jobs.csv from workflow run [skip ci]"
+          file_pattern: "live_jobs.csv"
 
       - name: Upload Harvested Datasets as Artifacts
         uses: actions/upload-artifact@v4
