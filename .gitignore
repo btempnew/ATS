@@ -1,0 +1,19 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.parquet
+
+# macOS
+.DS_Store
+
+# Temporary & Local
+/tmp/
+*.bak
+*copy.txt
+greenhouse_companies_verified_us.txt
+
+# Large subrepo (optional, ignore if not needed in parent repo)
+whirlwind-python/
+

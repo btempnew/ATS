@@ -1,0 +1,140 @@
+name: Validate Greenhouse Companies List
+
+on:
+  workflow_dispatch:
+    inputs:
+      concurrency:
+        description: "Async HTTP concurrency per runner"
+        required: false
+        default: "50"
+      batch_size:
+        description: "Batch size per checkpoint"
+        required: false
+        default: "500"
+
+  # Optional bi-weekly run on Sundays at 04:00 UTC
+  schedule:
+    - cron: "0 4 1,15 * *"
+
+permissions:
+  contents: write
+
+jobs:
+  # ============================================================================
+  # JOB 1: Parallel Matrix Validation across 6 runners
+  # ============================================================================
+  validate-shards:
+    name: "Validate Shard ${{ matrix.shard_index + 1 }} of 6"
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard_index: [0, 1, 2, 3, 4, 5]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Validate Greenhouse Candidates (Shard ${{ matrix.shard_index }})
+        run: |
+          python verify_greenhouse_txt.py validate \
+            --input "greenhouse_companies.txt" \
+            --db "greenhouse_val_${{ matrix.shard_index }}.db" \
+            --existing-db "ats_shard_greenhouse_us.db" \
+            --shard-index ${{ matrix.shard_index }} \
+            --total-shards 6 \
+            --concurrency ${{ github.event.inputs.concurrency || '50' }} \
+            --batch-size ${{ github.event.inputs.batch_size || '500' }}
+
+      - name: Upload Shard Database Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "val-shard-${{ matrix.shard_index }}"
+          path: "greenhouse_val_${{ matrix.shard_index }}.db"
+          retention-days: 7
+
+  # ============================================================================
+  # JOB 2: Merge Shards, Generate Exports & Auto-Commit to Git
+  # ============================================================================
+  merge-and-export:
+    name: "Merge Shards & Export Verified Greenhouse Datasets"
+    needs: validate-shards
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download All Shard Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./val_shards
+          pattern: "val-shard-*"
+          merge-multiple: true
+
+      - name: Merge Shard Databases
+        run: |
+          SHARD_DBS=$(ls ./val_shards/greenhouse_val_*.db | paste -sd "," -)
+          echo "Merging shard databases: $SHARD_DBS"
+          python verify_greenhouse_txt.py merge \
+            --inputs "$SHARD_DBS" \
+            --output "greenhouse_validation_merged.db"
+
+      - name: Export CSV and Verified TXT Lists
+        run: |
+          python verify_greenhouse_txt.py export \
+            --db "greenhouse_validation_merged.db" \
+            --output-dir "./exports_greenhouse"
+
+          # Display summary in GitHub Actions UI
+          if [ -f "./exports_greenhouse/VALIDATION_SUMMARY.md" ]; then
+            cat "./exports_greenhouse/VALIDATION_SUMMARY.md"
+            cat "./exports_greenhouse/VALIDATION_SUMMARY.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # Copy output text files to root directory for easy access
+          cp ./exports_greenhouse/greenhouse_companies_active.txt ./greenhouse_companies_active.txt
+          cp ./exports_greenhouse/greenhouse_companies_us_active.txt ./greenhouse_companies_us_active.txt
+
+      - name: Upload Final Verified Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: "greenhouse-verified-dataset"
+          path: |
+            ./exports_greenhouse/*
+            ./greenhouse_companies_active.txt
+            ./greenhouse_companies_us_active.txt
+            greenhouse_validation_merged.db
+          retention-days: 90
+
+      - name: Commit and Push Verified Lists
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated: update verified Greenhouse company lists [skip ci]"
+          file_pattern: "greenhouse_companies_active.txt greenhouse_companies_us_active.txt exports_greenhouse/*"
+

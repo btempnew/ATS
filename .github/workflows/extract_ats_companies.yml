@@ -1,0 +1,63 @@
+name: Extract ATS Companies (Common Crawl)
+
+on:
+  workflow_dispatch:
+    inputs:
+      crawl:
+        description: 'Common Crawl ID (e.g. CC-MAIN-2024-22 or CC-MAIN-2026-43)'
+        required: true
+        default: 'CC-MAIN-2024-22'
+      start_shard:
+        description: 'Starting shard index (0 to 299)'
+        required: true
+        default: '0'
+      num_shards:
+        description: 'Number of Parquet shards to scan (1 to 20)'
+        required: true
+        default: '10'
+
+  # Optional weekly schedule to discover newly indexed companies automatically
+  schedule:
+    - cron: '0 3 * * 1' # Runs every Monday at 3:00 AM UTC
+
+permissions:
+  contents: write
+
+jobs:
+  extract-companies:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install duckdb requests warcio
+
+      - name: Run Common Crawl ATS Extraction
+        run: |
+          START=${{ github.event.inputs.start_shard || '0' }}
+          SHARDS=${{ github.event.inputs.num_shards || '10' }}
+          CRAWL=${{ github.event.inputs.crawl || 'CC-MAIN-2024-22' }}
+
+          echo "Running crawl $CRAWL from shard $START ($SHARDS shards)..."
+          python gha_crawl_ats.py \
+            --crawl "$CRAWL" \
+            --start "$START" \
+            --shards "$SHARDS" \
+            --greenhouse-file "greenhouse_companies.txt"
+
+      - name: Commit and Push Updated Company List
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated: update greenhouse_companies.txt from Common Crawl [skip ci]"
+          file_pattern: "greenhouse_companies.txt *.parquet *.csv"
+
