@@ -4,21 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       crawl:
-        description: "Common Crawl ID ('ALL' for last 2 years, or specific ID like CC-MAIN-2026-43)"
+        description: "Common Crawl ID ('ALL' or specific ID like CC-MAIN-2026-43)"
         required: true
-        default: 'ALL'
+        default: 'CC-MAIN-2026-43'
       min_year:
         description: "Earliest crawl year if using ALL (e.g. 2024, 2025, 2026)"
         required: true
         default: '2024'
       start_shard:
-        description: 'Starting shard index (0 to 299)'
+        description: 'Starting shard index (0 to 299) - ATS boards are in 250-299'
         required: true
-        default: '0'
+        default: '270'
       num_shards:
-        description: 'Number of Parquet shards to scan per crawl (1 to 20)'
+        description: 'Number of Parquet shards to scan per crawl (1 to 30)'
         required: true
-        default: '5'
+        default: '15'
 
   # Optional weekly schedule to discover newly indexed companies automatically
   schedule:

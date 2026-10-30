@@ -97,13 +97,13 @@ def query_shard_for_ats(con: duckdb.DuckDBPyConnection, parquet_url: str) -> Lis
     slug_cases = []
     for cfg in ATS_REGISTRY.values():
         if cfg["type"] == "path_slug":
-            pattern = cfg["url_pattern"].replace("\\", "\\\\")
+            pattern = cfg["url_pattern"].replace("'", "''")
             slug_cases.append(
                 f"WHEN url_host_registered_domain = '{cfg['registered_domain']}' "
                 f"THEN lower(regexp_extract(url, '{pattern}', 1))"
             )
         elif cfg["type"] == "subdomain":
-            pattern = cfg["host_pattern"].replace("\\", "\\\\")
+            pattern = cfg["host_pattern"].replace("'", "''")
             slug_cases.append(
                 f"WHEN url_host_registered_domain = '{cfg['registered_domain']}' "
                 f"THEN lower(regexp_extract(url_host_name, '{pattern}', 1))"
@@ -129,7 +129,11 @@ def query_shard_for_ats(con: duckdb.DuckDBPyConnection, parquet_url: str) -> Lis
     FROM filtered
     WHERE company_slug IS NOT NULL
       AND length(company_slug) > 1
-      AND company_slug NOT IN ('www', 'app', 'static', 'assets', 'api', 'help', 'search', 'apply')
+      AND company_slug NOT IN (
+          'www', 'app', 'static', 'assets', 'api', 'help', 'search', 'apply',
+          'ai_opt_out_request', 'authorize', 'v1', 'private', 'site', 'docs',
+          'support', 'terms', 'privacy', 'login', 'signup'
+      )
     GROUP BY ats_platform, company_slug
     """
     

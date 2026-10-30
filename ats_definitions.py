@@ -25,8 +25,8 @@ ATS_REGISTRY: Dict[str, Dict[str, Any]] = {
         "name": "Greenhouse",
         "registered_domain": "greenhouse.io",
         "tld": "io",
-        "host_pattern": r"^(?:boards|job-boards)\.greenhouse\.io$",
-        "url_pattern": r"^https?://(?:boards|job-boards)\.greenhouse\.io/([^/?#]+)",
+        "host_pattern": r"^(?:boards|job-boards(?:\.[a-z]{2,3})?)\.greenhouse\.io$",
+        "url_pattern": r"^https?://(?:boards|job-boards(?:\.[a-z]{2,3})?)\.greenhouse\.io/([^/?#]+)",
         "type": "path_slug",
         "test_url": "https://boards.greenhouse.io/stripe/jobs/12345",
         "excluded_slugs": {"embed", "api", "static", "assets", "search"}
@@ -35,21 +35,21 @@ ATS_REGISTRY: Dict[str, Dict[str, Any]] = {
         "name": "Lever",
         "registered_domain": "lever.co",
         "tld": "co",
-        "host_pattern": r"^jobs\.lever\.co$",
-        "url_pattern": r"^https?://jobs\.lever\.co/([^/?#]+)",
+        "host_pattern": r"^(?:[a-zA-Z0-9-]+\.)*lever\.co$",
+        "url_pattern": r"^https?://(?:[a-zA-Z0-9-]+\.)*lever\.co/([^/?#]+)",
         "type": "path_slug",
         "test_url": "https://jobs.lever.co/netflix/12345",
-        "excluded_slugs": {"apply", "postings", "static", "assets"}
+        "excluded_slugs": {"apply", "postings", "static", "assets", "help", "support"}
     },
     "ashby": {
         "name": "Ashby",
         "registered_domain": "ashbyhq.com",
         "tld": "com",
-        "host_pattern": r"^jobs\.ashbyhq\.com$",
-        "url_pattern": r"^https?://jobs\.ashbyhq\.com/([^/?#]+)",
+        "host_pattern": r"^(?:[a-zA-Z0-9-]+\.)*ashbyhq\.com$",
+        "url_pattern": r"^https?://(?:[a-zA-Z0-9-]+\.)*ashbyhq\.com/([^/?#]+)",
         "type": "path_slug",
         "test_url": "https://jobs.ashbyhq.com/openai/12345",
-        "excluded_slugs": {"api", "static", "embed"}
+        "excluded_slugs": {"api", "static", "embed", "help"}
     },
     "workable": {
         "name": "Workable",
