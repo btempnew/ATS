@@ -1,0 +1,287 @@
+{
+  "Python": [],
+  "Java": [],
+  "C++": [],
+  "C#": [],
+  "Go": [
+    "Golang"
+  ],
+  "Rust": [],
+  "JavaScript": [
+    "JS"
+  ],
+  "TypeScript": [
+    "TS"
+  ],
+  "React": [
+    "React.js",
+    "ReactJS"
+  ],
+  "Angular": [],
+  "Vue": [
+    "Vue.js",
+    "VueJS"
+  ],
+  "Node.js": [
+    "NodeJS"
+  ],
+  "Next.js": [],
+  "Django": [],
+  "Flask": [],
+  "FastAPI": [],
+  "SQL": [],
+  "PostgreSQL": [
+    "Postgres"
+  ],
+  "MySQL": [],
+  "MongoDB": [],
+  "NoSQL": [],
+  "Redis": [],
+  "AWS": [
+    "Amazon Web Services"
+  ],
+  "GCP": [
+    "Google Cloud Platform"
+  ],
+  "Azure": [
+    "Microsoft Azure"
+  ],
+  "Docker": [],
+  "Kubernetes": [
+    "K8s"
+  ],
+  "Terraform": [],
+  "Machine Learning": [
+    "ML"
+  ],
+  "Deep Learning": [],
+  "PyTorch": [],
+  "TensorFlow": [],
+  "Pandas": [],
+  "Spark": [],
+  "Kafka": [],
+  "Natural Language Processing": [
+    "NLP"
+  ],
+  "Large Language Models": [
+    "LLM",
+    "LLMs"
+  ],
+  "Excel": [
+    "Microsoft Excel",
+    "MS Excel"
+  ],
+  "Power BI": [
+    "Microsoft Power BI",
+    "PowerBI"
+  ],
+  "Tableau": [],
+  "Looker": [],
+  "Snowflake": [],
+  "Databricks": [],
+  "dbt": [],
+  "Airflow": [],
+  "SAP Ariba": [
+    "Ariba"
+  ],
+  "SAP": [
+    "SAP ERP"
+  ],
+  "SAP S/4HANA": [
+    "S/4HANA"
+  ],
+  "Oracle ERP": [],
+  "Coupa": [],
+  "NetSuite": [
+    "Oracle NetSuite"
+  ],
+  "Workday": [],
+  "Salesforce": [],
+  "HubSpot": [],
+  "Strategic Sourcing": [],
+  "Supplier Negotiation": [],
+  "Vendor Management": [],
+  "Supplier Management": [],
+  "Supplier Relationship Management": [
+    "SRM"
+  ],
+  "Procurement": [],
+  "Category Management": [],
+  "Contract Negotiation": [],
+  "Supply Chain Management": [],
+  "Demand Planning": [],
+  "Inventory Management": [],
+  "Logistics": [],
+  "Purchasing": [],
+  "Cost Analysis": [],
+  "Spend Analysis": [],
+  "Forecasting": [],
+  "Financial Modeling": [],
+  "Budgeting": [],
+  "Financial Analysis": [],
+  "Accounting": [],
+  "GAAP": [],
+  "IFRS": [],
+  "QuickBooks": [],
+  "Auditing": [],
+  "Risk Management": [],
+  "Compliance": [],
+  "Project Management": [],
+  "Program Management": [],
+  "Product Management": [],
+  "Stakeholder Management": [],
+  "Change Management": [],
+  "Business Analysis": [],
+  "Agile": [],
+  "Scrum": [],
+  "Kanban": [],
+  "Jira": [],
+  "Confluence": [],
+  "Lean Six Sigma": [
+    "Six Sigma"
+  ],
+  "Lean Manufacturing": [],
+  "Process Improvement": [],
+  "Quality Assurance": [
+    "QA"
+  ],
+  "Quality Control": [
+    "QC"
+  ],
+  "ISO 9001": [],
+  "AutoCAD": [],
+  "SolidWorks": [],
+  "CATIA": [],
+  "MATLAB": [],
+  "Simulink": [],
+  "Figma": [],
+  "Adobe Photoshop": [
+    "Photoshop"
+  ],
+  "Adobe Illustrator": [
+    "Illustrator"
+  ],
+  "UX Research": [],
+  "UI Design": [],
+  "Interaction Design": [],
+  "Prototyping": [],
+  "SEO": [
+    "Search Engine Optimization"
+  ],
+  "SEM": [
+    "Search Engine Marketing"
+  ],
+  "Google Analytics": [
+    "GA4"
+  ],
+  "Google Ads": [],
+  "Content Marketing": [],
+  "Copywriting": [],
+  "Email Marketing": [],
+  "Social Media Marketing": [],
+  "Business Development": [],
+  "Account Management": [],
+  "Lead Generation": [],
+  "Customer Success": [],
+  "Customer Service": [],
+  "Communication": [],
+  "Leadership": [],
+  "Collaboration": [],
+  "Problem Solving": [
+    "Problem-solving"
+  ],
+  "Critical Thinking": [],
+  "Negotiation": [],
+  "Presentation Skills": [],
+  "Recruiting": [
+    "Recruitment"
+  ],
+  "Talent Acquisition": [],
+  "Payroll": [],
+  "Employee Relations": [],
+  "Training and Development": [],
+  "HRIS": [],
+  "Clinical Research": [],
+  "Patient Care": [],
+  "Nursing": [],
+  "HIPAA": [],
+  "Good Manufacturing Practice": [
+    "GMP",
+    "cGMP"
+  ],
+  "Good Clinical Practice": [
+    "GCP compliance"
+  ],
+  "CPR": [],
+  "BLS": [],
+  "ACLS": [],
+  "PMP": [],
+  "CPA": [],
+  "CFA": [],
+  "CISSP": [],
+  "OSHA": [],
+  "Forklift Operation": [],
+  "Welding": [],
+  "CNC": [],
+  "Linux": [],
+  "Unix": [],
+  "Bash": [],
+  "PowerShell": [],
+  "Git": [],
+  "CI/CD": [],
+  "Jenkins": [],
+  "GitHub Actions": [],
+  "Ansible": [],
+  "Spring Boot": [],
+  "Ruby": [],
+  "Ruby on Rails": [
+    "Rails"
+  ],
+  "PHP": [],
+  "Laravel": [],
+  "Swift": [],
+  "Kotlin": [],
+  "Dart": [],
+  "Flutter": [],
+  "React Native": [],
+  "HTML": [
+    "HTML5"
+  ],
+  "CSS": [
+    "CSS3"
+  ],
+  "Sass": [],
+  "GraphQL": [],
+  "REST APIs": [
+    "RESTful APIs",
+    "REST API"
+  ],
+  "gRPC": [],
+  "Cypress": [],
+  "Playwright": [],
+  "Selenium": [],
+  "JUnit": [],
+  "pytest": [],
+  "Elasticsearch": [],
+  "OpenSearch": [],
+  "DynamoDB": [],
+  "Statistics": [],
+  "Statistical Analysis": [],
+  "A/B Testing": [],
+  "R": [],
+  "SAS": [],
+  "SPSS": [],
+  "Stata": [],
+  "Computer Vision": [],
+  "Reinforcement Learning": [],
+  "MLOps": [],
+  "LangChain": [],
+  "Retrieval-Augmented Generation": [
+    "RAG"
+  ],
+  "English": [],
+  "Spanish": [],
+  "French": [],
+  "German": [],
+  "Mandarin": []
+}

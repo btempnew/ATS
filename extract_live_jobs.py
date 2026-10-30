@@ -41,6 +41,19 @@ try:
 except ImportError:
     HAS_AIOHTTP = False
 
+# Ensure local packages (scrapers, matching) are importable
+_CURR_DIR = os.path.dirname(os.path.abspath(__file__))
+if _CURR_DIR not in sys.path:
+    sys.path.insert(0, _CURR_DIR)
+
+try:
+    from scrapers.job_extraction.engine import extract_job
+    from scrapers.job_extraction.jd_enricher import parse_salary, detect_work_mode
+    from matching.jd_facts import extract_jd_facts
+    HAS_ENRICHMENT = True
+except Exception:
+    HAS_ENRICHMENT = False
+
 
 # US State identification regex & sets
 US_STATES = {
@@ -693,6 +706,105 @@ PLATFORM_HANDLERS = {
 }
 
 
+def enrich_job_record(raw: Dict[str, Any], enable_enrichment: bool = True) -> Dict[str, Any]:
+    """Enriches job dictionary with salary, skills, H-1B, and experience facts."""
+    out = dict(raw)
+    out.setdefault("salary", "")
+    out.setdefault("salary_min", None)
+    out.setdefault("salary_max", None)
+    out.setdefault("salary_currency", "")
+    out.setdefault("salary_period", "")
+    out.setdefault("skills", "")
+    out.setdefault("skills_required", "")
+    out.setdefault("skills_preferred", "")
+    out.setdefault("work_mode", "")
+    out.setdefault("experience_min", None)
+    out.setdefault("experience_max", None)
+    out.setdefault("education", "")
+    out.setdefault("h1b_status", "unknown")
+    out.setdefault("visa_sponsorship_status", "unknown")
+    out.setdefault("sponsorship_evidence", "")
+    out.setdefault("reports_to", "")
+
+    if not enable_enrichment or not HAS_ENRICHMENT:
+        return out
+
+    desc = raw.get("content") or raw.get("description") or ""
+    title = raw.get("title") or ""
+    location = raw.get("location") or ""
+    company = raw.get("company_name") or ""
+    platform = raw.get("platform") or ""
+
+    if desc:
+        # 1. Main JD extraction engine
+        try:
+            eng = extract_job({
+                "title": title,
+                "location": location,
+                "description": desc,
+                "company": company,
+                "source_board": platform,
+            })
+            if eng:
+                out["salary"] = eng.get("salary") or ""
+                out["salary_min"] = eng.get("salary_min")
+                out["salary_max"] = eng.get("salary_max")
+                out["salary_currency"] = eng.get("salary_currency") or ""
+                out["salary_period"] = eng.get("salary_period") or ""
+                out["skills"] = eng.get("skills") or ""
+                out["skills_required"] = ", ".join(eng.get("skills_required") or [])
+                out["skills_preferred"] = ", ".join(eng.get("skills_preferred") or [])
+                out["work_mode"] = eng.get("work_mode") or ""
+                out["experience_min"] = eng.get("experience_min")
+                out["experience_max"] = eng.get("experience_max")
+                edu = eng.get("education_requirements") or []
+                out["education"] = ", ".join(edu) if isinstance(edu, list) else str(edu)
+        except Exception:
+            pass
+
+        # 2. Fallback salary parser
+        if not out.get("salary_min") and not out.get("salary"):
+            try:
+                sal = parse_salary(desc)
+                if sal.get("salary_min") or sal.get("salary_max"):
+                    out["salary_min"] = sal.get("salary_min")
+                    out["salary_max"] = sal.get("salary_max")
+                    out["salary_currency"] = sal.get("salary_currency") or ""
+                    out["salary_period"] = sal.get("salary_period") or ""
+            except Exception:
+                pass
+
+        # 3. Work mode fallback
+        if not out.get("work_mode"):
+            try:
+                wm = detect_work_mode(raw)
+                if wm:
+                    out["work_mode"] = wm.title()
+            except Exception:
+                pass
+
+        # 4. JD Facts: H-1B, Visa Sponsorship, and Reporting Line
+        try:
+            facts = extract_jd_facts(desc)
+            if facts:
+                out["h1b_status"] = facts.h1b_status or "unknown"
+                out["visa_sponsorship_status"] = facts.visa_sponsorship_status or "unknown"
+                out["sponsorship_evidence"] = " | ".join(facts.sponsorship_evidence)
+                out["reports_to"] = facts.reports_to or ""
+        except Exception:
+            pass
+    else:
+        # Without full description, still attempt basic work mode detection from location
+        try:
+            wm = detect_work_mode(raw)
+            if wm:
+                out["work_mode"] = wm.title()
+        except Exception:
+            pass
+
+    return out
+
+
 def init_db(db_path: str):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
@@ -714,9 +826,51 @@ def init_db(db_path: str):
             updated_at TEXT,
             raw_timestamp TEXT,
             content TEXT,
+            salary TEXT,
+            salary_min REAL,
+            salary_max REAL,
+            salary_currency TEXT,
+            salary_period TEXT,
+            skills TEXT,
+            skills_required TEXT,
+            skills_preferred TEXT,
+            work_mode TEXT,
+            experience_min REAL,
+            experience_max REAL,
+            education TEXT,
+            h1b_status TEXT,
+            visa_sponsorship_status TEXT,
+            sponsorship_evidence TEXT,
+            reports_to TEXT,
             extracted_at TEXT NOT NULL
         );
     """)
+
+    # Auto-migrate table if created under an older schema version
+    cur.execute("PRAGMA table_info(live_jobs);")
+    existing_cols = {r[1] for r in cur.fetchall()}
+    columns_to_add = [
+        ("salary", "TEXT"),
+        ("salary_min", "REAL"),
+        ("salary_max", "REAL"),
+        ("salary_currency", "TEXT"),
+        ("salary_period", "TEXT"),
+        ("skills", "TEXT"),
+        ("skills_required", "TEXT"),
+        ("skills_preferred", "TEXT"),
+        ("work_mode", "TEXT"),
+        ("experience_min", "REAL"),
+        ("experience_max", "REAL"),
+        ("education", "TEXT"),
+        ("h1b_status", "TEXT"),
+        ("visa_sponsorship_status", "TEXT"),
+        ("sponsorship_evidence", "TEXT"),
+        ("reports_to", "TEXT"),
+    ]
+    for col_name, col_type in columns_to_add:
+        if col_name not in existing_cols:
+            cur.execute(f"ALTER TABLE live_jobs ADD COLUMN {col_name} {col_type};")
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS scanned_boards (
             platform TEXT NOT NULL,
@@ -732,6 +886,8 @@ def init_db(db_path: str):
     cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_company ON live_jobs(company_slug);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_posted ON live_jobs(posted_at);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_us ON live_jobs(is_us);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_sal ON live_jobs(salary_min);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_h1b ON live_jobs(h1b_status);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_boards_status ON scanned_boards(http_status);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_boards_platform ON scanned_boards(platform);")
     conn.commit()
@@ -752,22 +908,29 @@ def save_boards_batch(db_path: str, board_records: List[Tuple[str, str, int, int
     conn.close()
 
 
-def save_jobs_batch(db_path: str, jobs: List[Dict[str, Any]]):
+def save_jobs_batch(db_path: str, jobs: List[Dict[str, Any]], enable_enrichment: bool = False):
     if not jobs:
         return
+    prepared = [enrich_job_record(j, enable_enrichment=enable_enrichment) for j in jobs]
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.executemany("""
         INSERT OR REPLACE INTO live_jobs (
             job_id, platform, company_name, company_slug, title, location, is_us,
             apply_url, department, office, employment_type, posted_at, updated_at,
-            raw_timestamp, content, extracted_at
+            raw_timestamp, content, salary, salary_min, salary_max, salary_currency,
+            salary_period, skills, skills_required, skills_preferred, work_mode,
+            experience_min, experience_max, education, h1b_status,
+            visa_sponsorship_status, sponsorship_evidence, reports_to, extracted_at
         ) VALUES (
             :job_id, :platform, :company_name, :company_slug, :title, :location, :is_us,
             :apply_url, :department, :office, :employment_type, :posted_at, :updated_at,
-            :raw_timestamp, :content, :extracted_at
+            :raw_timestamp, :content, :salary, :salary_min, :salary_max, :salary_currency,
+            :salary_period, :skills, :skills_required, :skills_preferred, :work_mode,
+            :experience_min, :experience_max, :education, :h1b_status,
+            :visa_sponsorship_status, :sponsorship_evidence, :reports_to, :extracted_at
         )
-    """, jobs)
+    """, prepared)
     conn.commit()
     conn.close()
 
@@ -829,6 +992,7 @@ async def run_extractor(
     days: int = 0,
     keyword: Optional[str] = None,
     batch_size: int = 150,
+    enable_enrichment: bool = False,
 ):
     init_db(output_db)
     total_companies = len(targets)
@@ -847,6 +1011,7 @@ async def run_extractor(
     print(f"  • Concurrency: {concurrency} (Rate-limited <= 10 req/host)")
     print(f"  • Database: {output_db}")
     print(f"  • Full Content (HTML): {full_content}")
+    print(f"  • JD Enrichment (Salary, Skills, H-1B): {enable_enrichment and HAS_ENRICHMENT}")
     print(f"  • Only US Filter: {only_us}")
     if days > 0:
         print(f"  • Recency Filter: Last {days} days (>= {cutoff_dt.isoformat()})")
@@ -921,7 +1086,7 @@ async def run_extractor(
             if board_records:
                 save_boards_batch(output_db, board_records)
             if batch_jobs:
-                save_jobs_batch(output_db, batch_jobs)
+                save_jobs_batch(output_db, batch_jobs, enable_enrichment=enable_enrichment)
                 total_jobs_saved += len(batch_jobs)
 
             progress = min(idx + batch_size, total_companies)
@@ -948,11 +1113,13 @@ def main():
     parser.add_argument("--offset", type=int, default=0, help="Offset index into input list")
     parser.add_argument("--concurrency", type=int, default=40, help="Max async requests concurrency")
     parser.add_argument("--full-content", action="store_true", help="Download complete job descriptions")
+    parser.add_argument("--enrich", action="store_true", help="Run deep JD enrichment (salary, skills, H-1B, experience)")
     parser.add_argument("--only-us", action="store_true", help="Only save US / US-Remote jobs")
     parser.add_argument("--days", type=int, default=0, help="Filter jobs posted within last N days (0 = all time)")
     parser.add_argument("--keyword", type=str, default="", help="Filter job title/department/location by keyword")
 
     args = parser.parse_args()
+    enable_enrichment = args.enrich or args.full_content
 
     # 1. Single slug mode
     if args.slug:
@@ -994,7 +1161,7 @@ def main():
                 if args.output_db:
                     init_db(args.output_db)
                     save_boards_batch(args.output_db, [(platform, args.slug, status, len(jobs), len(filtered), datetime.now(timezone.utc).isoformat())])
-                    save_jobs_batch(args.output_db, filtered)
+                    save_jobs_batch(args.output_db, filtered, enable_enrichment=enable_enrichment)
                     print(f"Saved to {args.output_db}")
 
                 if args.export_csv:
@@ -1050,6 +1217,7 @@ def main():
             only_us=args.only_us,
             days=args.days,
             keyword=args.keyword,
+            enable_enrichment=enable_enrichment,
         )
     )
 

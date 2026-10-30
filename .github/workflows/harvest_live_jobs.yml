@@ -89,6 +89,11 @@ on:
         required: true
         type: boolean
         default: false
+      enrich_jobs:
+        description: '🧠 Deep JD Enrichment (Extract Salary, Skills, H-1B, Experience, Education)'
+        required: true
+        type: boolean
+        default: false
       concurrency:
         description: '⚡ Async Concurrency (Max concurrent HTTP workers)'
         required: true
@@ -145,6 +150,7 @@ jobs:
           CONCURRENCY="${{ github.event.inputs.concurrency || '40' }}"
           ONLY_US="${{ github.event.inputs.only_us }}"
           FULL_CONTENT="${{ github.event.inputs.full_content }}"
+          ENRICH="${{ github.event.inputs.enrich_jobs }}"
 
           INPUT_FILE="$SOURCE"
           if [ "$SOURCE" = "custom" ] && [ -n "$CUSTOM" ]; then
@@ -173,6 +179,10 @@ jobs:
 
           if [ "$FULL_CONTENT" = "true" ]; then
             FLAGS="$FLAGS --full-content"
+          fi
+
+          if [ "$ENRICH" = "true" ]; then
+            FLAGS="$FLAGS --enrich"
           fi
 
           echo "Executing: python extract_live_jobs.py $FLAGS"
@@ -213,6 +223,18 @@ jobs:
 
           ts_rate = ((with_ts / total_jobs) * 100) if total_jobs > 0 else 0
           board_200_rate = ((boards_200 / total_boards) * 100) if total_boards > 0 else 0
+
+          # Enriched metrics
+          jobs_with_sal = 0
+          jobs_with_skills = 0
+          jobs_with_h1b = 0
+          try:
+              cur.execute("SELECT COUNT(salary_min), COUNT(CASE WHEN skills != '' THEN 1 END), COUNT(CASE WHEN h1b_status != 'unknown' THEN 1 END) FROM live_jobs;")
+              row = cur.fetchone()
+              if row:
+                  jobs_with_sal, jobs_with_skills, jobs_with_h1b = row
+          except Exception:
+              pass
 
           # Platform breakdown
           try:
@@ -256,7 +278,12 @@ jobs:
               summary.append(f"- **Boards Returning HTTP 200 (Active):** `{boards_200:,}` / `{total_boards:,}` (**{board_200_rate:.1f}%**)")
               summary.append(f"- **Boards with Live Openings:** `{boards_with_jobs:,}`")
           summary.append(f"- **Total Live Jobs Harvested:** `{total_jobs:,}`")
-          summary.append(f"- **Timestamp Capture Rate:** `{with_ts:,}` / `{total_jobs:,}` (**{ts_rate:.1f}%**)\n")
+          summary.append(f"- **Timestamp Capture Rate:** `{with_ts:,}` / `{total_jobs:,}` (**{ts_rate:.1f}%**)")
+          if jobs_with_sal > 0 or jobs_with_skills > 0:
+              summary.append(f"- **Compensation Ranges Identified:** `{jobs_with_sal:,}` / `{total_jobs:,}`")
+              summary.append(f"- **Skills Extracted:** `{jobs_with_skills:,}` / `{total_jobs:,}`")
+              summary.append(f"- **Visa / H-1B Decisions Identified:** `{jobs_with_h1b:,}` / `{total_jobs:,}`")
+          summary.append("")
 
           summary.append("### Breakdown by Platform\n")
           if total_boards > 0:
