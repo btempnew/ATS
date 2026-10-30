@@ -273,13 +273,13 @@ class AsyncHTTPClient:
 
 
 # Platform Extractors
-async def extract_greenhouse(http: AsyncHTTPClient, slug: str, full_content: bool) -> List[Dict[str, Any]]:
+async def extract_greenhouse(http: AsyncHTTPClient, slug: str, full_content: bool) -> Tuple[int, List[Dict[str, Any]]]:
     url = f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs"
     if full_content:
         url += "?content=true"
     status, data = await http.get_json(url)
     if status != 200 or not isinstance(data, dict):
-        return []
+        return status, []
 
     company_name = data.get("name") or slug.title()
     jobs = data.get("jobs") or []
@@ -315,14 +315,14 @@ async def extract_greenhouse(http: AsyncHTTPClient, slug: str, full_content: boo
             "content": clean_html(content_raw) if full_content else "",
             "extracted_at": now_iso,
         })
-    return extracted
+    return status, extracted
 
 
-async def extract_lever(http: AsyncHTTPClient, slug: str, full_content: bool) -> List[Dict[str, Any]]:
+async def extract_lever(http: AsyncHTTPClient, slug: str, full_content: bool) -> Tuple[int, List[Dict[str, Any]]]:
     url = f"https://api.lever.co/v0/postings/{slug}?mode=json"
     status, data = await http.get_json(url)
     if status != 200 or not isinstance(data, list):
-        return []
+        return status, []
 
     company_name = slug.replace("-", " ").title()
     extracted = []
@@ -363,14 +363,14 @@ async def extract_lever(http: AsyncHTTPClient, slug: str, full_content: bool) ->
             "content": clean_html(content_raw) if full_content else "",
             "extracted_at": now_iso,
         })
-    return extracted
+    return status, extracted
 
 
-async def extract_ashby(http: AsyncHTTPClient, slug: str, full_content: bool) -> List[Dict[str, Any]]:
+async def extract_ashby(http: AsyncHTTPClient, slug: str, full_content: bool) -> Tuple[int, List[Dict[str, Any]]]:
     url = f"https://api.ashbyhq.com/posting-api/job-board/{slug}"
     status, data = await http.get_json(url)
     if status != 200 or not isinstance(data, dict):
-        return []
+        return status, []
 
     company_name = data.get("organizationName") or slug.replace("-", " ").title()
     jobs = data.get("jobs") or data.get("jobPostings") or []
@@ -404,14 +404,14 @@ async def extract_ashby(http: AsyncHTTPClient, slug: str, full_content: bool) ->
             "content": clean_html(content_raw) if full_content else "",
             "extracted_at": now_iso,
         })
-    return extracted
+    return status, extracted
 
 
-async def extract_smartrecruiters(http: AsyncHTTPClient, slug: str, full_content: bool) -> List[Dict[str, Any]]:
+async def extract_smartrecruiters(http: AsyncHTTPClient, slug: str, full_content: bool) -> Tuple[int, List[Dict[str, Any]]]:
     url = f"https://api.smartrecruiters.com/v1/companies/{slug}/postings"
     status, data = await http.get_json(url)
     if status != 200 or not isinstance(data, dict):
-        return []
+        return status, []
 
     jobs = data.get("content") or []
     extracted = []
@@ -444,14 +444,14 @@ async def extract_smartrecruiters(http: AsyncHTTPClient, slug: str, full_content
             "content": "",
             "extracted_at": now_iso,
         })
-    return extracted
+    return status, extracted
 
 
-async def extract_workable(http: AsyncHTTPClient, slug: str, full_content: bool) -> List[Dict[str, Any]]:
+async def extract_workable(http: AsyncHTTPClient, slug: str, full_content: bool) -> Tuple[int, List[Dict[str, Any]]]:
     url = f"https://apply.workable.com/api/v1/widget/accounts/{slug}"
     status, data = await http.get_json(url)
     if status != 200 or not isinstance(data, dict):
-        return []
+        return status, []
 
     company_name = data.get("name") or slug.replace("-", " ").title()
     jobs = data.get("jobs") or []
@@ -482,14 +482,14 @@ async def extract_workable(http: AsyncHTTPClient, slug: str, full_content: bool)
             "content": "",
             "extracted_at": now_iso,
         })
-    return extracted
+    return status, extracted
 
 
-async def extract_recruitee(http: AsyncHTTPClient, slug: str, full_content: bool) -> List[Dict[str, Any]]:
+async def extract_recruitee(http: AsyncHTTPClient, slug: str, full_content: bool) -> Tuple[int, List[Dict[str, Any]]]:
     url = f"https://{slug}.recruitee.com/api/offers"
     status, data = await http.get_json(url)
     if status != 200 or not isinstance(data, dict):
-        return []
+        return status, []
 
     offers = data.get("offers") or []
     extracted = []
@@ -512,7 +512,7 @@ async def extract_recruitee(http: AsyncHTTPClient, slug: str, full_content: bool
             "company_slug": slug,
             "title": o.get("title", "").strip(),
             "location": loc_str.strip(),
-            "is_us": 1 if (is_us_location(loc_str) or o.get("country_code") in ("US", "USA") or is_remote) else 0,
+            "is_us": 1 if (is_us_location(loc_str, extra_text=o.get("title", "")) or o.get("country_code") in ("US", "USA") or is_remote) else 0,
             "apply_url": o.get("careers_apply_url") or o.get("careers_url", ""),
             "department": o.get("department", ""),
             "office": workplace,
@@ -523,14 +523,14 @@ async def extract_recruitee(http: AsyncHTTPClient, slug: str, full_content: bool
             "content": clean_html(content_raw) if full_content else "",
             "extracted_at": now_iso,
         })
-    return extracted
+    return status, extracted
 
 
-async def extract_breezy(http: AsyncHTTPClient, slug: str, full_content: bool) -> List[Dict[str, Any]]:
+async def extract_breezy(http: AsyncHTTPClient, slug: str, full_content: bool) -> Tuple[int, List[Dict[str, Any]]]:
     url = f"https://{slug}.breezy.hr/json"
     status, data = await http.get_json(url)
     if status != 200 or not isinstance(data, list):
-        return []
+        return status, []
 
     company_name = slug.replace("-", " ").title()
     extracted = []
@@ -554,7 +554,7 @@ async def extract_breezy(http: AsyncHTTPClient, slug: str, full_content: bool) -
             "company_slug": slug,
             "title": j.get("name", "").strip(),
             "location": loc_str.strip(),
-            "is_us": 1 if is_us_location(loc_str, extra_text=f"{j.get('title', '')} {' '.join(offices)}") else 0,
+            "is_us": 1 if is_us_location(loc_str, extra_text=j.get("name", "")) else 0,
             "apply_url": j.get("url", ""),
             "department": j.get("department", ""),
             "office": "",
@@ -565,14 +565,14 @@ async def extract_breezy(http: AsyncHTTPClient, slug: str, full_content: bool) -
             "content": "",
             "extracted_at": now_iso,
         })
-    return extracted
+    return status, extracted
 
 
-async def extract_rippling(http: AsyncHTTPClient, slug: str, full_content: bool) -> List[Dict[str, Any]]:
+async def extract_rippling(http: AsyncHTTPClient, slug: str, full_content: bool) -> Tuple[int, List[Dict[str, Any]]]:
     url = f"https://ats.rippling.com/api/v1/board/{slug}/jobs"
     status, data = await http.get_json(url)
     if status != 200 or not isinstance(data, list):
-        return []
+        return status, []
 
     company_name = slug.replace("-", " ").title()
     extracted = []
@@ -589,7 +589,7 @@ async def extract_rippling(http: AsyncHTTPClient, slug: str, full_content: bool)
             "company_slug": slug,
             "title": j.get("name", "").strip(),
             "location": work_loc.strip(),
-            "is_us": 1 if is_us_location(work_loc) else 0,
+            "is_us": 1 if is_us_location(work_loc, extra_text=j.get("name", "")) else 0,
             "apply_url": j.get("url", ""),
             "department": (j.get("department") or {}).get("name", ""),
             "office": "",
@@ -600,14 +600,14 @@ async def extract_rippling(http: AsyncHTTPClient, slug: str, full_content: bool)
             "content": "",
             "extracted_at": now_iso,
         })
-    return extracted
+    return status, extracted
 
 
-async def extract_bamboohr(http: AsyncHTTPClient, slug: str, full_content: bool) -> List[Dict[str, Any]]:
+async def extract_bamboohr(http: AsyncHTTPClient, slug: str, full_content: bool) -> Tuple[int, List[Dict[str, Any]]]:
     url = f"https://{slug}.bamboohr.com/careers/list"
     status, data = await http.get_json(url)
     if status != 200 or not isinstance(data, dict):
-        return []
+        return status, []
 
     jobs = data.get("result") or []
     company_name = slug.replace("-", " ").title()
@@ -627,7 +627,7 @@ async def extract_bamboohr(http: AsyncHTTPClient, slug: str, full_content: bool)
             "company_slug": slug,
             "title": j.get("jobOpeningName", "").strip(),
             "location": loc_str.strip(),
-            "is_us": 1 if (is_us_location(loc_str) or is_remote) else 0,
+            "is_us": 1 if (is_us_location(loc_str, extra_text=j.get("jobOpeningName", "")) or is_remote) else 0,
             "apply_url": f"https://{slug}.bamboohr.com/careers/{job_id}",
             "department": j.get("departmentLabel", ""),
             "office": "Remote" if is_remote else "",
@@ -638,14 +638,14 @@ async def extract_bamboohr(http: AsyncHTTPClient, slug: str, full_content: bool)
             "content": "",
             "extracted_at": now_iso,
         })
-    return extracted
+    return status, extracted
 
 
-async def extract_pinpoint(http: AsyncHTTPClient, slug: str, full_content: bool) -> List[Dict[str, Any]]:
+async def extract_pinpoint(http: AsyncHTTPClient, slug: str, full_content: bool) -> Tuple[int, List[Dict[str, Any]]]:
     url = f"https://{slug}.pinpointhq.com/postings.json"
     status, data = await http.get_json(url)
     if status != 200 or not isinstance(data, dict):
-        return []
+        return status, []
 
     jobs = data.get("data") or []
     company_name = slug.replace("-", " ").title()
@@ -665,7 +665,7 @@ async def extract_pinpoint(http: AsyncHTTPClient, slug: str, full_content: bool)
             "company_slug": slug,
             "title": j.get("title", "").strip(),
             "location": loc_str.strip(),
-            "is_us": 1 if is_us_location(loc_str, extra_text=f"{j.get('title', '')} {' '.join(offices)}") else 0,
+            "is_us": 1 if is_us_location(loc_str, extra_text=j.get("title", "")) else 0,
             "apply_url": j.get("url", ""),
             "department": dept,
             "office": j.get("workplace_type_text", ""),
@@ -676,7 +676,7 @@ async def extract_pinpoint(http: AsyncHTTPClient, slug: str, full_content: bool)
             "content": clean_html(j.get("description", "")) if full_content else "",
             "extracted_at": now_iso,
         })
-    return extracted
+    return status, extracted
 
 
 PLATFORM_HANDLERS = {
@@ -717,10 +717,37 @@ def init_db(db_path: str):
             extracted_at TEXT NOT NULL
         );
     """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS scanned_boards (
+            platform TEXT NOT NULL,
+            company_slug TEXT NOT NULL,
+            http_status INTEGER NOT NULL,
+            total_jobs INTEGER DEFAULT 0,
+            us_jobs INTEGER DEFAULT 0,
+            scanned_at TEXT NOT NULL,
+            PRIMARY KEY (platform, company_slug)
+        );
+    """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_platform ON live_jobs(platform);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_company ON live_jobs(company_slug);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_posted ON live_jobs(posted_at);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_jobs_us ON live_jobs(is_us);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_boards_status ON scanned_boards(http_status);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_boards_platform ON scanned_boards(platform);")
+    conn.commit()
+    conn.close()
+
+
+def save_boards_batch(db_path: str, board_records: List[Tuple[str, str, int, int, int, str]]):
+    if not board_records:
+        return
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.executemany("""
+        INSERT OR REPLACE INTO scanned_boards (
+            platform, company_slug, http_status, total_jobs, us_jobs, scanned_at
+        ) VALUES (?, ?, ?, ?, ?, ?)
+    """, board_records)
     conn.commit()
     conn.close()
 
@@ -807,6 +834,8 @@ async def run_extractor(
     total_companies = len(targets)
     total_jobs_saved = 0
     jobs_with_post_time = 0
+    boards_with_200 = 0
+    boards_with_jobs = 0
 
     cutoff_dt = None
     if days > 0:
@@ -834,45 +863,74 @@ async def run_extractor(
                 if handler:
                     tasks.append(handler(http, slug, full_content))
                 else:
-                    tasks.append(asyncio.sleep(0, result=[]))
+                    tasks.append(asyncio.sleep(0, result=(0, [])))
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
             batch_jobs = []
+            board_records = []
+            now_iso = datetime.now(timezone.utc).isoformat()
 
-            for res in results:
-                if isinstance(res, list):
-                    for j in res:
-                        if only_us and not j["is_us"]:
+            for (platform, slug), res in zip(batch, results):
+                if isinstance(res, tuple):
+                    status_code, comp_jobs = res
+                elif isinstance(res, list):
+                    status_code, comp_jobs = 200, res
+                else:
+                    status_code, comp_jobs = 0, []
+
+                if status_code == 200:
+                    boards_with_200 += 1
+
+                valid_comp_jobs = []
+                for j in comp_jobs:
+                    if only_us and not j["is_us"]:
+                        continue
+
+                    # Check recency filter
+                    if cutoff_dt and j.get("posted_at"):
+                        try:
+                            j_dt = datetime.fromisoformat(j["posted_at"].replace("Z", "+00:00"))
+                            if j_dt < cutoff_dt:
+                                continue
+                        except Exception:
+                            pass
+
+                    # Check keyword filter
+                    if kw_clean:
+                        search_corpus = f"{j.get('title', '')} {j.get('department', '')} {j.get('location', '')}".lower()
+                        if kw_clean not in search_corpus:
                             continue
 
-                        # Check recency filter
-                        if cutoff_dt and j.get("posted_at"):
-                            try:
-                                j_dt = datetime.fromisoformat(j["posted_at"].replace("Z", "+00:00"))
-                                if j_dt < cutoff_dt:
-                                    continue
-                            except Exception:
-                                pass
+                    valid_comp_jobs.append(j)
+                    if j.get("posted_at"):
+                        jobs_with_post_time += 1
 
-                        # Check keyword filter
-                        if kw_clean:
-                            search_corpus = f"{j.get('title', '')} {j.get('department', '')} {j.get('location', '')}".lower()
-                            if kw_clean not in search_corpus:
-                                continue
+                if len(comp_jobs) > 0:
+                    boards_with_jobs += 1
 
-                        batch_jobs.append(j)
-                        if j["posted_at"]:
-                            jobs_with_post_time += 1
+                board_records.append((
+                    platform,
+                    slug,
+                    status_code,
+                    len(comp_jobs),
+                    len(valid_comp_jobs),
+                    now_iso
+                ))
+                batch_jobs.extend(valid_comp_jobs)
 
+            if board_records:
+                save_boards_batch(output_db, board_records)
             if batch_jobs:
                 save_jobs_batch(output_db, batch_jobs)
                 total_jobs_saved += len(batch_jobs)
 
             progress = min(idx + batch_size, total_companies)
             pct = (progress / total_companies) * 100
-            print(f"[{progress:,}/{total_companies:,} ({pct:.1f}%)] Scanned | Live Jobs Saved: {total_jobs_saved:,} | Timestamp Capture Rate: {jobs_with_post_time}/{max(1, total_jobs_saved)} ({((jobs_with_post_time / max(1, total_jobs_saved)) * 100):.1f}%)", flush=True)
+            rate_200 = (boards_with_200 / max(1, progress)) * 100
+            print(f"[{progress:,}/{total_companies:,} ({pct:.1f}%)] Scanned | Boards 200 OK: {boards_with_200:,}/{progress:,} ({rate_200:.1f}%) | Live Jobs: {total_jobs_saved:,} | Timestamp Rate: {jobs_with_post_time}/{max(1, total_jobs_saved)} ({((jobs_with_post_time / max(1, total_jobs_saved)) * 100):.1f}%)", flush=True)
 
     print(f"\nExtraction completed successfully!", flush=True)
+    print(f"Total Boards Returning HTTP 200: {boards_with_200:,} / {total_companies:,} ({((boards_with_200 / max(1, total_companies)) * 100):.1f}%)", flush=True)
     print(f"Total live jobs in '{output_db}': {total_jobs_saved:,}", flush=True)
     if export_csv:
         export_sqlite_to_csv(output_db, export_csv, only_us=only_us)
@@ -906,7 +964,7 @@ def main():
 
         async def run_single():
             async with AsyncHTTPClient(concurrency=10) as http:
-                jobs = await handler(http, args.slug, args.full_content)
+                status, jobs = await handler(http, args.slug, args.full_content)
                 filtered = []
                 cutoff_dt = datetime.now(timezone.utc) - timedelta(days=args.days) if args.days > 0 else None
                 kw = args.keyword.lower().strip()
@@ -927,13 +985,15 @@ def main():
                             continue
                     filtered.append(j)
 
-                print(f"\nExtracted {len(filtered)} matching live jobs for {platform.upper()}:{args.slug}")
+                print(f"\nBoard HTTP Status: {status} (200 = Board Exists & Active)")
+                print(f"Extracted {len(filtered)} matching live jobs for {platform.upper()}:{args.slug}")
                 for j in filtered[:10]:
                     print(f"  • {j['title']} | Loc: {j['location']} (US={j['is_us']})")
                     print(f"    Posted: {j['posted_at'] or 'N/A'} | Apply: {j['apply_url']}")
 
                 if args.output_db:
                     init_db(args.output_db)
+                    save_boards_batch(args.output_db, [(platform, args.slug, status, len(jobs), len(filtered), datetime.now(timezone.utc).isoformat())])
                     save_jobs_batch(args.output_db, filtered)
                     print(f"Saved to {args.output_db}")
 

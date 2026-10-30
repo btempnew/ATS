@@ -192,6 +192,19 @@ jobs:
           conn = sqlite3.connect(db_file)
           cur = conn.cursor()
 
+          # Boards metrics
+          total_boards = 0
+          boards_200 = 0
+          boards_with_jobs = 0
+          try:
+              cur.execute("SELECT COUNT(*), COUNT(CASE WHEN http_status = 200 THEN 1 END), COUNT(CASE WHEN total_jobs > 0 THEN 1 END) FROM scanned_boards;")
+              row = cur.fetchone()
+              if row:
+                  total_boards, boards_200, boards_with_jobs = row
+          except Exception:
+              pass
+
+          # Jobs metrics
           cur.execute("SELECT COUNT(*) FROM live_jobs;")
           total_jobs = cur.fetchone()[0]
 
@@ -199,14 +212,38 @@ jobs:
           with_ts = cur.fetchone()[0]
 
           ts_rate = ((with_ts / total_jobs) * 100) if total_jobs > 0 else 0
+          board_200_rate = ((boards_200 / total_boards) * 100) if total_boards > 0 else 0
 
-          cur.execute("""
-              SELECT platform, COUNT(*), COUNT(CASE WHEN is_us = 1 THEN 1 END), COUNT(CASE WHEN posted_at != \"\" THEN 1 END)
-              FROM live_jobs
-              GROUP BY platform
-              ORDER BY COUNT(*) DESC;
-          """)
-          rows = cur.fetchall()
+          # Platform breakdown
+          try:
+              cur.execute("""
+                  SELECT 
+                      s.platform,
+                      COUNT(s.company_slug) as scanned,
+                      COUNT(CASE WHEN s.http_status = 200 THEN 1 END) as b_200,
+                      COUNT(CASE WHEN s.total_jobs > 0 THEN 1 END) as b_jobs,
+                      COALESCE(j.total_jobs, 0) as tot_jobs,
+                      COALESCE(j.us_jobs, 0) as us_jobs,
+                      COALESCE(j.ts_jobs, 0) as ts_jobs
+                  FROM scanned_boards s
+                  LEFT JOIN (
+                      SELECT platform, COUNT(*) as total_jobs,
+                             COUNT(CASE WHEN is_us = 1 THEN 1 END) as us_jobs,
+                             COUNT(CASE WHEN posted_at != "" THEN 1 END) as ts_jobs
+                      FROM live_jobs GROUP BY platform
+                  ) j ON s.platform = j.platform
+                  GROUP BY s.platform
+                  ORDER BY tot_jobs DESC;
+              """)
+              rows = cur.fetchall()
+          except Exception:
+              cur.execute("""
+                  SELECT platform, 0, 0, 0, COUNT(*), COUNT(CASE WHEN is_us = 1 THEN 1 END), COUNT(CASE WHEN posted_at != \"\" THEN 1 END)
+                  FROM live_jobs
+                  GROUP BY platform
+                  ORDER BY COUNT(*) DESC;
+              """)
+              rows = cur.fetchall()
 
           cur.execute("SELECT title, company_name, location, posted_at, apply_url FROM live_jobs WHERE posted_at != \"\" ORDER BY posted_at DESC LIMIT 10;")
           recent = cur.fetchall()
@@ -214,13 +251,25 @@ jobs:
 
           summary = []
           summary.append("## 🚀 Live ATS Job Extraction Summary\n")
+          if total_boards > 0:
+              summary.append(f"- **Total Company Boards Scanned:** `{total_boards:,}`")
+              summary.append(f"- **Boards Returning HTTP 200 (Active):** `{boards_200:,}` / `{total_boards:,}` (**{board_200_rate:.1f}%**)")
+              summary.append(f"- **Boards with Live Openings:** `{boards_with_jobs:,}`")
           summary.append(f"- **Total Live Jobs Harvested:** `{total_jobs:,}`")
           summary.append(f"- **Timestamp Capture Rate:** `{with_ts:,}` / `{total_jobs:,}` (**{ts_rate:.1f}%**)\n")
+
           summary.append("### Breakdown by Platform\n")
-          summary.append("| Platform | Total Jobs | US Jobs | With Post Timestamp |")
-          summary.append("|---|---|---|---|")
-          for p, tot, us, ts in rows:
-              summary.append(f"| **{p.title()}** | `{tot:,}` | `{us:,}` | `{ts:,}` |")
+          if total_boards > 0:
+              summary.append("| Platform | Boards Scanned | 200 OK Boards | Boards with Jobs | Total Jobs | US Jobs | With Post Timestamp |")
+              summary.append("|---|---|---|---|---|---|---|")
+              for p, sc, b200, bjob, tot, us, ts in rows:
+                  rate_p = ((b200 / sc) * 100) if sc > 0 else 0
+                  summary.append(f"| **{p.title()}** | `{sc:,}` | `{b200:,}` ({rate_p:.1f}%) | `{bjob:,}` | `{tot:,}` | `{us:,}` | `{ts:,}` |")
+          else:
+              summary.append("| Platform | Total Jobs | US Jobs | With Post Timestamp |")
+              summary.append("|---|---|---|---|")
+              for r in rows:
+                  summary.append(f"| **{r[0].title()}** | `{r[4]:,}` | `{r[5]:,}` | `{r[6]:,}` |")
 
           if recent:
               summary.append("\n### 🕒 Most Recently Posted Live Jobs\n")
