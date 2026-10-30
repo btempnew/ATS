@@ -1,12 +1,12 @@
-name: US Job Companies ATS Discovery & Verification Pipeline (v5.0 Whirlwind Edition)
+name: US Job Companies ATS Discovery & Verification Pipeline (v6.0 TheirStack 100K+ Edition)
 
 on:
   workflow_dispatch:
     inputs:
       sources:
-        description: "Discovery engines (hf,pdns,wayback,commoncrawl)"
+        description: "Discovery engines (hf,catalogs,pdns,wayback,commoncrawl)"
         required: false
-        default: "hf,pdns,wayback,commoncrawl"
+        default: "hf,catalogs,pdns,wayback,commoncrawl"
       from_date:
         description: "Historical start date YYYYMMDD (3-5 Years = 20210101)"
         required: false
@@ -32,7 +32,7 @@ permissions:
 
 jobs:
   # ============================================================================
-  # JOB 1: Parallel Sharded Discovery + Direct HF Parquet Verification + Probe
+  # JOB 1: Parallel Sharded Discovery + Direct Catalog/Parquet Pre-Verification
   # ============================================================================
   discover-and-verify-shard:
     name: "US ATS Shard: ${{ matrix.shard_name }}"
@@ -75,12 +75,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install "cdx_toolkit>=0.9.37" "warcio>=1.7.5" "duckdb>=1.0.0" "pyarrow>=15.0.0"
 
       - name: Run Built-in Self-Test
         run: |
           python ats_company_discovery_engine.py self-test
 
-      - name: Step 1 - Discover US ATS Boards & Pre-Verify HF OpenApply Parquet
+      - name: Step 1 - Discover & Pre-Verify US ATS Boards (HF Parquet + 160K Catalogs + PDNS + Wayback + CC)
         # Hard 90-minute timeout + continue-on-error so a slow index NEVER blocks Step 2 or artifact upload
         timeout-minutes: 90
         continue-on-error: true
@@ -88,14 +89,14 @@ jobs:
           python ats_company_discovery_engine.py discover \
             --db "ats_${{ matrix.shard_id }}.db" \
             --platforms "${{ matrix.platforms }}" \
-            --sources "${{ github.event.inputs.sources || 'hf,pdns,wayback,commoncrawl' }}" \
+            --sources "${{ github.event.inputs.sources || 'hf,catalogs,pdns,wayback,commoncrawl' }}" \
             --from-date "${{ github.event.inputs.from_date || '20210101' }}" \
             --to-date "${{ github.event.inputs.to_date || '20261231' }}" \
             --wayback-limit "${{ github.event.inputs.wayback_limit || '50000' }}" \
             --concurrency "${{ github.event.inputs.concurrency || '60' }}"
 
-      - name: Step 2 - Verify Net-New Candidate Boards & Filter US Jobs
-        timeout-minutes: 210
+      - name: Step 2 - Enrich Candidate Boards with Live US Job Counts & Tech Stack
+        timeout-minutes: 120
         continue-on-error: true
         run: |
           python ats_company_discovery_engine.py verify \
@@ -129,7 +130,6 @@ jobs:
   merge-and-export:
     name: "Merge Shards & Export US Company Lists"
     needs: discover-and-verify-shard
-    # CRITICAL FIX: Always run merge-and-export even if one shard hits a partial timeout
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -183,4 +183,3 @@ jobs:
             ./exports/SUMMARY.md
             ats_companies_merged.db
           retention-days: 90
-
