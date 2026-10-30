@@ -4,17 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       crawl:
-        description: 'Common Crawl ID (e.g. CC-MAIN-2026-43 or CC-MAIN-2024-22)'
+        description: "Common Crawl ID ('ALL' for last 2 years, or specific ID like CC-MAIN-2026-43)"
         required: true
-        default: 'CC-MAIN-2026-43'
+        default: 'ALL'
+      min_year:
+        description: "Earliest crawl year if using ALL (e.g. 2024, 2025, 2026)"
+        required: true
+        default: '2024'
       start_shard:
         description: 'Starting shard index (0 to 299)'
         required: true
         default: '0'
       num_shards:
-        description: 'Number of Parquet shards to scan (1 to 20)'
+        description: 'Number of Parquet shards to scan per crawl (1 to 20)'
         required: true
-        default: '10'
+        default: '5'
 
   # Optional weekly schedule to discover newly indexed companies automatically
   schedule:
@@ -45,12 +49,14 @@ jobs:
       - name: Run Common Crawl ATS Extraction
         run: |
           START=${{ github.event.inputs.start_shard || '0' }}
-          SHARDS=${{ github.event.inputs.num_shards || '10' }}
-          CRAWL=${{ github.event.inputs.crawl || 'CC-MAIN-2026-43' }}
+          SHARDS=${{ github.event.inputs.num_shards || '5' }}
+          CRAWL=${{ github.event.inputs.crawl || 'ALL' }}
+          MIN_YEAR=${{ github.event.inputs.min_year || '2024' }}
 
-          echo "Running crawl $CRAWL from shard $START ($SHARDS shards)..."
+          echo "Running ATS Extraction (crawl=$CRAWL, min_year=$MIN_YEAR, start=$START, shards=$SHARDS)..."
           python gha_crawl_ats.py \
             --crawl "$CRAWL" \
+            --min-year "$MIN_YEAR" \
             --start "$START" \
             --shards "$SHARDS" \
             --greenhouse-file "greenhouse_companies.txt"
