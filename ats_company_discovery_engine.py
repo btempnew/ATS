@@ -357,8 +357,10 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
         ats_id="dover",
         display_name="Dover",
         category="us_tech_startups",
-        url_regexes=(r"https?://app\.dover\.(?:com|io)/apply/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",),
-        cdx_patterns=("app.dover.com/apply/*", "app.dover.io/apply/*"),
+        url_regexes=(
+            r"https?://app\.dover\.(?:com|io)/(?:apply|jobs)/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
+        ),
+        cdx_patterns=("app.dover.com/apply/*", "app.dover.io/apply/*", "app.dover.com/jobs/*"),
         is_subdomain_ats=False,
         passive_dns_domains=("app.dover.com",),
         html_signatures=(r"app\.dover\.(?:com|io)/apply/(?P<slug>[a-zA-Z0-9_-]+)",),
@@ -630,12 +632,18 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
         display_name="SAP SuccessFactors",
         category="us_enterprise",
         url_regexes=(
-            r"https?://career(?P<shard>\d+)?\.successfactors\.(?P<site>com|eu)/career\?company=(?P<slug>[a-zA-Z0-9_-]+)",
+            r"https?://career(?P<shard>\d+)?\.successfactors\.(?P<site>com|eu)/career\?company=(?P<slug>[a-zA-Z0-9._-]+)",
             r"https?://(?P<slug>[a-zA-Z0-9-]+)\.successfactors\.(?P<site>com|eu)(?:/|$|\?)",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.jobs2web\.com(?:/|$|\?)",
         ),
-        cdx_patterns=("successfactors.com",),
-        is_subdomain_ats=True,
-        passive_dns_domains=("successfactors.com",),
+        cdx_patterns=(
+            "career4.successfactors.com/career?company=*",
+            "career8.successfactors.com/career?company=*",
+            "career.successfactors.com/career?company=*",
+            "jobs2web.com",
+        ),
+        is_subdomain_ats=False,
+        passive_dns_domains=("successfactors.com", "jobs2web.com"),
         cname_targets=("successfactors.com", "jobs2web.com"),
         html_signatures=(r"successfactors\.com/career\?company=(?P<slug>[a-zA-Z0-9_-]+)",),
         public_api_url="https://career.successfactors.com/career?company={slug}",
@@ -646,9 +654,15 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
         display_name="Fountain",
         category="us_enterprise",
         url_regexes=(
-            r"https?://(?:apply|jobs|web)\.fountain\.com/(?:apply/)?(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
+            r"https?://(?:apply|jobs|web|www)?\.?fountain\.com/(?:apply/|c/|jobs/)?(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
         ),
-        cdx_patterns=("apply.fountain.com/*", "jobs.fountain.com/*"),
+        cdx_patterns=(
+            "apply.fountain.com/*",
+            "jobs.fountain.com/*",
+            "web.fountain.com/apply/*",
+            "web.fountain.com/c/*",
+            "www.fountain.com/c/*",
+        ),
         is_subdomain_ats=False,
         passive_dns_domains=("fountain.com",),
         cname_targets=("fountain.com",),
@@ -1305,8 +1319,15 @@ class PublicATSCatalogVerifier:
     """
 
     LATMAY_CSV_URLS: Tuple[str, ...] = (
+        "https://huggingface.co/datasets/latmay/ats-career-page-urls/resolve/main/ats_career_page_urls.csv",
+        "https://huggingface.co/datasets/Vera-001/ats-career-page-urls/resolve/main/ats_career_page_urls.csv",
         "https://huggingface.co/datasets/latmay/ats-career-page-urls/resolve/main/ats_page_urls.csv",
         "https://huggingface.co/datasets/Vera-001/ats-career-page-urls/resolve/main/ats_page_urls.csv",
+    )
+
+    STATE_OF_ATS_CSV_URLS: Tuple[str, ...] = (
+        "https://raw.githubusercontent.com/Kayvan-Zahiri/state-of-ats-2026/main/data/companies.csv",
+        "https://raw.githubusercontent.com/Kayvan-Zahiri/state-of-ats-2026/main/data/verification-2026-10.csv",
     )
 
     GZ_SLUG_URLS: Dict[str, str] = {
@@ -1428,6 +1449,28 @@ class PublicATSCatalogVerifier:
                 except Exception as exc:
                     logger.debug("[Public ATS Catalogs] Failed parsing %s: %s", json_url, exc)
 
+        # 4. Ingest State of ATS 2026 Fortune 500 / Global 2000 Verified Dataset (`Kayvan-Zahiri/state-of-ats-2026`)
+        for s_url in self.STATE_OF_ATS_CSV_URLS:
+            status, body, _ = await self.http.request("GET", s_url, timeout_override=25.0)
+            if status == 200 and body:
+                reader = csv.DictReader(io.StringIO(body))
+                for row in reader:
+                    host_or_url = (
+                        row.get("apply_host")
+                        or row.get("evidence_url")
+                        or row.get("portal_url")
+                        or ""
+                    ).strip()
+                    if not host_or_url:
+                        continue
+                    if not host_or_url.startswith("http"):
+                        host_or_url = f"https://{host_or_url}"
+                    b = extract_ats_from_url(
+                        host_or_url, discovery_source="state_of_ats_2026", platforms=platforms
+                    )
+                    if b and b.ats_id in target_set:
+                        discovered_map[b.board_key] = b
+
         discovered_list = list(discovered_map.values())
         verified_list = boards_to_preverified(discovered_list)
         return discovered_list, verified_list
@@ -1542,10 +1585,9 @@ class WhirlwindCDXToolkitDiscoverer:
             try:
                 for obj in cdx.iter(
                     query_url,
-                    from_ts="202401",
+                    from_ts="202501",
                     to="202612",
                     limit=self.limit_per_pattern,
-                    filter=["=status:200"],
                 ):
                     if time.monotonic() - start_ts > self.max_seconds - 5.0:
                         break
@@ -1586,6 +1628,28 @@ class WaybackCDXDiscoverer:
         self.to_date = to_date
 
     @staticmethod
+    def compute_surt_collapse_len(pattern: str, is_subdomain: bool) -> int:
+        """
+        Computes the exact SURT `urlkey` prefix length that includes the domain + base path +
+        first 9 characters of the company slug/subdomain, so all 5,000+ job postings of a single
+        company collapse into 1 row on the Wayback server!
+        """
+        clean = pattern.replace("*.", "").rstrip("*")
+        if "/" in clean:
+            host, path_part = clean.split("/", 1)
+            path_part = "/" + path_part
+        else:
+            host, path_part = clean, ""
+        host_parts = [p for p in host.lower().split(".") if p]
+        surt_host = ",".join(reversed(host_parts))
+        if is_subdomain and not path_part:
+            # e.g. `com,recruitee,<subdomain>` -> collapse after 9 chars of subdomain (before `)/path`)
+            return len(surt_host) + 1 + 9
+        # e.g. `com,smartrecruiters,jobs)/<slug>` -> collapse after 9 chars of company slug
+        surt_base = f"{surt_host}){path_part.lower()}"
+        return len(surt_base) + 9
+
+    @staticmethod
     def build_wayback_url(
         spec: ATSPlatformSpec,
         pattern: str,
@@ -1594,22 +1658,21 @@ class WaybackCDXDiscoverer:
         limit: int,
     ) -> str:
         clean_dom = pattern.replace("*.", "").rstrip("/*")
-        if spec.is_subdomain_ats:
-            # Collapse on first 38 chars of SURT key (`com,bamboohr,<full_company_subdomain>`)
+        is_sub = spec.is_subdomain_ats or ("/" not in pattern and not pattern.endswith("*"))
+        collapse_n = WaybackCDXDiscoverer.compute_surt_collapse_len(pattern, is_sub)
+        if is_sub:
             return (
                 f"https://web.archive.org/cdx/search/cdx"
                 f"?url={quote_plus(clean_dom)}&matchType=domain&output=json&fl=original"
                 f"&filter=statuscode:200&from={from_date}&to={to_date}"
-                f"&collapse=urlkey:38&limit={min(max(limit, 40000), 60000)}"
+                f"&collapse=urlkey:{collapse_n}&limit={min(max(limit, 50000), 80000)}"
             )
         else:
-            # Path-based ATS: use fast `collapse=urlkey` with lightweight per-prefix limits (3500)
-            # so all 36 prefix queries complete in ~45 seconds (yielding 11,310+ Greenhouse boards!)
             return (
                 f"https://web.archive.org/cdx/search/cdx"
                 f"?url={quote_plus(pattern)}&output=json&fl=original"
                 f"&filter=statuscode:200&from={from_date}&to={to_date}"
-                f"&collapse=urlkey&limit={limit}"
+                f"&collapse=urlkey:{collapse_n}&limit={limit}"
             )
 
     async def discover_for_platform(self, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
@@ -2807,11 +2870,11 @@ def run_self_test() -> None:
     wb_recruitee = WaybackCDXDiscoverer.build_wayback_url(
         ATS_PLATFORMS["recruitee"], "recruitee.com", "20210101", "20261231", 50000
     )
-    assert "matchType=domain" in wb_recruitee and "collapse=urlkey:38" in wb_recruitee
+    assert "matchType=domain" in wb_recruitee and "collapse=urlkey:23" in wb_recruitee
     wb_gh = WaybackCDXDiscoverer.build_wayback_url(
         ATS_PLATFORMS["greenhouse"], "boards.greenhouse.io/*", "20210101", "20261231", 50000
     )
-    assert "collapse=urlkey&" in wb_gh
+    assert "collapse=urlkey:31" in wb_gh
     print("[PASS] 2. Wayback CDX Subdomain (`matchType=domain`) & Path Collapsing verified.")
 
     # 3. Verify US location detection
