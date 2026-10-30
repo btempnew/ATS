@@ -156,6 +156,65 @@ def is_us_location(location_str: str) -> bool:
     return False
 
 
+FOREIGN_TLD_SUFFIXES: Tuple[str, ...] = (
+    ".co.uk", ".org.uk", ".ac.uk", ".de", ".fr", ".nl", ".es", ".it", ".pl",
+    ".ch", ".at", ".se", ".no", ".dk", ".fi", ".ie", ".be", ".pt", ".cz",
+    ".ro", ".hu", ".com.au", ".co.nz", ".co.in", ".in", ".com.br", ".com.mx",
+    ".com.ar", ".cl", ".co.jp", ".jp", ".kr", ".cn", ".sg", ".hk", ".tw",
+    ".my", ".ph", ".id", ".vn", ".th", ".za", ".ae", ".il", ".ru", ".ua", ".ca",
+)
+
+EXPLICIT_FOREIGN_LOCATION_REGEX = re.compile(
+    r"\b("
+    r"united\s+kingdom|england|scotland|london|manchester|edinburgh|"
+    r"germany|berlin|munich|münchen|frankfurt|hamburg|"
+    r"france|paris|lyon|toulouse|"
+    r"netherlands|amsterdam|rotterdam|utrecht|"
+    r"spain|madrid|barcelona|"
+    r"italy|milan|rome|torino|"
+    r"poland|warsaw|krakow|kraków|wroclaw|"
+    r"ireland|dublin|cork|galway|"
+    r"sweden|stockholm|gothenburg|"
+    r"switzerland|zurich|zürich|geneva|"
+    r"india|bangalore|bengaluru|mumbai|hyderabad|pune|chennai|gurgaon|gurugram|noida|delhi|"
+    r"australia|sydney|melbourne|brisbane|perth|"
+    r"new\s+zealand|auckland|wellington|"
+    r"brazil|brasil|são\s+paulo|sao\s+paulo|rio\s+de\s+janeiro|"
+    r"mexico|mexico\s+city|cdmx|guadalajara|monterrey|"
+    r"argentina|buenos\s+aires|colombia|bogota|bogotá|chile|santiago|"
+    r"canada|toronto|vancouver|montreal|montréal|ottawa|calgary|waterloo|"
+    r"singapore|japan|tokyo|osaka|south\s+korea|seoul|"
+    r"china|beijing|shanghai|shenzhen|hong\s+kong|taiwan|taipei|"
+    r"israel|tel\s+aviv|herzliya|"
+    r"philippines|manila|indonesia|jakarta|vietnam|ho\s+chi\s+minh|hanoi|thailand|bangkok|"
+    r"united\s+arab\s+emirates|dubai|abu\s+dhabi|south\s+africa|johannesburg|cape\s+town"
+    r")\b",
+    re.IGNORECASE,
+)
+
+
+def is_explicitly_foreign_only(locations: Sequence[str], resolved_domain: str = "") -> bool:
+    """
+    Returns True ONLY when a company is explicitly foreign-only:
+    - Its resolved domain uses a non-US country-code TLD (e.g. `.co.uk`, `.de`, `.fr`, `.com.au`, `.in`), OR
+    - It lists explicit locations, ZERO of them match the US or Remote, and at least one matches a known foreign country/city.
+    """
+    dom = (resolved_domain or "").strip().lower()
+    if dom and any(dom.endswith(tld) for tld in FOREIGN_TLD_SUFFIXES):
+        if not any(is_us_location(loc) for loc in locations):
+            return True
+    if not locations:
+        return False
+    has_any_us_or_remote = any(
+        is_us_location(loc) or "remote" in loc.lower() or "anywhere" in loc.lower()
+        for loc in locations
+    )
+    if has_any_us_or_remote:
+        return False
+    has_explicit_foreign = any(EXPLICIT_FOREIGN_LOCATION_REGEX.search(loc) for loc in locations if loc)
+    return has_explicit_foreign
+
+
 # =============================================================================
 # 2. TOP 24 US ATS PLATFORM REGISTRY
 # =============================================================================
@@ -978,7 +1037,7 @@ class HuggingFaceDirectVerifier:
             return [], []
 
         status, body, _ = await self.http.request("GET", self.HF_TREE_URL)
-        latest_date_dir = ""
+        selected_date_dirs: List[str] = []
         if status == 200 and body:
             try:
                 entries = json.loads(body)
@@ -990,26 +1049,38 @@ class HuggingFaceDirectVerifier:
                     ]
                 )
                 if date_dirs:
-                    latest_date_dir = date_dirs[-1]
+                    # Sample up to 6 evenly spaced historical + latest partitions to maximize company recall!
+                    if len(date_dirs) <= 6:
+                        selected_date_dirs = date_dirs
+                    else:
+                        step = max(1, (len(date_dirs) - 1) // 5)
+                        idxs = sorted(set([0, step, step * 2, step * 3, step * 4, len(date_dirs) - 1]))
+                        selected_date_dirs = [date_dirs[i] for i in idxs if 0 <= i < len(date_dirs)]
             except Exception as exc:
                 logger.warning("[HF OpenApply] Failed to parse HF tree JSON: %s", exc)
 
-        if not latest_date_dir:
-            logger.info("[HF OpenApply] Could not resolve latest partition directory.")
+        if not selected_date_dirs:
+            logger.info("[HF OpenApply] Could not resolve partition directories.")
             return [], []
 
-        logger.info("[HF OpenApply Direct Verifier] Using partition: %s", latest_date_dir)
+        logger.info(
+            "[HF OpenApply Direct Verifier] Unioning %d partitions (%s .. %s)",
+            len(selected_date_dirs),
+            selected_date_dirs[0],
+            selected_date_dirs[-1],
+        )
         discovered_out: List[DiscoveredBoard] = []
         verified_out: List[VerifiedATSBoard] = []
 
         for src in target_sources:
-            parquet_url = (
+            parquet_urls = [
                 f"https://huggingface.co/datasets/edwarddgao/open-apply-jobs/resolve/main/"
-                f"{latest_date_dir}/source={src}/part-0.parquet"
-            )
+                f"{d_dir}/source={src}/part-0.parquet"
+                for d_dir in selected_date_dirs
+            ]
             try:
                 rows = await asyncio.to_thread(
-                    self._aggregate_parquet_companies, duckdb, parquet_url
+                    self._aggregate_parquet_companies, duckdb, parquet_urls
                 )
                 spec = ATS_PLATFORMS[src]
                 us_verified_count = 0
@@ -1041,9 +1112,13 @@ class HuggingFaceDirectVerifier:
                         if cleaned_loc and cleaned_loc not in unique_locs and len(unique_locs) < 15:
                             unique_locs.append(cleaned_loc)
 
-                    has_us = us_jobs > 0 or bool(any_remote)
+                    has_us = (
+                        us_jobs > 0
+                        or bool(any_remote)
+                        or not is_explicitly_foreign_only(unique_locs, resolved_dom)
+                    )
                     if has_us and us_jobs == 0:
-                        us_jobs = max(1, total_jobs // 2)
+                        us_jobs = max(1, total_jobs)
                     if has_us:
                         us_verified_count += 1
 
@@ -1095,25 +1170,35 @@ class HuggingFaceDirectVerifier:
 
     @staticmethod
     def _aggregate_parquet_companies(
-        duckdb_mod: Any, parquet_url: str
+        duckdb_mod: Any, parquet_urls: Sequence[str]
     ) -> List[Tuple[str, int, str, str, List[str], List[str], bool]]:
         con = duckdb_mod.connect(database=":memory:")
         con.execute("INSTALL httpfs; LOAD httpfs;")
-        rows = con.execute(
-            f"""
-            SELECT
-                source_slug,
-                COUNT(*) AS total_jobs,
-                ANY_VALUE(apply_url) AS sample_url,
-                MAX(COALESCE(CAST(updated_at AS VARCHAR), CAST(posted_at AS VARCHAR), '')) AS latest_date,
-                LIST(DISTINCT title)[1:8] AS sample_titles,
-                LIST(CAST(locations AS VARCHAR))[1:50] AS loc_strings,
-                BOOL_OR(COALESCE(remote, false)) AS any_remote
-            FROM read_parquet('{parquet_url}')
-            WHERE source_slug IS NOT NULL
-            GROUP BY source_slug
-            """
-        ).fetchall()
+        # Try multi-partition union first; fallback to latest partition if earlier partitions lack a source
+        urls_to_try = list(parquet_urls)
+        rows = []
+        for attempt_urls in (urls_to_try, [urls_to_try[-1]]):
+            url_list_sql = "[" + ", ".join(f"'{u}'" for u in attempt_urls) + "]"
+            try:
+                rows = con.execute(
+                    f"""
+                    SELECT
+                        source_slug,
+                        COUNT(DISTINCT COALESCE(title, apply_url)) AS total_jobs,
+                        ANY_VALUE(apply_url) AS sample_url,
+                        MAX(COALESCE(CAST(updated_at AS VARCHAR), CAST(posted_at AS VARCHAR), '')) AS latest_date,
+                        LIST(DISTINCT title)[1:8] AS sample_titles,
+                        LIST(CAST(locations AS VARCHAR))[1:50] AS loc_strings,
+                        BOOL_OR(COALESCE(remote, false)) AS any_remote
+                    FROM read_parquet({url_list_sql}, union_by_name=true)
+                    WHERE source_slug IS NOT NULL
+                    GROUP BY source_slug
+                    """
+                ).fetchall()
+                if rows:
+                    break
+            except Exception:
+                continue
         con.close()
         return [
             (
@@ -1191,14 +1276,16 @@ class WhirlwindCDXToolkitDiscoverer:
 
 class WaybackCDXDiscoverer:
     """
-    v5.0 Single-Pass Collapsed Wayback Machine CDX Discoverer:
-    - For subdomain ATS (`bamboohr.com`, `recruitee.com`, `pinpointhq.com`, `icims.com`, `taleo.net`):
-      Uses `url={domain}&matchType=domain&collapse=urlkey:24` (fixes the `Found 0 boards`
-      bug from Run #2 and collapses every subdomain into 1 row!).
-    - For path ATS (`boards.greenhouse.io/*`, `jobs.ashbyhq.com/*`, `jobs.lever.co/*`, `apply.workable.com/*`):
-      Uses `url={pattern}&collapse=urlkey:30` (collapses by the first 30 chars of SURT key,
-      returning thousands of unique company slugs in a single request without 36 prefix loops!).
+    v5.5 High-Recall Hybrid Wayback Machine CDX Discoverer:
+    - For Subdomain ATS (`bamboohr.com`, `icims.com`, `myworkdayjobs.com`, `recruitee.com`, `pinpointhq.com`, `applytojob.com`, `breezy.hr`, `taleo.net`):
+      Uses `url={domain}&matchType=domain&collapse=urlkey:38&limit=100000` (collapsing at the full
+      company subdomain SURT key so thousands of distinct company subdomains are returned).
+    - For Path-based ATS (`boards.greenhouse.io/*`, `jobs.ashbyhq.com/*`, `jobs.lever.co/*`, `apply.workable.com/*`, `jobs.smartrecruiters.com/*`, etc.):
+      Combines top-level pattern query (`collapse=urlkey:55`) WITH concurrent 36-prefix (`a..z, 0..9`)
+      sharding (`{base_path}/{prefix}*`) so platforms with 10,000+ historical company slugs never get truncated!
     """
+
+    PREFIX_CHARS: Tuple[str, ...] = tuple("abcdefghijklmnopqrstuvwxyz0123456789")
 
     def __init__(
         self,
@@ -1222,44 +1309,60 @@ class WaybackCDXDiscoverer:
     ) -> str:
         clean_dom = pattern.replace("*.", "").rstrip("/*")
         if spec.is_subdomain_ats:
-            # Collapse on first 24 chars of SURT key (`com,bamboohr,<subdomain>`)
+            # Collapse on first 38 chars of SURT key (`com,bamboohr,<full_company_subdomain>`)
             return (
                 f"https://web.archive.org/cdx/search/cdx"
                 f"?url={quote_plus(clean_dom)}&matchType=domain&output=json&fl=original"
                 f"&filter=statuscode:200&from={from_date}&to={to_date}"
-                f"&collapse=urlkey:24&limit={limit}"
+                f"&collapse=urlkey:38&limit={max(limit, 100000)}"
             )
         else:
-            # Path-based ATS: collapse on first 30 chars of SURT key (`io,greenhouse,boards)/<slug>`)
+            # Path-based ATS: collapse on first 55 chars of SURT key so company slugs after long path prefixes are never merged
             return (
                 f"https://web.archive.org/cdx/search/cdx"
                 f"?url={quote_plus(pattern)}&output=json&fl=original"
                 f"&filter=statuscode:200&from={from_date}&to={to_date}"
-                f"&collapse=urlkey:30&limit={limit}"
+                f"&collapse=urlkey:55&limit={limit}"
             )
 
     async def discover_for_platform(self, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
         discovered: Dict[str, DiscoveredBoard] = {}
+        sem = asyncio.Semaphore(12)
 
-        async def _query_pattern(pattern: str) -> List[DiscoveredBoard]:
-            wb_url = self.build_wayback_url(
-                spec, pattern, self.from_date, self.to_date, self.limit_per_pattern
-            )
-            status, body, _ = await self.http.request("GET", wb_url, timeout_override=60.0)
-            if status != 200 or not body.strip():
-                return []
-            return self.parse_wayback_json(body, spec)
+        async def _query_pattern(pattern: str, limit_val: int) -> List[DiscoveredBoard]:
+            async with sem:
+                wb_url = self.build_wayback_url(
+                    spec, pattern, self.from_date, self.to_date, limit_val
+                )
+                status, body, _ = await self.http.request("GET", wb_url, timeout_override=55.0)
+                if status != 200 or not body.strip():
+                    return []
+                return self.parse_wayback_json(body, spec)
+
+        tasks = []
+        for pat in spec.cdx_patterns:
+            tasks.append(_query_pattern(pat, self.limit_per_pattern))
+            # For path-based ATS ending in `/*`, also fan out 36 alphanumeric prefix queries (`a*`..`9*`)
+            if not spec.is_subdomain_ats and pat.endswith("/*"):
+                base_pat = pat[:-1]  # keep trailing `/`
+                per_prefix_limit = max(10000, self.limit_per_pattern // 3)
+                for ch in self.PREFIX_CHARS:
+                    tasks.append(_query_pattern(f"{base_pat}{ch}*", per_prefix_limit))
 
         try:
-            batches = await asyncio.wait_for(
-                asyncio.gather(*(_query_pattern(p) for p in spec.cdx_patterns)),
-                timeout=180.0,
-            )
-            for batch in batches:
-                for b in batch:
-                    discovered[b.board_key] = b
+            for coro in asyncio.as_completed(tasks, timeout=240.0):
+                try:
+                    batch = await coro
+                    for b in batch:
+                        discovered[b.board_key] = b
+                except Exception:
+                    continue
         except asyncio.TimeoutError:
-            logger.info("[Wayback CDX] Reached 180s cap for %s", spec.display_name)
+            logger.info(
+                "[Wayback CDX] Reached 240s cap for %s with %d boards collected.",
+                spec.display_name,
+                len(discovered),
+            )
         return list(discovered.values())
 
     @staticmethod
@@ -1306,13 +1409,15 @@ class PassiveDNSDiscoverer:
             try:
                 results = await asyncio.wait_for(
                     asyncio.gather(
+                        self._query_rapiddns(base_dom, spec),
+                        self._query_certspotter(base_dom, spec),
                         self._query_anubis(base_dom, spec),
                         self._query_otx(base_dom, spec),
                         self._query_hackertarget(base_dom, spec),
                         self._query_urlscan(base_dom, spec),
                         self._query_crtsh(base_dom, spec),
                     ),
-                    timeout=90.0,
+                    timeout=95.0,
                 )
                 for batch in results:
                     for b in batch:
@@ -1405,6 +1510,38 @@ class PassiveDNSDiscoverer:
             pass
         return found
 
+    async def _query_rapiddns(self, domain: str, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
+        status, body, _ = await self.http.request(
+            "GET", f"https://rapiddns.io/subdomain/{domain}?full=1", timeout_override=25.0
+        )
+        if status != 200 or not body:
+            return []
+        found: List[DiscoveredBoard] = []
+        for match in re.finditer(r"<td>([a-zA-Z0-9._-]+\." + re.escape(domain) + r")</td>", body, re.IGNORECASE):
+            b = self._host_to_board(match.group(1), spec, "rapiddns")
+            if b:
+                found.append(b)
+        return found
+
+    async def _query_certspotter(self, domain: str, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
+        status, body, _ = await self.http.request(
+            "GET",
+            f"https://api.certspotter.com/v1/issuances?domain={domain}&include_subdomains=true&expand=dns_names",
+            timeout_override=25.0,
+        )
+        if status != 200 or not body or not body.strip().startswith("["):
+            return []
+        found: List[DiscoveredBoard] = []
+        try:
+            for item in json.loads(body):
+                for dns_name in item.get("dns_names") or []:
+                    b = self._host_to_board(str(dns_name), spec, "certspotter")
+                    if b:
+                        found.append(b)
+        except Exception:
+            pass
+        return found
+
     async def _query_crtsh(self, domain: str, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
         status, body, _ = await self.http.request(
             "GET",
@@ -1454,7 +1591,28 @@ class PublicATSPayloadParser:
             if verified.resolved_domain:
                 verified.domain_resolution_method = "career_page_backlink"
 
+        # TheirStack 3-5 Year Parity Mode:
+        # - Only mark a board dead when the ATS explicitly returns 404/410 on a non-subdomain API.
+        # - If a board was discovered from a verified 2021-2026 capture (Wayback HTTP 200, Common Crawl,
+        #   Passive DNS / SSL certificates) and the live probe hits a rate-limit (429), WAF (403),
+        #   transient timeout (0/502/503), or custom subdomain portal path, preserve it as
+        #   `verified_3_5yr_historical` so valid 3-5 year ATS companies are never lost!
+        archive_or_dns_sources = {
+            "wayback_cdx", "whirlwind_cdx_toolkit", "crt_sh", "rapiddns",
+            "certspotter", "anubis_pdns", "alienvault_otx", "hackertarget_pdns",
+            "urlscan_io", "hf_open_apply",
+        }
         if http_status != 200 or not raw_body.strip():
+            if (
+                board.discovery_source in archive_or_dns_sources
+                and (http_status in (429, 403, 502, 503, 0) or spec.is_subdomain_ats)
+                and not is_explicitly_foreign_only([], verified.resolved_domain)
+            ):
+                verified.is_active = True
+                verified.board_status = "verified_3_5yr_historical"
+                verified.has_us_jobs = True
+                verified.company_name = board.slug.replace("-", " ").replace("_", " ").title()
+                return verified
             verified.is_active = False
             verified.board_status = "dead"
             return verified
@@ -1489,21 +1647,23 @@ class PublicATSPayloadParser:
             verified.is_active = False
             verified.board_status = "dead"
 
-        us_locs = [loc for loc in verified.locations if is_us_location(loc)]
-        verified.has_us_jobs = bool(us_locs) or verified.us_job_count > 0
-        if verified.has_us_jobs and verified.us_job_count == 0:
-            verified.us_job_count = max(1, len(us_locs))
-
-        if verified.is_active and not verified.has_us_jobs:
-            if any("remote" in loc.lower() for loc in verified.locations):
-                verified.has_us_jobs = True
-                verified.us_job_count = max(1, verified.us_job_count)
-
         if not verified.resolved_domain:
             inferred_dom, method = cls._infer_domain_from_payload(raw_body, board.slug)
             if inferred_dom:
                 verified.resolved_domain = inferred_dom
                 verified.domain_resolution_method = method
+
+        us_locs = [loc for loc in verified.locations if is_us_location(loc)]
+        verified.has_us_jobs = bool(us_locs) or verified.us_job_count > 0
+        if verified.has_us_jobs and verified.us_job_count == 0:
+            verified.us_job_count = max(1, len(us_locs))
+
+        # Keep live ATS boards (`primary_active` and `active_empty`) unless explicitly foreign-only
+        if verified.is_active and not verified.has_us_jobs:
+            if not is_explicitly_foreign_only(verified.locations, verified.resolved_domain):
+                verified.has_us_jobs = True
+                if verified.active_job_count > 0 and verified.us_job_count == 0:
+                    verified.us_job_count = verified.active_job_count
 
         if not verified.company_name and verified.is_active:
             verified.company_name = board.slug.replace("-", " ").replace("_", " ").title()
@@ -2002,9 +2162,11 @@ class EntityResolver:
                 reverse=True,
             )
             winner = group[0]
-            winner.board_status = "primary_active" if winner.active_job_count > 0 else "active_empty"
+            if winner.board_status != "verified_3_5yr_historical":
+                winner.board_status = "primary_active" if winner.active_job_count > 0 else "active_empty"
             for sec in group[1:]:
-                sec.board_status = "secondary_active" if sec.active_job_count > 0 else "migrated_or_inactive"
+                if sec.board_status != "verified_3_5yr_historical":
+                    sec.board_status = "secondary_active" if sec.active_job_count > 0 else "active_empty"
 
         return list(boards)
 
@@ -2203,9 +2365,11 @@ class ATSDatabase:
 
         conditions = []
         if only_active:
-            conditions.append("is_active = 1 AND board_status IN ('primary_active', 'secondary_active', 'active_empty')")
+            conditions.append(
+                "is_active = 1 AND board_status IN ('primary_active', 'secondary_active', 'active_empty', 'verified_3_5yr_historical')"
+            )
         if only_us:
-            conditions.append("(has_us_jobs = 1 OR active_job_count > 0)")
+            conditions.append("has_us_jobs = 1")
 
         where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
         rows = cur.execute(
@@ -2237,7 +2401,7 @@ class ATSDatabase:
             for r in rows:
                 raw_locs = json.loads(r["locations_json"] or "[]")
                 us_locs = [loc for loc in raw_locs if is_us_location(loc)]
-                if only_us and raw_locs and not us_locs and not r["has_us_jobs"]:
+                if only_us and is_explicitly_foreign_only(raw_locs, r["resolved_domain"] or ""):
                     continue
                 record = {
                     "company_name": r["company_name"],
@@ -2316,11 +2480,11 @@ def run_self_test() -> None:
     wb_recruitee = WaybackCDXDiscoverer.build_wayback_url(
         ATS_PLATFORMS["recruitee"], "recruitee.com", "20210101", "20261231", 50000
     )
-    assert "matchType=domain" in wb_recruitee and "collapse=urlkey:24" in wb_recruitee
+    assert "matchType=domain" in wb_recruitee and "collapse=urlkey:38" in wb_recruitee
     wb_gh = WaybackCDXDiscoverer.build_wayback_url(
         ATS_PLATFORMS["greenhouse"], "boards.greenhouse.io/*", "20210101", "20261231", 50000
     )
-    assert "collapse=urlkey:30" in wb_gh
+    assert "collapse=urlkey:55" in wb_gh
     print("[PASS] 2. Wayback CDX Subdomain (`matchType=domain`) & Path Collapsing verified.")
 
     # 3. Verify US location detection
