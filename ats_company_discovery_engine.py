@@ -1545,60 +1545,150 @@ class PublicATSCatalogVerifier:
 
 class WhirlwindCDXToolkitDiscoverer:
     """
-    Uses Common Crawl's official `cdx_toolkit` library (featured in
-    `https://github.com/commoncrawl/whirlwind-python`) to query Common Crawl CDX
-    indexes politely and reliably, with a strict per-platform time budget so it
-    never hangs a GitHub Actions runner!
+    Queries ONLY the 2 newest 2025-2026 Common Crawl CDX indexes asynchronously
+    with a strict 45-second per-platform timeout and ZERO blocking background threads
+    (preventing `asyncio.run()` from hanging on `shutdown_default_executor` when
+    Common Crawl returns 504 Gateway Time-out!).
     """
 
-    def __init__(self, max_Giveup_seconds: float = 150.0, limit_per_pattern: int = 4000):
-        self.max_seconds = max_Giveup_seconds
+    COLLINFO_URL = "https://index.commoncrawl.org/collinfo.json"
+    FALLBACK_INDEXES = (
+        "https://index.commoncrawl.org/CC-MAIN-2026-10-index",
+        "https://index.commoncrawl.org/CC-MAIN-2025-50-index",
+    )
+
+    def __init__(self, max_Giveup_seconds: float = 45.0, limit_per_pattern: int = 2000, http_client: Optional[AsyncHTTPClient] = None):
+        self.max_seconds = min(max_Giveup_seconds, 60.0)
         self.limit_per_pattern = limit_per_pattern
+        self.http = http_client
+        self._cached_indexes: Optional[List[str]] = None
+
+    async def _get_latest_cc_indexes(self, http: AsyncHTTPClient) -> List[str]:
+        if self._cached_indexes is not None:
+            return self._cached_indexes
+        status, body, _ = await http.request("GET", self.COLLINFO_URL, timeout_override=12.0)
+        if status == 200 and body:
+            try:
+                items = json.loads(body)
+                urls = [
+                    str(it.get("cdx-api"))
+                    for it in items
+                    if isinstance(it, dict) and it.get("cdx-api") and ("2026" in str(it.get("id", "")) or "2025" in str(it.get("id", "")))
+                ]
+                if urls:
+                    self._cached_indexes = urls[:2]
+                    return self._cached_indexes
+            except Exception:
+                pass
+        self._cached_indexes = list(self.FALLBACK_INDEXES)
+        return self._cached_indexes
 
     async def discover_for_platform(self, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
-        if not HAS_CDX_TOOLKIT:
-            logger.info("[Whirlwind cdx_toolkit] cdx_toolkit not installed; skipping.")
-            return []
+        discovered: Dict[str, DiscoveredBoard] = {}
         try:
-            return await asyncio.wait_for(
-                asyncio.to_thread(self._sync_cdx_toolkit_fetch, spec),
-                timeout=self.max_seconds,
-            )
+            async with AsyncHTTPClient(concurrency=10, per_host_concurrency=3, timeout=12.0, max_retries=1) as local_http:
+                http = self.http or local_http
+                cc_indexes = await self._get_latest_cc_indexes(http)
+
+                async def _run_queries() -> None:
+                    for pat in spec.cdx_patterns[:2]:
+                        query_url = f"*.{pat}" if spec.is_subdomain_ats and not pat.startswith("*.") else pat
+                        for idx_api in cc_indexes:
+                            req_url = f"{idx_api}?url={quote_plus(query_url)}&output=json&fl=url&limit={min(self.limit_per_pattern, 1500)}"
+                            status, body, _ = await http.request("GET", req_url, timeout_override=12.0)
+                            if status != 200 or not body:
+                                continue
+                            for line in body.splitlines():
+                                line = line.strip()
+                                if not line.startswith("{"):
+                                    continue
+                                try:
+                                    rec = json.loads(line)
+                                    b = extract_ats_from_url(
+                                        str(rec.get("url") or ""),
+                                        discovery_source="whirlwind_cdx_toolkit",
+                                        platforms=[spec.ats_id],
+                                    )
+                                    if b:
+                                        discovered[b.board_key] = b
+                                except Exception:
+                                    continue
+
+                await asyncio.wait_for(_run_queries(), timeout=self.max_seconds)
         except asyncio.TimeoutError:
             logger.info(
-                "[Whirlwind cdx_toolkit] Reached %ds time budget for %s; moving on cleanly.",
+                "[Whirlwind CC Index] Reached %ds time budget for %s (%d boards).",
                 int(self.max_seconds),
                 spec.display_name,
+                len(discovered),
             )
-            return []
         except Exception as exc:
-            logger.warning("[Whirlwind cdx_toolkit] Error for %s: %s", spec.display_name, exc)
-            return []
+            logger.debug("[Whirlwind CC Index] Skipped %s: %s", spec.display_name, exc)
+        return list(discovered.values())
 
     def _sync_cdx_toolkit_fetch(self, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
         discovered: Dict[str, DiscoveredBoard] = {}
-        cdx = cdx_toolkit.CDXFetcher(source="cc")
+        # Mute cdx_toolkit retry spam on transient 504s
+        logging.getLogger("cdx_toolkit").setLevel(logging.ERROR)
+        logging.getLogger("cdx_toolkit.myrequests").setLevel(logging.ERROR)
+
+        try:
+            cdx = cdx_toolkit.CDXFetcher(source="cc")
+            # Select ONLY the top 3 newest Common Crawl monthly indexes (e.g. 2026-10, 2026-04, 2025-50)
+            # NEVER allow cdx_toolkit to traverse backwards into dead 2014-2015 archives!
+            all_crawls = getattr(cdx, "crawls", None) or getattr(cdx, "cc_crawls", None) or []
+            if not all_crawls:
+                try:
+                    all_crawls = cdx.cc_get_crawls()
+                except Exception:
+                    all_crawls = []
+            newest_crawls = [c for c in all_crawls if "2026" in c or "2025" in c][:2]
+        except Exception:
+            newest_crawls = []
+
         start_ts = time.monotonic()
 
         for pat in spec.cdx_patterns:
             query_url = f"*.{pat}" if spec.is_subdomain_ats and not pat.startswith("*.") else pat
-            try:
-                for obj in cdx.iter(
-                    query_url,
-                    from_ts="202501",
-                    to="202612",
-                    limit=self.limit_per_pattern,
-                ):
+            if newest_crawls:
+                for crawl_id in newest_crawls:
                     if time.monotonic() - start_ts > self.max_seconds - 5.0:
                         break
-                    raw_url = obj.data.get("url", "")
-                    b = extract_ats_from_url(
-                        raw_url, discovery_source="whirlwind_cdx_toolkit", platforms=[spec.ats_id]
-                    )
-                    if b:
-                        discovered[b.board_key] = b
-            except Exception as exc:
-                logger.debug("[Whirlwind cdx_toolkit] Pattern %s finished/stopped: %s", query_url, exc)
+                    try:
+                        for obj in cdx.iter(
+                            query_url,
+                            crawl=crawl_id,
+                            limit=min(self.limit_per_pattern, 2500),
+                        ):
+                            if time.monotonic() - start_ts > self.max_seconds - 5.0:
+                                break
+                            raw_url = obj.data.get("url", "")
+                            b = extract_ats_from_url(
+                                raw_url, discovery_source="whirlwind_cdx_toolkit", platforms=[spec.ats_id]
+                            )
+                            if b:
+                                discovered[b.board_key] = b
+                    except Exception as exc:
+                        logger.debug("[Whirlwind cdx_toolkit] Crawl %s for %s finished/stopped: %s", crawl_id, query_url, exc)
+            else:
+                try:
+                    for obj in cdx.iter(
+                        query_url,
+                        from_ts="202601",
+                        to="202612",
+                        limit=min(self.limit_per_pattern, 2500),
+                    ):
+                        if time.monotonic() - start_ts > self.max_seconds - 5.0:
+                            break
+                        raw_url = obj.data.get("url", "")
+                        b = extract_ats_from_url(
+                            raw_url, discovery_source="whirlwind_cdx_toolkit", platforms=[spec.ats_id]
+                        )
+                        if b:
+                            discovered[b.board_key] = b
+                except Exception as exc:
+                    logger.debug("[Whirlwind cdx_toolkit] Pattern %s finished/stopped: %s", query_url, exc)
+
         return list(discovered.values())
 
 
@@ -1659,20 +1749,19 @@ class WaybackCDXDiscoverer:
     ) -> str:
         clean_dom = pattern.replace("*.", "").rstrip("/*")
         is_sub = spec.is_subdomain_ats or ("/" not in pattern and not pattern.endswith("*"))
-        collapse_n = WaybackCDXDiscoverer.compute_surt_collapse_len(pattern, is_sub)
         if is_sub:
             return (
                 f"https://web.archive.org/cdx/search/cdx"
                 f"?url={quote_plus(clean_dom)}&matchType=domain&output=json&fl=original"
                 f"&filter=statuscode:200&from={from_date}&to={to_date}"
-                f"&collapse=urlkey:{collapse_n}&limit={min(max(limit, 50000), 80000)}"
+                f"&collapse=urlkey:38&limit={min(max(limit, 40000), 60000)}"
             )
         else:
             return (
                 f"https://web.archive.org/cdx/search/cdx"
                 f"?url={quote_plus(pattern)}&output=json&fl=original"
                 f"&filter=statuscode:200&from={from_date}&to={to_date}"
-                f"&collapse=urlkey:{collapse_n}&limit={limit}"
+                f"&collapse=urlkey&limit={limit}"
             )
 
     async def discover_for_platform(self, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
@@ -2542,7 +2631,7 @@ class ATSDatabase:
 
     def _init_schema(self) -> None:
         cur = self.conn.cursor()
-        cur.execute("PRAGMA journal_mode=WAL;")
+        cur.execute("PRAGMA journal_mode=DELETE;")
         cur.execute("PRAGMA synchronous=NORMAL;")
         cur.execute(
             """
@@ -2870,11 +2959,11 @@ def run_self_test() -> None:
     wb_recruitee = WaybackCDXDiscoverer.build_wayback_url(
         ATS_PLATFORMS["recruitee"], "recruitee.com", "20210101", "20261231", 50000
     )
-    assert "matchType=domain" in wb_recruitee and "collapse=urlkey:23" in wb_recruitee
+    assert "matchType=domain" in wb_recruitee and "collapse=urlkey:38" in wb_recruitee
     wb_gh = WaybackCDXDiscoverer.build_wayback_url(
         ATS_PLATFORMS["greenhouse"], "boards.greenhouse.io/*", "20210101", "20261231", 50000
     )
-    assert "collapse=urlkey:31" in wb_gh
+    assert "collapse=urlkey&" in wb_gh
     print("[PASS] 2. Wayback CDX Subdomain (`matchType=domain`) & Path Collapsing verified.")
 
     # 3. Verify US location detection
