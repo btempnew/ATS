@@ -167,16 +167,33 @@ def get_all_crawls(min_year: int = 2024) -> List[str]:
     return crawls
 
 
+PLATFORM_FILES: Dict[str, str] = {
+    "Greenhouse": "greenhouse_companies.txt",
+    "Lever": "lever_companies.txt",
+    "Ashby": "ashby_companies.txt",
+    "Workday": "workday_companies.txt",
+    "BambooHR": "bamboohr_companies.txt",
+    "Workable": "workable_companies.txt",
+    "SmartRecruiters": "smartrecruiters_companies.txt",
+    "Rippling": "rippling_companies.txt",
+    "Jobvite": "jobvite_companies.txt",
+    "Recruitee": "recruitee_companies.txt",
+    "JazzHR": "jazzhr_companies.txt",
+    "Breezy HR": "breezy_companies.txt",
+    "Pinpoint": "pinpoint_companies.txt",
+}
+
+
 def run_gha_crawler(
     crawl: str = "ALL",
     paths_file: Optional[str] = None,
-    start_shard: int = 0,
-    max_shards: int = 5,
+    start_shard: int = 270,
+    max_shards: int = 15,
     greenhouse_file: str = "greenhouse_companies.txt",
     min_year: int = 2024
 ):
     print("=" * 65)
-    print(" GitHub Actions Common Crawl ATS Extractor")
+    print(" GitHub Actions Common Crawl ATS Extractor (Multi-Platform)")
     print("=" * 65)
 
     if crawl.upper() in ("ALL", "LAST-2-YEARS", "LAST_2_YEARS"):
@@ -189,20 +206,25 @@ def run_gha_crawler(
         crawl_list = [crawl.strip()]
         print(f"Target: Single crawl {crawl}")
 
-    # 1. Load existing Greenhouse list for immediate de-duplication
-    existing_gh: Set[str] = set()
-    if os.path.exists(greenhouse_file):
-        with open(greenhouse_file, "r", encoding="utf-8") as f:
-            existing_gh = {line.strip().lower() for line in f if line.strip()}
-    print(f"Existing {greenhouse_file}: {len(existing_gh):,} companies\n")
+    # Override Greenhouse filename if user passed a custom argument
+    PLATFORM_FILES["Greenhouse"] = greenhouse_file
+
+    # 1. Pre-load all existing lists for immediate de-duplication
+    known_by_platform: Dict[str, Set[str]] = {}
+    for plat, filename in PLATFORM_FILES.items():
+        known_by_platform[plat] = set()
+        if os.path.exists(filename):
+            with open(filename, "r", encoding="utf-8") as f:
+                known_by_platform[plat] = {line.strip().lower() for line in f if line.strip()}
+            print(f"Existing {filename:32s}: {len(known_by_platform[plat]):,} companies")
 
     con = setup_duckdb()
     new_by_platform: Dict[str, Set[str]] = {}
-    new_gh_names = []
+    new_discoveries_by_platform: Dict[str, List[tuple]] = {}
     global_start = time.time()
 
     for crawl_idx, current_crawl in enumerate(crawl_list, start=1):
-        print(f"--- [{crawl_idx}/{len(crawl_list)}] Processing {current_crawl} (Shards {start_shard} to {start_shard + max_shards - 1}) ---")
+        print(f"\n--- [{crawl_idx}/{len(crawl_list)}] Processing {current_crawl} (Shards {start_shard} to {start_shard + max_shards - 1}) ---")
         try:
             all_shards = get_crawl_shards(current_crawl, paths_file)
             selected_shards = all_shards[start_shard : start_shard + max_shards]
@@ -224,12 +246,12 @@ def run_gha_crawler(
                     new_by_platform[platform] = set()
                 new_by_platform[platform].add(slug)
 
-                # Track new Greenhouse companies
-                if platform == "Greenhouse":
-                    if slug.lower() not in existing_gh:
-                        existing_gh.add(slug.lower())
-                        new_gh_names.append(slug)
-                        print(f"    + New Greenhouse: {slug} ({sample_url})")
+                # Check if this slug is new for this platform
+                known_set = known_by_platform.setdefault(platform, set())
+                if slug.lower() not in known_set:
+                    known_set.add(slug.lower())
+                    new_discoveries_by_platform.setdefault(platform, []).append((slug, sample_url))
+                    print(f"    + New {platform}: {slug} ({sample_url})")
 
     total_time = time.time() - global_start
     print("\n" + "=" * 65)
@@ -237,30 +259,57 @@ def run_gha_crawler(
     print("=" * 65)
 
     for platform, slugs in new_by_platform.items():
-        print(f"  - {platform}: {len(slugs):,} unique companies identified in this scan")
+        new_count = len(new_discoveries_by_platform.get(platform, []))
+        print(f"  - {platform:16s}: {len(slugs):,} seen ({new_count:,} net-new added)")
 
-    # Append new Greenhouse companies to file
-    if new_gh_names:
-        print(f"\nAppending {len(new_gh_names)} new companies to {greenhouse_file}...")
-        with open(greenhouse_file, "r", encoding="utf-8") as f:
-            all_current = [line.strip() for line in f if line.strip()]
+    # 2. Append new companies to platform-specific text files
+    total_added = 0
+    import csv
+    from datetime import datetime, timezone
+    now_iso = datetime.now(timezone.utc).isoformat()
+    all_new_csv_rows = []
 
-        all_combined = sorted(list(set(all_current) | set(new_gh_names)), key=lambda s: s.lower())
-        with open(greenhouse_file, "w", encoding="utf-8") as f:
-            for item in all_combined:
-                f.write(item + "\n")
-        print(f"Updated {greenhouse_file} total size: {len(all_combined):,} companies.")
-    else:
-        print(f"\nNo new Greenhouse companies discovered in this batch (all {len(existing_gh):,} were already known).")
+    for plat, filename in PLATFORM_FILES.items():
+        new_items = new_discoveries_by_platform.get(plat, [])
+        if new_items:
+            new_slugs = [s for s, _ in new_items]
+            all_current = []
+            if os.path.exists(filename):
+                with open(filename, "r", encoding="utf-8") as f:
+                    all_current = [line.strip() for line in f if line.strip()]
+
+            all_combined = sorted(list(set(all_current) | set(new_slugs)), key=lambda s: s.lower())
+            with open(filename, "w", encoding="utf-8") as f:
+                for item in all_combined:
+                    f.write(item + "\n")
+            print(f"Updated {filename}: +{len(new_slugs):,} new companies (Total: {len(all_combined):,})")
+            total_added += len(new_slugs)
+
+            for slug, url in new_items:
+                all_new_csv_rows.append([plat, slug, url, now_iso])
+
+    # 3. Append to master CSV log
+    if all_new_csv_rows:
+        csv_file = "all_ats_companies_discovered.csv"
+        csv_exists = os.path.exists(csv_file)
+        with open(csv_file, "a", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            if not csv_exists:
+                writer.writerow(["ats_platform", "company_slug", "sample_url", "discovered_at"])
+            writer.writerows(all_new_csv_rows)
+        print(f"Saved {len(all_new_csv_rows):,} discoveries to {csv_file}")
+
+    if total_added == 0:
+        print("\nNo net-new ATS companies discovered in this batch (all were already known).")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="GitHub Actions Common Crawl ATS Runner")
-    parser.add_argument("--crawl", default="ALL", help="Crawl ID, comma-separated list, or 'ALL' for last 2 years")
+    parser.add_argument("--crawl", default="CC-MAIN-2026-43", help="Crawl ID, comma-separated list, or 'ALL'")
     parser.add_argument("--min-year", type=int, default=2024, help="Earliest crawl year when using 'ALL'")
     parser.add_argument("--paths-file", default=None, help="Optional local paths.gz file")
-    parser.add_argument("--start", type=int, default=0, help="Start shard index")
-    parser.add_argument("--shards", type=int, default=5, help="Number of shards to process per crawl")
+    parser.add_argument("--start", type=int, default=270, help="Start shard index")
+    parser.add_argument("--shards", type=int, default=15, help="Number of shards to process per crawl")
     parser.add_argument("--greenhouse-file", default="greenhouse_companies.txt")
 
     args = parser.parse_args()

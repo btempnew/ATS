@@ -48,9 +48,9 @@ jobs:
 
       - name: Run Common Crawl ATS Extraction
         run: |
-          START=${{ github.event.inputs.start_shard || '0' }}
-          SHARDS=${{ github.event.inputs.num_shards || '5' }}
-          CRAWL=${{ github.event.inputs.crawl || 'ALL' }}
+          START=${{ github.event.inputs.start_shard || '270' }}
+          SHARDS=${{ github.event.inputs.num_shards || '15' }}
+          CRAWL=${{ github.event.inputs.crawl || 'CC-MAIN-2026-43' }}
           MIN_YEAR=${{ github.event.inputs.min_year || '2024' }}
 
           echo "Running ATS Extraction (crawl=$CRAWL, min_year=$MIN_YEAR, start=$START, shards=$SHARDS)..."
@@ -64,6 +64,6 @@ jobs:
       - name: Commit and Push Updated Company List
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Automated: update greenhouse_companies.txt from Common Crawl [skip ci]"
-          file_pattern: "greenhouse_companies.txt *.parquet *.csv"
+          commit_message: "Automated: update ATS company lists from Common Crawl [skip ci]"
+          file_pattern: "*.txt *.csv *.parquet"
 
