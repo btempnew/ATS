@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ATS Company Discovery & Entity Resolution Engine (US Job Companies — v5.0 Whirlwind Edition)
+ATS Company Discovery & Entity Resolution Engine (US Job Companies — v6.0 Whirlwind Edition)
 ============================================================================================
 
 Upgraded based on real GitHub Actions telemetry from Run #2 and Common Crawl's
@@ -2459,7 +2459,7 @@ class ATSDatabase:
         total_us_companies = sum(counts_by_ats.values())
         total_us_jobs = sum(us_jobs_by_ats.values())
         md_lines = [
-            "# US Job Companies Discovery Summary (v5.0 Whirlwind Edition)",
+            "# US Job Companies Discovery Summary (v6.0 Whirlwind Edition)",
             "",
             f"- **Total Verified Active US Companies**: **{total_us_companies:,}**",
             f"- **Total Open US Jobs Indexed**: **{total_us_jobs:,}**",
@@ -2492,7 +2492,7 @@ def run_self_test() -> None:
     import tempfile
 
     print("=" * 76)
-    print("RUNNING US JOB COMPANIES ATS ENGINE SELF-TEST (v5.0 WHIRLWIND EDITION)")
+    print("RUNNING US JOB COMPANIES ATS ENGINE SELF-TEST (v6.0 Whirlwind EDITION)")
     print("=" * 76)
 
     # 1. Verify Top 24 US Platforms
@@ -2723,7 +2723,7 @@ def cmd_export(args: argparse.Namespace) -> None:
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="US Job Companies ATS Discovery Engine (v5.0 Whirlwind Edition)"
+        description="US Job Companies ATS Discovery Engine (v6.0 Whirlwind Edition)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
