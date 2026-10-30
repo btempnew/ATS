@@ -12,9 +12,9 @@ on:
         required: false
         default: "500"
 
-  # Optional bi-weekly run on Sundays at 04:00 UTC
+  # Run weekly on Sundays at 04:00 UTC
   schedule:
-    - cron: "0 4 1,15 * *"
+    - cron: "0 4 * * 0"
 
 permissions:
   contents: write
@@ -24,13 +24,25 @@ jobs:
   # JOB 1: Parallel Matrix Validation across 6 runners
   # ============================================================================
   validate-shards:
-    name: "Validate Shard ${{ matrix.shard_index + 1 }} of 6"
+    name: "Validate Shard ${{ matrix.shard.num }} of 6"
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        shard_index: [0, 1, 2, 3, 4, 5]
+        shard:
+          - index: 0
+            num: 1
+          - index: 1
+            num: 2
+          - index: 2
+            num: 3
+          - index: 3
+            num: 4
+          - index: 4
+            num: 5
+          - index: 5
+            num: 6
 
     steps:
       - name: Checkout Repository
@@ -47,22 +59,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Validate Greenhouse Candidates (Shard ${{ matrix.shard_index }})
+      - name: Validate Greenhouse Candidates (Shard ${{ matrix.shard.num }})
         run: |
           python verify_greenhouse_txt.py validate \
             --input "greenhouse_companies.txt" \
-            --db "greenhouse_val_${{ matrix.shard_index }}.db" \
+            --db "greenhouse_val_${{ matrix.shard.index }}.db" \
             --existing-db "ats_shard_greenhouse_us.db" \
-            --shard-index ${{ matrix.shard_index }} \
+            --shard-index ${{ matrix.shard.index }} \
             --total-shards 6 \
-            --concurrency ${{ github.event.inputs.concurrency || '50' }} \
-            --batch-size ${{ github.event.inputs.batch_size || '500' }}
+            --concurrency ${{ inputs.concurrency || '50' }} \
+            --batch-size ${{ inputs.batch_size || '500' }}
 
       - name: Upload Shard Database Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: "val-shard-${{ matrix.shard_index }}"
-          path: "greenhouse_val_${{ matrix.shard_index }}.db"
+          name: "val-shard-${{ matrix.shard.index }}"
+          path: "greenhouse_val_${{ matrix.shard.index }}.db"
           retention-days: 7
 
   # ============================================================================
@@ -137,4 +149,3 @@ jobs:
         with:
           commit_message: "Automated: update verified Greenhouse company lists [skip ci]"
           file_pattern: "greenhouse_companies_active.txt greenhouse_companies_us_active.txt exports_greenhouse/*"
-
