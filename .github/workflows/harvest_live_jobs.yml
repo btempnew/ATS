@@ -238,14 +238,8 @@ jobs:
                   f.write(summary_text + "\n")
           '
 
-      - name: Commit and Push Results to Repository
-        if: ${{ github.event.inputs.commit_to_git == 'true' }}
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Automated: update live_jobs.csv from workflow run [skip ci]"
-          file_pattern: "live_jobs.csv"
-
       - name: Upload Harvested Datasets as Artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: live-ats-jobs-dataset
@@ -253,3 +247,18 @@ jobs:
             live_jobs.db
             live_jobs.csv
           retention-days: 90
+
+      - name: Commit and Push Results to Repository
+        if: ${{ github.event.inputs.commit_to_git == 'true' }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git rebase origin/main || git merge -X ours origin/main
+          git add live_jobs.csv
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Automated: update live_jobs.csv from workflow run [skip ci]"
+            git push origin main || git push --force-with-lease origin main
+          fi
