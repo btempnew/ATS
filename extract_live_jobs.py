@@ -870,10 +870,10 @@ async def run_extractor(
 
             progress = min(idx + batch_size, total_companies)
             pct = (progress / total_companies) * 100
-            print(f"[{progress:,}/{total_companies:,} ({pct:.1f}%)] Scanned | Live Jobs Saved: {total_jobs_saved:,} | Timestamp Capture Rate: {jobs_with_post_time}/{max(1, total_jobs_saved)} ({((jobs_with_post_time / max(1, total_jobs_saved)) * 100):.1f}%)")
+            print(f"[{progress:,}/{total_companies:,} ({pct:.1f}%)] Scanned | Live Jobs Saved: {total_jobs_saved:,} | Timestamp Capture Rate: {jobs_with_post_time}/{max(1, total_jobs_saved)} ({((jobs_with_post_time / max(1, total_jobs_saved)) * 100):.1f}%)", flush=True)
 
-    print(f"\nExtraction completed successfully!")
-    print(f"Total live jobs in '{output_db}': {total_jobs_saved:,}")
+    print(f"\nExtraction completed successfully!", flush=True)
+    print(f"Total live jobs in '{output_db}': {total_jobs_saved:,}", flush=True)
     if export_csv:
         export_sqlite_to_csv(output_db, export_csv, only_us=only_us)
 

@@ -115,6 +115,8 @@ permissions:
 jobs:
   harvest-jobs:
     runs-on: ubuntu-latest
+    env:
+      PYTHONUNBUFFERED: "1"
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
