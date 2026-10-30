@@ -65,27 +65,54 @@ US_CITIES_SAMPLE = {
     "phoenix", "portland", "salt lake city", "raleigh", "charlotte", "minneapolis", "nashville"
 }
 
+NON_US_COUNTRIES = {
+    "united kingdom", "london", "canada", "germany", "berlin", "france", "paris",
+    "spain", "madrid", "barcelona", "italy", "milan", "rome", "india", "bangalore",
+    "hyderabad", "pune", "mumbai", "delhi", "australia", "sydney", "melbourne",
+    "netherlands", "amsterdam", "brazil", "poland", "warsaw", "ukraine", "kyiv",
+    "denmark", "copenhagen", "sweden", "stockholm", "finland", "helsinki",
+    "ireland", "dublin", "japan", "tokyo", "singapore", "mexico", "austria", "vienna",
+    "belgium", "antwerp", "brussels", "greece", "athens", "portugal", "lisbon",
+    "switzerland", "zurich", "norway", "oslo", "czech", "prague", "philippines",
+    "manila", "argentina", "buenos aires", "colombia", "bogota", "chile", "santiago",
+    "israel", "tel aviv", "new zealand", "auckland", "south africa", "emea", "apac", "latam"
+}
 
-def is_us_location(loc_input: Any) -> bool:
-    """Robust heuristic to determine if a location represents a US location."""
-    if not loc_input:
-        return False
+
+def is_us_location(loc_input: Any, extra_text: str = "") -> bool:
+    """
+    Robust heuristic to determine if a job is US-based or US-Remote.
+    Checks location string, job title, and office names.
+    """
     if isinstance(loc_input, dict):
         loc_str = " ".join(str(v) for v in loc_input.values() if v)
     else:
-        loc_str = str(loc_input)
+        loc_str = str(loc_input or "")
+
     clean = loc_str.lower().strip()
+    combined = f"{loc_str} {extra_text}".lower().strip()
+
+    # If explicitly foreign and doesn't mention US
+    has_foreign = any(re.search(r"\b" + re.escape(fc) + r"\b", combined) for fc in NON_US_COUNTRIES)
+    has_explicit_us = any(u in combined for u in ["united states", ", us", "usa", "(us)", "- us", "us -"])
+
+    if has_foreign and not has_explicit_us:
+        return False
 
     # Direct US indicators
     if clean in ("us", "usa", "united states", "united states of america"):
         return True
-    if any(tag in clean for tag in ["(us)", "- us", "us -", ", us", "usa", "united states"]):
+    if has_explicit_us:
         return True
-    if any(tag in clean for tag in ["us remote", "remote - us", "remote, us", "remote (us)", "remote us"]):
+    if any(tag in combined for tag in ["us remote", "remote - us", "remote, us", "remote (us)", "remote us"]):
+        return True
+
+    # Generic remote for US companies (without non-US tags)
+    if clean in ("remote", "work from home", "anywhere"):
         return True
 
     # State code pattern e.g. "San Francisco, CA" or "Austin, TX"
-    match = re.search(r",\s*([a-zA-Z]{2})(?:\s+|$|\b)", loc_str)
+    match = re.search(r",\s*([a-zA-Z]{2})(?:\s+|$|\b)", combined)
     if match:
         code = match.group(1).upper()
         if code in US_STATE_CODES:
@@ -93,12 +120,12 @@ def is_us_location(loc_input: Any) -> bool:
 
     # State name match
     for st_name in US_STATE_NAMES:
-        if st_name in clean:
+        if re.search(r"\b" + re.escape(st_name) + r"\b", combined):
             return True
 
     # Major US tech cities
     for city in US_CITIES_SAMPLE:
-        if city in clean:
+        if re.search(r"\b" + re.escape(city) + r"\b", combined):
             return True
 
     return False
@@ -277,7 +304,7 @@ async def extract_greenhouse(http: AsyncHTTPClient, slug: str, full_content: boo
             "company_slug": slug,
             "title": j.get("title", "").strip(),
             "location": loc_str.strip(),
-            "is_us": 1 if is_us_location(loc_str) else 0,
+            "is_us": 1 if is_us_location(loc_str, extra_text=f"{j.get('title', '')} {' '.join(offices)}") else 0,
             "apply_url": j.get("absolute_url", ""),
             "department": ", ".join(filter(None, depts)),
             "office": ", ".join(filter(None, offices)),
@@ -325,7 +352,7 @@ async def extract_lever(http: AsyncHTTPClient, slug: str, full_content: bool) ->
             "company_slug": slug,
             "title": j.get("text", "").strip(),
             "location": loc_str.strip(),
-            "is_us": 1 if (country.upper() == "US" or is_us_location(loc_str) or workplace == "remote") else 0,
+            "is_us": 1 if (country.upper() == "US" or is_us_location(loc_str, extra_text=j.get("text", "")) or workplace == "remote") else 0,
             "apply_url": j.get("applyUrl") or j.get("hostedUrl", ""),
             "department": str(dept),
             "office": str(workplace),
@@ -366,7 +393,7 @@ async def extract_ashby(http: AsyncHTTPClient, slug: str, full_content: bool) ->
             "company_slug": slug,
             "title": j.get("title", "").strip(),
             "location": loc_str.strip(),
-            "is_us": 1 if (is_us_location(loc_str) or is_us_location(addr) or is_remote) else 0,
+            "is_us": 1 if (is_us_location(loc_str, extra_text=j.get("title", "")) or is_us_location(addr, extra_text=j.get("title", "")) or is_remote) else 0,
             "apply_url": j.get("applyUrl") or j.get("jobUrl", ""),
             "department": j.get("department") or j.get("team") or "",
             "office": workplace,
@@ -406,7 +433,7 @@ async def extract_smartrecruiters(http: AsyncHTTPClient, slug: str, full_content
             "company_slug": slug,
             "title": j.get("name", "").strip(),
             "location": loc_str.strip(),
-            "is_us": 1 if (c_code == "US" or is_us_location(loc_str)) else 0,
+            "is_us": 1 if (c_code == "US" or is_us_location(loc_str, extra_text=j.get("name", ""))) else 0,
             "apply_url": f"https://jobs.smartrecruiters.com/{slug}/{job_id}",
             "department": (j.get("department") or {}).get("label", ""),
             "office": "",
@@ -444,7 +471,7 @@ async def extract_workable(http: AsyncHTTPClient, slug: str, full_content: bool)
             "company_slug": slug,
             "title": j.get("title", "").strip(),
             "location": loc_str.strip(),
-            "is_us": 1 if (j.get("country") in ("United States", "US") or is_us_location(loc_str) or is_tele) else 0,
+            "is_us": 1 if (j.get("country") in ("United States", "US") or is_us_location(loc_str, extra_text=j.get("title", "")) or is_tele) else 0,
             "apply_url": j.get("application_url") or j.get("url") or f"https://apply.workable.com/{slug}/j/{shortcode}/",
             "department": j.get("department", ""),
             "office": "Remote" if is_tele else "",
@@ -527,7 +554,7 @@ async def extract_breezy(http: AsyncHTTPClient, slug: str, full_content: bool) -
             "company_slug": slug,
             "title": j.get("name", "").strip(),
             "location": loc_str.strip(),
-            "is_us": 1 if is_us_location(loc_str) else 0,
+            "is_us": 1 if is_us_location(loc_str, extra_text=f"{j.get('title', '')} {' '.join(offices)}") else 0,
             "apply_url": j.get("url", ""),
             "department": j.get("department", ""),
             "office": "",
@@ -638,7 +665,7 @@ async def extract_pinpoint(http: AsyncHTTPClient, slug: str, full_content: bool)
             "company_slug": slug,
             "title": j.get("title", "").strip(),
             "location": loc_str.strip(),
-            "is_us": 1 if is_us_location(loc_str) else 0,
+            "is_us": 1 if is_us_location(loc_str, extra_text=f"{j.get('title', '')} {' '.join(offices)}") else 0,
             "apply_url": j.get("url", ""),
             "department": dept,
             "office": j.get("workplace_type_text", ""),
