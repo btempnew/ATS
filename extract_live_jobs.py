@@ -423,9 +423,12 @@ async def extract_lever(http: AsyncHTTPClient, slug: str, full_content: bool) ->
         if country.upper() == "US" or not loc_str:
             loc_str = f"{loc_str}, US".strip(", ") if loc_str else "United States"
 
-        dept = cats.get("team") or cats.get("department", "")
-        emp_type = cats.get("commitment", "")
-        workplace = j.get("workplaceType", "")
+        dept_val = cats.get("team") or cats.get("department", "")
+        dept = dept_val.get("name", "") if isinstance(dept_val, dict) else str(dept_val)
+        emp_val = cats.get("commitment", "")
+        emp_type = emp_val.get("name", "") if isinstance(emp_val, dict) else str(emp_val)
+        workplace_val = j.get("workplaceType", "")
+        workplace = workplace_val.get("name", "") if isinstance(workplace_val, dict) else str(workplace_val)
 
         created_ms = j.get("createdAt")
         posted_iso = parse_to_iso(created_ms)
@@ -459,15 +462,25 @@ async def extract_ashby(http: AsyncHTTPClient, slug: str, full_content: bool) ->
         return status, []
 
     company_name = data.get("organizationName") or slug.replace("-", " ").title()
+    if isinstance(company_name, dict):
+        company_name = company_name.get("name") or slug.replace("-", " ").title()
+
     jobs = data.get("jobs") or data.get("jobPostings") or []
     extracted = []
     now_iso = datetime.now(timezone.utc).isoformat()
 
     for j in jobs:
-        loc_str = j.get("location") or j.get("locationName") or ""
-        addr = j.get("address") or ""
+        loc_val = j.get("location") or j.get("locationName") or ""
+        loc_str = loc_val.get("name", "") if isinstance(loc_val, dict) else str(loc_val)
+        addr_val = j.get("address") or ""
+        addr = addr_val.get("addressLocality", "") if isinstance(addr_val, dict) else str(addr_val)
         is_remote = bool(j.get("isRemote"))
         workplace = "Remote" if is_remote else (j.get("workplaceType") or "")
+
+        dept_val = j.get("department") or j.get("team") or ""
+        dept_str = dept_val.get("name", "") if isinstance(dept_val, dict) else str(dept_val)
+        emp_val = j.get("employmentType", "")
+        emp_str = emp_val.get("name", "") if isinstance(emp_val, dict) else str(emp_val)
 
         pub_at = j.get("publishedAt") or ""
         content_raw = (j.get("descriptionPlain") or j.get("descriptionHtml", "")) if full_content else ""
@@ -481,9 +494,9 @@ async def extract_ashby(http: AsyncHTTPClient, slug: str, full_content: bool) ->
             "location": loc_str.strip(),
             "is_us": 1 if (is_us_location(loc_str, extra_text=j.get("title", "")) or is_us_location(addr, extra_text=j.get("title", "")) or is_remote) else 0,
             "apply_url": j.get("applyUrl") or j.get("jobUrl", ""),
-            "department": j.get("department") or j.get("team") or "",
+            "department": dept_str,
             "office": workplace,
-            "employment_type": j.get("employmentType", ""),
+            "employment_type": emp_str,
             "posted_at": parse_to_iso(pub_at),
             "updated_at": parse_to_iso(pub_at),
             "raw_timestamp": str(pub_at),
@@ -630,19 +643,30 @@ async def extract_breezy(http: AsyncHTTPClient, slug: str, full_content: bool) -
         type_obj = j.get("type") or {}
         emp_type = type_obj.get("name", "") if isinstance(type_obj, dict) else str(type_obj)
 
+        comp_obj = j.get("company")
+        if isinstance(comp_obj, dict):
+            comp_name = comp_obj.get("name") or company_name
+        elif isinstance(comp_obj, str) and comp_obj.strip():
+            comp_name = comp_obj.strip()
+        else:
+            comp_name = company_name
+
+        dept_obj = j.get("department")
+        dept_str = dept_obj.get("name", "") if isinstance(dept_obj, dict) else str(dept_obj or "")
+
         pub_date = j.get("published_date") or ""
         job_id = j.get("id") or j.get("friendly_id")
 
         extracted.append({
             "job_id": f"breezy_{slug}_{job_id}",
             "platform": "breezy",
-            "company_name": j.get("company") or company_name,
+            "company_name": comp_name,
             "company_slug": slug,
             "title": j.get("name", "").strip(),
             "location": loc_str.strip(),
             "is_us": 1 if is_us_location(loc_str, extra_text=j.get("name", "")) else 0,
             "apply_url": j.get("url", ""),
-            "department": j.get("department", ""),
+            "department": dept_str,
             "office": "",
             "employment_type": emp_type,
             "posted_at": parse_to_iso(pub_date),
@@ -991,10 +1015,33 @@ def save_boards_batch(db_path: str, board_records: List[Tuple[str, str, int, int
     conn.close()
 
 
+def sanitize_sqlite_value(val: Any) -> Any:
+    """Ensures values bound to SQLite are primitive types (str, int, float, None)."""
+    if val is None or isinstance(val, (int, float, str, bytes)):
+        return val
+    if isinstance(val, bool):
+        return int(val)
+    if isinstance(val, (list, tuple, set)):
+        return ", ".join(str(x) for x in val if x is not None)
+    if isinstance(val, dict):
+        for k in ("name", "label", "text", "value", "title", "name_text", "addressLocality"):
+            if k in val and val[k]:
+                return str(val[k])
+        try:
+            return json.dumps(val, default=str)
+        except Exception:
+            return str(val)
+    return str(val)
+
+
 def save_jobs_batch(db_path: str, jobs: List[Dict[str, Any]], enable_enrichment: bool = False):
     if not jobs:
         return
-    prepared = [enrich_job_record(j, enable_enrichment=enable_enrichment) for j in jobs]
+    prepared = []
+    for j in jobs:
+        enr = enrich_job_record(j, enable_enrichment=enable_enrichment)
+        clean = {k: sanitize_sqlite_value(v) for k, v in enr.items()}
+        prepared.append(clean)
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.executemany("""
