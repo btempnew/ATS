@@ -806,8 +806,13 @@ PLATFORM_HANDLERS = {
 def enrich_job_record(raw: Dict[str, Any], enable_enrichment: bool = True) -> Dict[str, Any]:
     """Enriches job dictionary with salary, skills, H-1B, and experience facts."""
     out = dict(raw)
+    out.setdefault("job_id", "")
+    out.setdefault("platform", "")
     out.setdefault("company_name", "")
+    out.setdefault("company_slug", "")
+    out.setdefault("title", "")
     out.setdefault("location", "")
+    out.setdefault("is_us", 0)
     out.setdefault("apply_url", "")
     out.setdefault("department", "")
     out.setdefault("office", "")
@@ -832,6 +837,7 @@ def enrich_job_record(raw: Dict[str, Any], enable_enrichment: bool = True) -> Di
     out.setdefault("visa_sponsorship_status", "unknown")
     out.setdefault("sponsorship_evidence", "")
     out.setdefault("reports_to", "")
+    out.setdefault("extracted_at", datetime.now(timezone.utc).isoformat())
 
     if not enable_enrichment or not HAS_ENRICHMENT:
         return out

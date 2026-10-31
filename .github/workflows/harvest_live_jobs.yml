@@ -440,8 +440,11 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Backup generated CSV safely before pulling remote changes
+          cp live_jobs.csv /tmp/live_jobs_export.csv
           git fetch origin main
-          git rebase origin/main || git merge -X ours origin/main
+          git reset --hard origin/main
+          cp /tmp/live_jobs_export.csv live_jobs.csv
           git add live_jobs.csv
           if git diff --staged --quiet; then
             echo "No changes to commit."
