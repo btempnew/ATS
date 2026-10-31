@@ -299,6 +299,12 @@ jobs:
           ls -lh ./shards/ || true
           python extract_live_jobs.py --merge-dbs "./shards/*.db" --output-db live_jobs.db --export-csv live_jobs.csv
 
+      - name: Deep JD Enrichment Post-Processing
+        if: ${{ github.event.inputs.enrich_jobs == 'true' || github.event.inputs.full_content == 'true' }}
+        run: |
+          echo "Running Deep JD Enrichment on merged database..."
+          python enrich_jobs.py --db live_jobs.db --export-csv live_jobs.csv
+
       - name: Generate Extraction Summary
         if: always()
         run: |

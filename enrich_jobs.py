@@ -169,7 +169,42 @@ def enrich_csv_file(input_path: str, output_path: str) -> int:
     return len(enriched_rows)
 
 
-def enrich_sqlite_db(db_path: str) -> int:
+def sanitize_sqlite_value(val: Any) -> Any:
+    """Ensures values bound to SQLite are primitive types (str, int, float, None)."""
+    if val is None or isinstance(val, (int, float, str, bytes)):
+        return val
+    if isinstance(val, bool):
+        return int(val)
+    if isinstance(val, (list, tuple, set)):
+        return ", ".join(str(x) for x in val if x is not None)
+    if isinstance(val, dict):
+        for k in ("name", "label", "text", "value", "title", "name_text", "addressLocality"):
+            if k in val and val[k]:
+                return str(val[k])
+        try:
+            import json
+            return json.dumps(val, default=str)
+        except Exception:
+            return str(val)
+    return str(val)
+
+
+def export_sqlite_to_csv(db_path: str, csv_path: str):
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM live_jobs ORDER BY posted_at DESC;")
+    columns = [desc[0] for desc in cur.description]
+    rows = cur.fetchall()
+    conn.close()
+
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(columns)
+        writer.writerows(rows)
+    print(f"Exported {len(rows):,} enriched jobs to '{csv_path}'.")
+
+
+def enrich_sqlite_db(db_path: str, export_csv: str | None = None) -> int:
     """Enriches all jobs in an existing SQLite database in-place."""
     if not os.path.exists(db_path):
         raise FileNotFoundError(f"Database not found: {db_path}")
@@ -241,12 +276,13 @@ def enrich_sqlite_db(db_path: str) -> int:
 
     for idx, j in enumerate(jobs, 1):
         enr = enrich_record(j)
-        batch.append(enr)
-        if enr.get("salary_min") or enr.get("salary"):
+        clean = {k: sanitize_sqlite_value(v) for k, v in enr.items()}
+        batch.append(clean)
+        if clean.get("salary_min") or clean.get("salary"):
             has_salary += 1
-        if enr.get("skills"):
+        if clean.get("skills"):
             has_skills += 1
-        if enr.get("h1b_status") in ("yes", "no", "conditional"):
+        if clean.get("h1b_status") in ("yes", "no", "conditional"):
             has_h1b += 1
 
         if len(batch) >= 500 or idx == total:
@@ -260,6 +296,10 @@ def enrich_sqlite_db(db_path: str) -> int:
     print(f"  • With Identified Compensation: {has_salary:,} / {total:,}")
     print(f"  • With Extracted Skills:        {has_skills:,} / {total:,}")
     print(f"  • With H-1B / Visa Decisions:   {has_h1b:,} / {total:,}")
+
+    if export_csv:
+        export_sqlite_to_csv(db_path, export_csv)
+
     return total
 
 
@@ -268,10 +308,11 @@ def main():
     parser.add_argument("--csv", help="Input CSV file to enrich")
     parser.add_argument("--output", help="Output enriched CSV path (defaults to <name>_enriched.csv)")
     parser.add_argument("--db", help="SQLite database to enrich in-place")
+    parser.add_argument("--export-csv", help="Optional path to export enriched SQLite database to CSV")
     args = parser.parse_args()
 
     if args.db:
-        enrich_sqlite_db(args.db)
+        enrich_sqlite_db(args.db, export_csv=args.export_csv)
     elif args.csv:
         out = args.output or args.csv.replace(".csv", "_enriched.csv")
         enrich_csv_file(args.csv, out)

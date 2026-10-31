@@ -1,0 +1,135 @@
+name: Enrich Harvested Jobs with Deep JD Intelligence
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: '🆔 GitHub Actions Run ID to download & enrich (e.g. 41193343225)'
+        required: true
+        type: string
+        default: '41193343225'
+      commit_to_git:
+        description: '💾 Commit enriched live_jobs.csv directly back to GitHub repository'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  enrich-dataset:
+    name: "🧠 Deep JD Enrichment Pass"
+    runs-on: ubuntu-latest
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install aiohttp requests pydantic
+
+      - name: Download Artifacts from Target Run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_ID="${{ github.event.inputs.run_id }}"
+          echo "Downloading artifacts from run: $RUN_ID..."
+          mkdir -p ./downloads
+          gh run download "$RUN_ID" --repo "${{ github.repository }}" --dir ./downloads || true
+
+          # Locate or merge databases
+          if [ -f "./downloads/live-ats-jobs-dataset/live_jobs.db" ]; then
+            cp ./downloads/live-ats-jobs-dataset/live_jobs.db ./live_jobs.db
+          elif [ -f "./downloads/live_jobs.db" ]; then
+            cp ./downloads/live_jobs.db ./live_jobs.db
+          else
+            echo "Searching for shard databases to merge..."
+            mkdir -p ./shards
+            find ./downloads -name "*.db" -exec cp {} ./shards/ \;
+            python extract_live_jobs.py --merge-dbs "./shards/*.db" --output-db live_jobs.db
+          fi
+
+      - name: Run Deep JD Enrichment Engine
+        run: |
+          echo "Executing deep extraction on live_jobs.db..."
+          python enrich_jobs.py --db live_jobs.db --export-csv live_jobs.csv
+
+      - name: Generate Extraction Summary
+        if: always()
+        run: |
+          python -c '
+          import os, sqlite3
+
+          db_file = "live_jobs.db"
+          if not os.path.exists(db_file):
+              print("No database found.")
+              exit(0)
+
+          conn = sqlite3.connect(db_file)
+          cur = conn.cursor()
+
+          cur.execute("SELECT COUNT(*) FROM live_jobs;")
+          total_jobs = cur.fetchone()[0]
+
+          cur.execute("SELECT COUNT(posted_at) FROM live_jobs WHERE posted_at != \"\";")
+          with_ts = cur.fetchone()[0]
+          ts_rate = ((with_ts / total_jobs) * 100) if total_jobs > 0 else 0
+
+          cur.execute("SELECT COUNT(salary_min), COUNT(CASE WHEN skills != \"\" THEN 1 END), COUNT(CASE WHEN h1b_status != \"unknown\" THEN 1 END) FROM live_jobs;")
+          jobs_with_sal, jobs_with_skills, jobs_with_h1b = cur.fetchone()
+
+          conn.close()
+
+          summary = []
+          summary.append("## 🧠 Post-Harvest Deep JD Enrichment Summary\n")
+          summary.append(f"- **Total Live Jobs Enriched:** `{total_jobs:,}`")
+          summary.append(f"- **Compensation Ranges Identified:** `{jobs_with_sal:,}` / `{total_jobs:,}`")
+          summary.append(f"- **Skills Extracted:** `{jobs_with_skills:,}` / `{total_jobs:,}`")
+          summary.append(f"- **Visa / H-1B Decisions Identified:** `{jobs_with_h1b:,}` / `{total_jobs:,}`")
+          summary.append(f"- **Timestamp Capture Rate:** `{with_ts:,}` / `{total_jobs:,}` (**{ts_rate:.1f}%**)")
+
+          summary_text = "\n".join(summary)
+          print(summary_text)
+
+          step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if step_summary:
+              with open(step_summary, "a", encoding="utf-8") as f:
+                  f.write(summary_text + "\n")
+          '
+
+      - name: Upload Enriched Datasets as Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: enriched-live-ats-jobs
+          path: |
+            live_jobs.db
+            live_jobs.csv
+          retention-days: 90
+
+      - name: Commit and Push Results to Repository
+        if: ${{ github.event.inputs.commit_to_git == 'true' }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp live_jobs.csv /tmp/live_jobs_export.csv
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/live_jobs_export.csv live_jobs.csv
+          git add live_jobs.csv
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Automated: deep JD enrichment from run ${{ github.event.inputs.run_id }} [skip ci]"
+            git push origin main || git push --force-with-lease origin main
+          fi
