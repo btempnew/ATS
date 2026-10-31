@@ -55,8 +55,9 @@ try:
     from scrapers.job_extraction.jd_enricher import parse_salary, detect_work_mode
     from matching.jd_facts import extract_jd_facts
     HAS_ENRICHMENT = True
-except Exception:
+except Exception as e:
     HAS_ENRICHMENT = False
+    print(f"Notice: JD Enrichment engine disabled: {e}", file=sys.stderr)
 
 
 # US State identification regex & sets

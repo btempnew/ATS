@@ -9,7 +9,15 @@ from html import unescape
 import re
 from typing import Literal
 
-from pydantic import BaseModel, Field
+try:
+    from pydantic import BaseModel, Field
+except ImportError:
+    class BaseModel:
+        def __init__(self, **kwargs):
+            for k, v in kwargs.items():
+                setattr(self, k, v)
+    def Field(default_factory=list):
+        return default_factory() if callable(default_factory) else []
 
 SponsorshipStatus = Literal['yes', 'no', 'conditional', 'conflicting', 'unknown']
 
