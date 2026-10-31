@@ -44,19 +44,24 @@ jobs:
         run: |
           RUN_ID="${{ github.event.inputs.run_id }}"
           echo "Downloading artifacts from run: $RUN_ID..."
-          mkdir -p ./downloads
+          mkdir -p ./shards ./downloads
+          
+          # Try downloading shard DBs first (fastest and most compact)
+          gh run download "$RUN_ID" --repo "${{ github.repository }}" --pattern "shard-db-*" --dir ./shards || \
+          gh run download "$RUN_ID" --repo "${{ github.repository }}" --name live-ats-jobs-dataset --dir ./downloads || \
           gh run download "$RUN_ID" --repo "${{ github.repository }}" --dir ./downloads || true
 
           # Locate or merge databases
-          if [ -f "./downloads/live-ats-jobs-dataset/live_jobs.db" ]; then
+          if [ -d "./shards" ] && [ "$(find ./shards -name '*.db' 2>/dev/null | wc -l)" -gt 0 ]; then
+            echo "Merging discovered shard databases..."
+            python extract_live_jobs.py --merge-dbs "./shards/**/*.db" --output-db live_jobs.db
+          elif [ -f "./downloads/live-ats-jobs-dataset/live_jobs.db" ]; then
             cp ./downloads/live-ats-jobs-dataset/live_jobs.db ./live_jobs.db
           elif [ -f "./downloads/live_jobs.db" ]; then
             cp ./downloads/live_jobs.db ./live_jobs.db
           else
-            echo "Searching for shard databases to merge..."
-            mkdir -p ./shards
-            find ./downloads -name "*.db" -exec cp {} ./shards/ \;
-            python extract_live_jobs.py --merge-dbs "./shards/*.db" --output-db live_jobs.db
+            echo "Searching all downloaded directories for databases..."
+            python extract_live_jobs.py --merge-dbs "./downloads/**/*.db" --output-db live_jobs.db
           fi
 
       - name: Run Deep JD Enrichment Engine
@@ -133,3 +138,4 @@ jobs:
             git commit -m "Automated: deep JD enrichment from run ${{ github.event.inputs.run_id }} [skip ci]"
             git push origin main || git push --force-with-lease origin main
           fi
+

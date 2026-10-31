@@ -169,6 +169,12 @@ def enrich_csv_file(input_path: str, output_path: str) -> int:
     return len(enriched_rows)
 
 
+def _enrich_single_record_wrapper(raw: Dict[str, Any]) -> Dict[str, Any]:
+    """Helper wrapper for parallel multi-process enrichment."""
+    enr = enrich_record(raw)
+    return {k: sanitize_sqlite_value(v) for k, v in enr.items()}
+
+
 def sanitize_sqlite_value(val: Any) -> Any:
     """Ensures values bound to SQLite are primitive types (str, int, float, None)."""
     if val is None or isinstance(val, (int, float, str, bytes)):
@@ -189,23 +195,42 @@ def sanitize_sqlite_value(val: Any) -> Any:
     return str(val)
 
 
-def export_sqlite_to_csv(db_path: str, csv_path: str):
+def export_sqlite_to_csv(db_path: str, csv_path: str, include_content: bool = False):
+    """Exports SQLite live_jobs table to CSV, omitting heavy HTML content by default."""
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM live_jobs ORDER BY posted_at DESC;")
+    cur.execute("PRAGMA table_info(live_jobs);")
+    cols = [r[1] for r in cur.fetchall()]
+    if not include_content and "content" in cols:
+        cols = [c for c in cols if c != "content"]
+    col_str = ", ".join(f'"{c}"' for c in cols)
+    cur.execute(f"SELECT {col_str} FROM live_jobs ORDER BY posted_at DESC;")
     columns = [desc[0] for desc in cur.description]
-    rows = cur.fetchall()
-    conn.close()
 
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(columns)
-        writer.writerows(rows)
-    print(f"Exported {len(rows):,} enriched jobs to '{csv_path}'.")
+        while True:
+            rows = cur.fetchmany(5000)
+            if not rows:
+                break
+            writer.writerows(rows)
+
+    cur.execute("SELECT COUNT(*) FROM live_jobs;")
+    count = cur.fetchone()[0]
+    conn.close()
+    print(f"Exported {count:,} enriched jobs to '{csv_path}' (include_content={include_content}).")
 
 
-def enrich_sqlite_db(db_path: str, export_csv: str | None = None) -> int:
-    """Enriches all jobs in an existing SQLite database in-place."""
+def enrich_sqlite_db(
+    db_path: str,
+    export_csv: str | None = None,
+    include_content_in_csv: bool = False,
+    workers: int | None = None,
+) -> int:
+    """Enriches all jobs in an existing SQLite database in-place with multi-core parallelism."""
+    import concurrent.futures
+
     if not os.path.exists(db_path):
         raise FileNotFoundError(f"Database not found: {db_path}")
 
@@ -247,11 +272,10 @@ def enrich_sqlite_db(db_path: str, export_csv: str | None = None) -> int:
         conn.close()
         return 0
 
-    print(f"Enriching {total:,} jobs in {db_path}...")
-    batch = []
-    has_salary = 0
-    has_skills = 0
-    has_h1b = 0
+    if workers is None:
+        workers = min(os.cpu_count() or 4, 8)
+
+    print(f"Enriching {total:,} jobs in {db_path} (Parallel Workers: {workers})...")
 
     update_sql = """
         UPDATE live_jobs SET
@@ -274,22 +298,56 @@ def enrich_sqlite_db(db_path: str, export_csv: str | None = None) -> int:
         WHERE job_id = :job_id;
     """
 
-    for idx, j in enumerate(jobs, 1):
-        enr = enrich_record(j)
-        clean = {k: sanitize_sqlite_value(v) for k, v in enr.items()}
-        batch.append(clean)
-        if clean.get("salary_min") or clean.get("salary"):
-            has_salary += 1
-        if clean.get("skills"):
-            has_skills += 1
-        if clean.get("h1b_status") in ("yes", "no", "conditional"):
-            has_h1b += 1
+    has_salary = 0
+    has_skills = 0
+    has_h1b = 0
+    processed_count = 0
+    batch_size = 2000
 
-        if len(batch) >= 500 or idx == total:
-            cur.executemany(update_sql, batch)
-            conn.commit()
-            batch.clear()
-            print(f"[{idx:,}/{total:,}] Enriched | Salaries: {has_salary:,} | Skills: {has_skills:,} | H-1B Detected: {has_h1b:,}", flush=True)
+    # Multi-process parallel mapping
+    try:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+            # Chunk generator
+            for i in range(0, total, batch_size):
+                chunk = jobs[i : i + batch_size]
+                chunk_results = list(executor.map(_enrich_single_record_wrapper, chunk, chunksize=100))
+                cur.executemany(update_sql, chunk_results)
+                conn.commit()
+
+                for clean in chunk_results:
+                    if clean.get("salary_min") or clean.get("salary"):
+                        has_salary += 1
+                    if clean.get("skills"):
+                        has_skills += 1
+                    if clean.get("h1b_status") in ("yes", "no", "conditional"):
+                        has_h1b += 1
+
+                processed_count += len(chunk_results)
+                print(
+                    f"[{processed_count:,}/{total:,}] Enriched | Salaries: {has_salary:,} | Skills: {has_skills:,} | H-1B: {has_h1b:,}",
+                    flush=True,
+                )
+    except Exception as e:
+        print(f"Parallel executor notice ({e}), falling back to single-threaded batching...")
+        batch = []
+        for idx, j in enumerate(jobs, 1):
+            clean = _enrich_single_record_wrapper(j)
+            batch.append(clean)
+            if clean.get("salary_min") or clean.get("salary"):
+                has_salary += 1
+            if clean.get("skills"):
+                has_skills += 1
+            if clean.get("h1b_status") in ("yes", "no", "conditional"):
+                has_h1b += 1
+
+            if len(batch) >= 500 or idx == total:
+                cur.executemany(update_sql, batch)
+                conn.commit()
+                batch.clear()
+                print(
+                    f"[{idx:,}/{total:,}] Enriched | Salaries: {has_salary:,} | Skills: {has_skills:,} | H-1B: {has_h1b:,}",
+                    flush=True,
+                )
 
     conn.close()
     print(f"\nDone! Database {db_path} enriched successfully.")
@@ -298,7 +356,7 @@ def enrich_sqlite_db(db_path: str, export_csv: str | None = None) -> int:
     print(f"  • With H-1B / Visa Decisions:   {has_h1b:,} / {total:,}")
 
     if export_csv:
-        export_sqlite_to_csv(db_path, export_csv)
+        export_sqlite_to_csv(db_path, export_csv, include_content=include_content_in_csv)
 
     return total
 
@@ -309,10 +367,17 @@ def main():
     parser.add_argument("--output", help="Output enriched CSV path (defaults to <name>_enriched.csv)")
     parser.add_argument("--db", help="SQLite database to enrich in-place")
     parser.add_argument("--export-csv", help="Optional path to export enriched SQLite database to CSV")
+    parser.add_argument("--include-content", action="store_true", help="Include full raw HTML descriptions in exported CSV")
+    parser.add_argument("--workers", type=int, default=None, help="Number of parallel worker processes")
     args = parser.parse_args()
 
     if args.db:
-        enrich_sqlite_db(args.db, export_csv=args.export_csv)
+        enrich_sqlite_db(
+            args.db,
+            export_csv=args.export_csv,
+            include_content_in_csv=args.include_content,
+            workers=args.workers,
+        )
     elif args.csv:
         out = args.output or args.csv.replace(".csv", "_enriched.csv")
         enrich_csv_file(args.csv, out)

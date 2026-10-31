@@ -1072,23 +1072,34 @@ def save_jobs_batch(db_path: str, jobs: List[Dict[str, Any]], enable_enrichment:
     conn.close()
 
 
-def export_sqlite_to_csv(db_path: str, csv_path: str, only_us: bool = False):
+def export_sqlite_to_csv(db_path: str, csv_path: str, only_us: bool = False, include_content: bool = False):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
-    query = "SELECT * FROM live_jobs"
+    cur.execute("PRAGMA table_info(live_jobs);")
+    cols = [r[1] for r in cur.fetchall()]
+    if not include_content and "content" in cols:
+        cols = [c for c in cols if c != "content"]
+    col_str = ", ".join(f'"{c}"' for c in cols)
+    query = f"SELECT {col_str} FROM live_jobs"
     if only_us:
         query += " WHERE is_us = 1"
     query += " ORDER BY posted_at DESC"
     cur.execute(query)
     columns = [desc[0] for desc in cur.description]
-    rows = cur.fetchall()
-    conn.close()
 
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(columns)
-        writer.writerows(rows)
-    print(f"Exported {len(rows):,} jobs to '{csv_path}'.")
+        while True:
+            rows = cur.fetchmany(5000)
+            if not rows:
+                break
+            writer.writerows(rows)
+            
+    cur.execute(f"SELECT COUNT(*) FROM live_jobs {'WHERE is_us = 1' if only_us else ''};")
+    count = cur.fetchone()[0]
+    conn.close()
+    print(f"Exported {count:,} jobs to '{csv_path}' (include_content={include_content}).")
 
 
 def merge_databases(input_patterns: List[str], output_db: str, export_csv: Optional[str] = None):
