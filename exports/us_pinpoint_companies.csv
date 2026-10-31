@@ -1,39 +1,933 @@
 company_name,resolved_domain,ats_id,ats_display_name,slug,board_url,us_job_count,active_job_count,latest_posted_at,confidence_score,us_locations,detected_tech_stack,sample_job_titles
+Trilongroup,,pinpoint,Pinpoint,trilongroup,https://trilongroup.pinpointhq.com,887,908,,0.85,"Columbus, OH; Toledo, OH; Cincinnati, OH; Maumee, OH; Charleston, WV ",,"Civil Project Engineer - Municipal Design ; Civil Engineer, PE; ODOT Prequalified Coatings Inspectors-OHIO; Landfill Engineer; Senior Landfill Engineer"
+Vgroup,,pinpoint,Pinpoint,vgroup,https://vgroup.pinpointhq.com,368,368,,0.85,Shipboard; Register Interest,,Chief Engineer for HSC RoRoPassenger Ferry; Commis II Mandarin Speaking for MSC Cruises; Demi Chef De Partie Mandarin Speaking for MSC Cruises; Chef De Partie for Royal Caribbean International; Ordinary Seaman for Saga Cruises
+Keystoneclear,,pinpoint,Pinpoint,keystoneclear,https://keystoneclear.pinpointhq.com,257,265,,0.85,"Wheeling, WV; Cambridge, OH; Carrollton, OH; Mansfield, PA; Towanda, PA",,Managing Director - Water Transfer Field Operations; Managing Director - Water Transfer Field Operations; Managing Director - Water Transfer Field Operations; Field Automation Supervisor - Oil & Gas; Field Automation Supervisor - Oil & Gas
+Reliablesfc,,pinpoint,Pinpoint,reliablesfc,https://reliablesfc.pinpointhq.com,94,94,,0.85,"Columbia, PA - Plant; Lawrenceville, GA - Distribution Center; Chicago, IL (Remote); Oak Brook, IL; Minneapolis, MN (Remote)",,"Materials Dispatcher; Warehouse Associate ; Maintenance Helper; Machine Setup, Repair, and Tooling; CNC Operator"
+Nxcus,,pinpoint,Pinpoint,nxcus,https://nxcus.pinpointhq.com,56,56,,0.85,"Manchester, CT; Essex Junction, VT; Plattsburgh, NY; North Clarendon, VT; Amherst, NY",,Action Air Systems General Application ; Alliance Group General Inquiry; Senior Mechanical Engineer; Industrial Combustion Technician; Lead Electrician - Commercial
+Davies,,pinpoint,Pinpoint,davies,https://davies.pinpointhq.com,54,303,,0.85,"Home United States; Cherry Hill, NJ; Lakewood Ranch, FL; Norfolk, VA; Remote, FL",,Solicitor Advocate / Barrister (Band 2); Fast Track Quantum Handler; Technical Supervisor - MOD NIHL ; File Handler; Domain Expert
+Franklin Electric,,pinpoint,Pinpoint,franklin-electric,https://franklin-electric.pinpointhq.com,48,88,,0.85,US - Wisconsin - Madison; US - Indiana - Fort Wayne; US - Twin Falls - Idaho; US - Indiana - Avon; US - Indiana - Fishers,,"Area Sales Manager - Gujarat (India); Finance Intern ; Purchase Engineer, Savli, Vadodara (India); Engineering Intern; Area Sales Executive - Jaipur, Rajasthan (India)"
+Roofsbyaspen,,pinpoint,Pinpoint,roofsbyaspen,https://roofsbyaspen.pinpointhq.com,47,58,,0.85,120 O'Fallon MO; 501 Waterloo IA; 503 Plainville CT; 495 Port Dickinson NY; 110 Des Moines IA,,"Roofing Lead Generator; Canvasser- Hiring Immediately ; Project Consultant - Roofing, Siding, and Gutters; Sales Representative – Outside Sales | HIRING; Roofing Sales Representative"
+Pinnaclebank,,pinpoint,Pinpoint,pinnaclebank,https://pinnaclebank.pinpointhq.com,45,59,,0.85,"Pinnacle Bank, Texas; Glenwood Springs, Colorado; Colleyville, Texas; Mansfield, Texas; Keene, Texas",,MORTG ORIGINATOR ; FINANCIAL ADVISOR ; MORTG ORIGINATOR ; MORTG ORIGINATOR ; MORTG ORIGINATOR 
+Pinnbank,,pinpoint,Pinpoint,pinnbank,https://pinnbank.pinpointhq.com,45,59,,0.85,"Pinnacle Bank, Texas; Glenwood Springs, Colorado; Colleyville, Texas; Mansfield, Texas; Keene, Texas",,MORTG ORIGINATOR ; FINANCIAL ADVISOR ; MORTG ORIGINATOR ; MORTG ORIGINATOR ; MORTG ORIGINATOR 
 Littleelmsdaycare,,pinpoint,Pinpoint,littleelmsdaycare,https://littleelmsdaycare.pinpointhq.com,45,45,,0.85,Little Elms Daycare Nursery Sydenham;  Little Elms Beckenham Elm Road; Little Elms Daycare Nursery Peninsula ; Little Elms Daycare Nursery Lee ; Little Elms Daycare Nursery Catford ,,Nursery Practitioner Lunch cover; Nursery Bank staff; Nursery Qualified Bank staff; Front Of House; Nursery Room Manager
-Alcanzaclinical,,pinpoint,Pinpoint,alcanzaclinical,https://alcanzaclinical.pinpointhq.com,41,52,,0.85,"Olympus - Katy, TX; Kansas City Research Institute - Kansas City, MO; Accel Research Sites - Largo, FL; Coastal Carolina Research Center | Charleston, SC; Innovation - Palmetto Bay, FL",,Clinical Research Principal Investigator - Neurologist; Clinical Research Physician - Internal Medicine (Part time); Clinical Research Physician - Dermatologist (Part Time); Licensed Mental Health Therapist (PRN); Clinical Research Physician - Cardiologist (Part time)
+Alcanzaclinical,,pinpoint,Pinpoint,alcanzaclinical,https://alcanzaclinical.pinpointhq.com,42,53,,0.85,"Olympus - Katy, TX; Kansas City Research Institute - Kansas City, MO; Accel Research Sites - Largo, FL; Coastal Carolina Research Center | Charleston, SC; Innovation - Palmetto Bay, FL",,Clinical Research Principal Investigator - Neurologist; Clinical Research Physician - Internal Medicine (Part time); Clinical Research Physician - Dermatologist (Part Time); Licensed Mental Health Therapist (PRN); Clinical Research Physician - Cardiologist (Part time)
+Thecoteam,,pinpoint,Pinpoint,thecoteam,https://thecoteam.pinpointhq.com,42,45,,0.85,"Stillwater, MN (NorthStar Home Technologies); North Salt Lake, UT (ATI); Hamilton, NJ (Springboard); Minnetonka, MN (Lelch); San Diego, CA (Intersection)",,Lighting & Shading Installation Technician; AV Installation Technician; AV Service Technician; AV Technician & Lutron Programmer; AV Installation Technician - Residential
+Forterro,,pinpoint,Pinpoint,forterro,https://forterro.pinpointhq.com,39,39,,0.85,"Poland, Katowice; Spain, Barcelona; Morocco, Casablanca; UK, Remote; Germany, Leer",,"Senior, Field Sales (Female/Male); Senior, Business Process Services; Software Engineer (MAUI / Mobile); Software & Data Installation Technician; App Development & Integrations Engineer"
+Skims,,pinpoint,Pinpoint,skims,https://skims.pinpointhq.com,35,108,,0.85,Los Angeles HQ; Los Angeles or New York City; Houston Galleria; Las Vegas Premium Outlet; Fashion Outlets of Chicago,,"Store Leader, Operations, Regent Street, London; Store Leader- Regent Street; Assistant Store Leader; Director, Treasury & Credit Risk; Senior Data Analyst"
+Thorne,,pinpoint,Pinpoint,thorne,https://thorne.pinpointhq.com,33,42,,0.85,"Summerville, SC; Madison, WI",,Inventory Support Technician; Quality Control Inspector; Warehouse Material Handler; Quality Assurance Specialist II; Quality Control Data Associate
 Aawdc,,pinpoint,Pinpoint,aawdc,https://aawdc.pinpointhq.com,33,33,,0.85,Partner Employment Opportunity; Central County; Anne Arundel County; Millersville; Annapolis,,Pipeline for Future IT Federal/Government Positions; Finishing Trades Institute: Glazier; Information Technology/Cybersecurity Talent Pool; Construction & Skilled Trades Talent Pool; Transportation & Logistics Talent Pool
+Gloryglobal,,pinpoint,Pinpoint,gloryglobal,https://gloryglobal.pinpointhq.com,30,91,,0.85,"United States/Field based; United States/Watertown, WI; United States/Carrollton, TX",,"Servicetechniker (m/w/d) im Außendienst für den Raum München; Supervisor de Soporte en Campo (Chiapas); Soporte técnico - Primer nivel, CDMX; Field Service Technician - Knoxville, TN; Sales Manager, Vietnam"
+Ymcaboston,,pinpoint,Pinpoint,ymcaboston,https://ymcaboston.pinpointhq.com,29,194,,0.85,East Boston YMCA; Education & Training Center (Boston); Waltham YMCA,,Fitness Floor Staff - Wang; Teen Leader - Chinatown; Aquatics Fitness Instructor; Teen Leader - East Boston; Early Education Apprentice
+Roofingsource,,pinpoint,Pinpoint,roofingsource,https://roofingsource.pinpointhq.com,28,28,,0.84,"Chicago, IL; Dallas/Fort Worth, TX; El Paso, TX; Orlando, FL; Pensacola, FL",,Service Foreman; Business Development Representative; Journeyman; Apprentice; Service Foreman
 Acorntraining,,pinpoint,Pinpoint,acorntraining,https://acorntraining.pinpointhq.com,26,26,,0.834,East Midlands; Hybrid; Across the Midlands; Lincolnshire; South Yorkshire,,Learner Engagement Officer - East Midlands; Early Years Trainer Assessor; Functional Skills English & Maths Tutor; Early Years Tutor; Health and Social Care Tutor
+Bluemantis,,pinpoint,Pinpoint,bluemantis,https://bluemantis.pinpointhq.com,26,26,,0.834,Remote; Onsite; Hybrid,,Azure FinOps Consultant - PR; Cloud Customer Success Manager - PR; Desktop Support Engineer L1 - PR ; Service Delivery Lead - New York City ; Microsoft Power Platform Engineer - Toronto Canada 
 Herrs,,pinpoint,Pinpoint,herrs,https://herrs.pinpointhq.com,25,25,,0.831,"Seaford, DE; Nottingham, PA; Concordville, PA; Central, PA; Lakewood, NJ",,Part-Time Weekend Merchandiser; Warehouse Receiver/Forklift Operator FULL-TIME - 1st Shift Weekend; Part-Time Warehouse Laborer; Hourly Route Sales Representative ; Route Sales Representative
-Sensiba,,pinpoint,Pinpoint,sensiba,https://sensiba.pinpointhq.com,23,35,,0.85,"San Jose, CA; United States; San Ramon, CA; Bend, OR",," Tax Intern – Summer 2027;  Audit Intern – Summer 2027; Audit Partner, Private Equity; Sales Development Representative; Senior Audit Associate, Venture Capital"
-Advitaortho,,pinpoint,Pinpoint,advitaortho,https://advitaortho.pinpointhq.com,23,24,,0.828,"Gainesville, FL",,"VP Global Finance & Controller; Manufacturing Engineer (All Levels), New Product Development; Director, Quality Engineering; Corporate FP&A Manager; Sr. Project Manager - Operations"
+Sensiba,,pinpoint,Pinpoint,sensiba,https://sensiba.pinpointhq.com,23,34,,0.85,"San Jose, CA; United States; San Ramon, CA; Bend, OR",," Tax Intern – Summer 2027;  Audit Intern – Summer 2027; Audit Partner, Private Equity; Sales Development Representative; Senior Audit Associate, Venture Capital"
+Astonmartinf1,,pinpoint,Pinpoint,astonmartinf1,https://astonmartinf1.pinpointhq.com,23,23,,0.825,Silverstone,,Senior Control Systems Engineer; Business Analyst; Data Science Engineer – Vehicle Science; Graduate Data Scientist - Vehicle Science; Design Engineer – Aerodynamic Surfacing
+Compasshealthnetwork,,pinpoint,Pinpoint,compasshealthnetwork,https://compasshealthnetwork.pinpointhq.com,22,248,,0.85,"Nevada - Austin Boulevard; Columbia - Portland Street; Columbia - Portland Street, Mobile Dental Unit; Nevada - West Street; St. Louis - Hampton Avenue",,Outpatient Psychiatrist - Adult/Child/Adolescent - All Locations; Outpatient Psychiatrist - Adult/Child/Adolescent - All Locations; Outpatient Psychiatrist - Adult/Child/Adolescent - All Locations; Therapist/Counselor - Substance Use Recovery (Licensed); Community Support Specialist Youth
+Advitaortho,,pinpoint,Pinpoint,advitaortho,https://advitaortho.pinpointhq.com,22,23,,0.825,"Gainesville, FL",,"VP Global Finance & Controller; Director, Quality Engineering; Corporate FP&A Manager; Sr. Project Manager - Operations; Senior Quality Engineer, Validation"
+Greenstarexteriors,,pinpoint,Pinpoint,greenstarexteriors,https://greenstarexteriors.pinpointhq.com,22,22,,0.822,"Ringwood, NJ; Montclair, NJ; Lansdale, PA; Coatesville, PA; Edison, NJ",,Entry Level Sales (Base Pay + Benefits); Entry Level Sales (Base Pay + Benefits); Entry Level Sales (Base Pay + Benefits); Entry Level Sales (Base Pay + Benefits); Entry Level Sales (Base Pay + Benefits)
 C10Labs,,pinpoint,Pinpoint,c10labs,https://c10labs.pinpointhq.com,21,22,,0.822,"New York City ; Cambridge ; Washington, DC",,AI Nexus – Advisory Board Member; Mentor | New York Angels; Founder in Residence; University Venture Scout; Founder in Residence
 Abcdboston,,pinpoint,Pinpoint,abcdboston,https://abcdboston.pinpointhq.com,20,67,,0.85,East Boston - Condor Street; East Boston; Cambridge; South Boston ; Downtown Boston - Chauncy Street,,Teacher: Head Start (46 wk); Teacher Assistant: Head Start (46 wk); Teacher: Infant/Toddler ; Teacher Assistant: Head Start (46 wk); Teacher Assistant: Head Start (52 wk)
+Heapy,,pinpoint,Pinpoint,heapy,https://heapy.pinpointhq.com,18,18,,0.809,"Cleveland, OH; Raleigh, NC; Indianapolis, IN; Columbus, OH; Dayton, OH",,Building Optimization Engineer ; Senior Plumbing Engineer; Building Optimization Engineer ; Senior Mechanical Engineer; Senior Client Manager 
+Nypl,,pinpoint,Pinpoint,nypl,https://nypl.pinpointhq.com,18,18,,0.809,Various Locations; Wakefield Library; Library Services Center; 270 Madison Avenue; Stephen A. Schwarzman Building,,"Junior Library Custodian - East Manhattan Network; Adult English Language and Literacy Intake Advisor (Wakefield Library - Bronx); Aaron and Clara Greenhut Rabinowitz Director of Preservation Services; Investment Office Coordinator/Executive Assistant; Manager, Visual Materials Cataloging"
 Updatepromise,,pinpoint,Pinpoint,updatepromise,https://updatepromise.pinpointhq.com,17,17,,0.805,"San Francisco, California ; Chicago, Illinois; Baltimore, Maryland; Philadelphia, Pennsylvania; Boston, Massachusetts",,"Implementation Representative - San Francisco, California; Implementation Representative - Chicago, Illinois; Implementation Representative - Baltimore, Maryland; Implementation Representative - Philadelphia, PA; Implementation Representative - Boston, MA"
+Factbird,,pinpoint,Pinpoint,factbird,https://factbird.pinpointhq.com,16,16,,0.802,Copenhagen ; Germany; Remote - EMEA ; United Kingdom; Italy,,Full Stack Cloud Engineer; Senior Full Stack Cloud Engineer; Senior Full Stack Cloud Engineer - Copenhagen based ; Full Stack Cloud Engineer - Copenhagen Based ; AI Operations Specialist
+Fidelitone,,pinpoint,Pinpoint,fidelitone,https://fidelitone.pinpointhq.com,16,16,,0.802,"Lihue, HI (Kauai); Lebanon, TN (Division); Reno, NV; Bolingbrook, IL; Taunton, MA",,Forklift/Cherry Picker Operator - Mon-Fri - 1st Shift; Furniture Repair Technician - Woodworking Exp.; Pick/Pack Specialist - Part Time - Mon/Tues First Shift - $20/hr - Easy Commute; Pick/Pack Specialist - Full Time - Mon-Fri - 1st Shift - Easy Commute; Non CDL Class C - White Glove Delivery Driver
+Field,,pinpoint,Pinpoint,field,https://field.pinpointhq.com,16,16,,0.802,UK - London; Italy ; Germany; UK - Remote,,BESS Engineer; Talent Acquisition Partner  (12 month Fixed-Term Contract); Construction Lead - Italy; Regional Commercial & Procurement Manager - Germany; Regional Commercial & Procurement Manager
+Sandpiperci,,pinpoint,Pinpoint,sandpiperci,https://sandpiperci.pinpointhq.com,16,16,,0.802,Jersey; Guernsey,,Supervisor (39hrs) - Marks & Spencer ; Supervisor (39hrs) - Marks & Spencer St John; Temp Christmas Sales Assistant - Hotel Chocolat Guernsey - starting November 2026; Christmas Temporary Sales Assistant - Cardfactory Guernsey - starting November 2026; Sales Assistant (5hrs) - Cardfactory Guernsey 
+Bighatbiosciences,,pinpoint,Pinpoint,bighatbiosciences,https://bighatbiosciences.pinpointhq.com,15,15,,0.798,"San Mateo, CA",,"Scientist II, Developability ; Senior Director, Clinical Operations; Principal, Machine Learning Scientist; SharePoint Consultant; Senior Scientist I, Antibody Engineering"
+Groupo,,pinpoint,Pinpoint,groupo,https://groupo.pinpointhq.com,14,14,,0.794,"Haslet, Texas (405); Remote - United States; Milan, IL (4905); Roanoke, TX; Milan, IL or Fort Worth, TX",,RF Testing Engineer; Pricing Strategy Manager; Sourcing Specialist; Product Reliability Engineer; Sr. Lead Brand Marketing Partnership 
 Actica,,pinpoint,Pinpoint,actica,https://actica.pinpointhq.com,14,14,,0.794,United Kingdom / Remote; United Kingdom / Hybrid; Guildford,,Lead Cyber Security Consultant; Senior Cyber Security Consultant; Technical Consultant; Business Consultant; Security Architect
+Confluence,,pinpoint,Pinpoint,confluence,https://confluence.pinpointhq.com,12,22,,0.822,"Pittsburgh, PA; United States; Boston, US",,Market Data Business Analyst ; Senior Data Engineer; Senior DevOps Engineer; Senior Data Engineer; Senior Account Manager - NAM
+Frs,,pinpoint,Pinpoint,frs,https://frs.pinpointhq.com,12,12,,0.785,WA; TX,,Business Development Representative; Participant Engagement Specialist ; Wealth Program Manager; Retirement Counselor; Associate Retirement Counselor
+Rangeline,,pinpoint,Pinpoint,rangeline,https://rangeline.pinpointhq.com,12,12,,0.785,"Fort Worth, TX; San Antonio, FL; Corpus Christi, TX; Austin, TX; Winter Haven, Florida",,Shop technician; Construction Laborer; Heavy Civil Construction Laborer; Underground Utility Foreman ; Heavy Civil Construction Pipelayer 
 Guernseyelectricity,,pinpoint,Pinpoint,guernseyelectricity,https://guernseyelectricity.pinpointhq.com,12,12,,0.785,Guernsey,,Electrical Engineer Maintenance; Electrical Technician; Senior Metering Engineer; Electrical Solutions Estimator; Electrical Team Lead 
 Aeriz,,pinpoint,Pinpoint,aeriz,https://aeriz.pinpointhq.com,12,12,,0.785,"Anna, IL; Riverbank, CA",,Grow Staff-2nd Shift; Grow Staff Weekend 2nd Shift; Harvest Technician ; Grow Staff-3rd Shift Weekend; Cultivation Technician- Weekend
-Alcumus,,pinpoint,Pinpoint,alcumus,https://alcumus.pinpointhq.com,10,82,,0.85,"Remote, United States; Boston, Massachusetts; Houston; Covington, Louisiana; Burlington, Massachusetts",,"Lead Auditor, UK - Subcontractor ; Health and Safety Auditor ; Lead Auditor - Manufacturing Background (Subcontractor) ; Lead Auditor - Manufacturing Background (Subcontractor) ; Lead Auditor"
+Bedellcristin,,pinpoint,Pinpoint,bedellcristin,https://bedellcristin.pinpointhq.com,12,12,,0.785,Cayman Islands; Jersey; Guernsey,,Legal Administrator; Legal Administrator; Senior Associate; Finance Administrator ; Billing and Revenue Controller
+Rwdi,,pinpoint,Pinpoint,rwdi,https://rwdi.pinpointhq.com,11,30,,0.845,"Philadelphia, PA; Warren, MI; Los Angeles, CA; Portland, OR; Emeryville, CA",,Senior Field Technician; Air Emission Monitoring Specialist  - Remote; Junior Wind Engineer; Environmental Noise and Vibration Senior Engineer/Scientist; Senior Field Technician - Air Quality & Emissions
+Masteryprep,,pinpoint,Pinpoint,masteryprep,https://masteryprep.pinpointhq.com,11,18,,0.809,Minneapolis; Remote - USA; Remote - Nashville; Remote - Atlanta; Remote - Houston,,MasteryPrep Tutor; MasteryPrep Tutor; Program Manager for Minnesota Gear Up Middle and High School Tutoring Program; Engineering Team Lead; Backend Product Engineer
+Indrive,,pinpoint,Pinpoint,indrive,https://indrive.pinpointhq.com,10,166,,0.85,Georgia; United States,,Risk Ops Engineer; Country Manager; Senior Performance Engineer; Senior Product Manager (SuperApp); Business Development Manager
+Alcumus,,pinpoint,Pinpoint,alcumus,https://alcumus.pinpointhq.com,10,81,,0.85,"Remote, United States; Boston, Massachusetts; Houston; Covington, Louisiana; Burlington, Massachusetts",,"Lead Auditor, UK - Subcontractor ; Health and Safety Auditor ; Lead Auditor - Manufacturing Background (Subcontractor) ; Lead Auditor - Manufacturing Background (Subcontractor) ; Lead Auditor"
+Intermedia,,pinpoint,Pinpoint,intermedia,https://intermedia.pinpointhq.com,10,53,,0.85,United States; Georgia,,"Product Lead, Healthcare Software Solutions; Principal DevOps Engineer; DevOps Engineer 1  (Infrastructure & Deployment) ; Application Security Engineer; DevOps Engineer - Voice"
+Esss,,pinpoint,Pinpoint,esss,https://esss.pinpointhq.com,10,29,,0.842,"Florianópolis, SC; Bogota, CO",,Estágio em Engenharia de Simulação (Inside Sales) ; Business Development Representative | Inside Sales; Business Development Representative; IT Analyst | Analista de TI (Linux) - Hablante de Italiano; IT Analyst | Analista de TI - Hablante de Italiano
+Tradingtechnologies,,pinpoint,Pinpoint,tradingtechnologies,https://tradingtechnologies.pinpointhq.com,10,20,,0.816,Chicago; New York,,Senior Platform Engineer (Architect); Senior Automation Test Engineer; Senior Site Reliability Engineer (US Hours); Senior Platform Engineer (Architect); Senior Accountant (CPA)
+Kwi,,pinpoint,Pinpoint,kwi,https://kwi.pinpointhq.com,10,10,,0.776,"Melville, NY ",, Sr Customer Success Manager; Sr Enterprise Sales Executive ; Technical Lead; Application Support Analyst; SDET 
+Stacywitbeck,,pinpoint,Pinpoint,stacywitbeck,https://stacywitbeck.pinpointhq.com,9,29,,0.842,Seattle; Charlotte; Austin,,Internship: Construction Management; Internship: Construction Estimating ; Internship: Safety Construction; Internship: Construction Management; Internship: Transit Communication Systems
+Pettable,,pinpoint,Pinpoint,pettable,https://pettable.pinpointhq.com,9,14,,0.794,Missouri; Mississippi; Kentucky; New York; Virginia,,"Nurse Practitioner - ADHD Diagnosis and Treatment; Licensed Mental Health Professional (Emotional Support Animal Assessor); Physician - Emotional Support Animal Assessor (Colorado); Senior Manager, Support Operations; Physician - ADHD Diagnosis and Treatment (Missouri)"
 Aciedge,,pinpoint,Pinpoint,aciedge,https://aciedge.pinpointhq.com,9,14,,0.794,"Fort Hood, TX; Aberdeen Proving Grounds, MD; Fort Detrick, MD; Joint Base Lewis-McChord, WA; Fort Carson, CO",,Training Specialist; Installer/Electronic Technician; Software Engineer - Level II; Logistics Analyst - Level II; Logistics Analyst - Level III
+Heffernan,,pinpoint,Pinpoint,heffernan,https://heffernan.pinpointhq.com,9,13,,0.789,"Scottsdale, AZ; Walnut Creek, CA; Tracy, CA; St. Agustine, FL; St. Louis, MO",,"Financial Advisor; Account Manager, HeffDirect Commercial Lines ; Tax Advisor; Account Manager, Commercial Lines; Assistant Account Manager, Personal Lines"
+Heritage,,pinpoint,Pinpoint,heritage,https://heritage.pinpointhq.com,9,10,,0.776,Washington D.C.,,"Research Assistant, Douglas and Sarah Allison Center for National Security; Policy Analyst, Budget Policy; Editorial Associate, Media and Public Relations; Marketing Executive; Young Leaders Program - Spring 2026"
+Flatironssolutions,,pinpoint,Pinpoint,flatironssolutions,https://flatironssolutions.pinpointhq.com,9,9,,0.77,"Chennai, IN; Edmonton, CA; Boulder, CO",,Senior Software Engineer; Senior Technical Illustrator; AI Software Developer; Mobile App Developer; Technical Author
+Togethergroup,,pinpoint,Pinpoint,togethergroup,https://togethergroup.pinpointhq.com,8,20,,0.816,PURPLE New York; PURPLE LA; Together Group New York,,Lead Real-Time Artist; Senior Real-Time Viz Artist; Unreal Engine Rendering & Cinematics Specialist; Senior Unreal Developer ; PR Account Manager - Beauty (LA/New York)
+Srk,,pinpoint,Pinpoint,srk,https://srk.pinpointhq.com,8,17,,0.805,"Reno, NV; Anchorage, AK; Tucson, AZ; Elko, NV; Denver, CO",,"Junior to Intermediate Geologist; Senior Consultant; Senior Geochemist; Mid- to Senior-Level Engineer (Civil, Geotechnical, Environmental); Civil/Environmental/Geotechnical Engineer"
+Harnham,,pinpoint,Pinpoint,harnham,https://harnham.pinpointhq.com,8,9,,0.77,New York; Phoenix,,Recruitment Consultant ; Experienced Recruiters ; Recruitment Consultant / Senior Recruitment Consultant - US Market; Recruitment Consultant ; Lead Recruitment Consultant (Sourcing Manager) – Data & AI
+Aaanortheast,,pinpoint,Pinpoint,aaanortheast,https://aaanortheast.pinpointhq.com,8,8,,0.765,"RI Prov Fleet; East Providence, RI; RI Remote Location; Providence, RI; Avon, MA",,TEST_External Position; TEST_Roadside Technician Flatbed_External; TEST_Insurance Agent_External; TEST_Insurance Agent; Insurance Agent Additional Posting
+Mimeo,,pinpoint,Pinpoint,mimeo,https://mimeo.pinpointhq.com,8,8,,0.765,"Memphis, TN",,Kitting Associate - TNB; Collation Associate - TNB; Color Press Operator  - TNB; Black and White Press Operator(TNB) ; Production Runner - TNB 
+Peverelcourtcare,,pinpoint,Pinpoint,peverelcourtcare,https://peverelcourtcare.pinpointhq.com,8,8,,0.765,Bartlett's Residential Home; Merryfield House Nursing Home; Stone House Nursing Home,,Healthcare Assistant; Healthcare Assistant; Laundry Assistant; Part-time Domestic/Kitchen/Laundry Assistant; Senior Healthcare Assistant 
+Porterdodson,,pinpoint,Pinpoint,porterdodson,https://porterdodson.pinpointhq.com,8,8,,0.765,Exeter; Flexible; Poundbury; Remote ; Yeovil ,,Corporate Commercial Associate - Partner; Private Client Trusts Lawyer - Senior Associate; Corporate Commercial Associate - Partner; Commercial Property Litigation Associate; Recruitment and Early Careers Manager
+Clearview,,pinpoint,Pinpoint,clearview,https://clearview.pinpointhq.com,7,7,,0.759,"Hybrid - Washington, DC; New York, NY; Remote USA",,Director of U.S. Intelligence Community Enterprise Sales; Senior Software Engineer; U.S. Federal Civilian Sales Account Executive (Selected Agencies); U.S. Department of War Account Executive (USN/USMC); U.S. Federal Civilian Sales Account Executive (DOJ)
+Invictus,,pinpoint,Pinpoint,invictus,https://invictus.pinpointhq.com,7,7,,0.759,"Bloomington, MN; Washington, DC",,Regional Sales Manager – Wholesale; Strategic Account Executive - Financial Institutions; Systems Support Analyst - Mortgage Applications; Corporate Accountant; Wholesale Account Executive
+Reimaginedcareers,,pinpoint,Pinpoint,reimaginedcareers,https://reimaginedcareers.pinpointhq.com,6,108,,0.85,R82-102_1012 N Washington St; L28006700_1000 LOUISIANA ST; L21084200_17707 NW MIAMI CT; A30209101_3800 NE 1ST AVE; I22-126_322 E Illinois St,,"Senior Data Product Manager; Account Manager ; Airport Parking Location Manager; Valet Parking Attendant - Calgary Sports & Entertainment; Impark Parking Healthcare Services, Director – Vancouver, BC (Local Candidates Only)"
 Accelercomm,,pinpoint,Pinpoint,accelercomm,https://accelercomm.pinpointhq.com,6,17,,0.805,"West Coast, United States ; Cambridge, UK",,Software Engineering Manager; Senior Design Engineer; Senior Hardware Design Engineers ; Design Engineers; Software Engineer
-Reimaginedcareers,,pinpoint,Pinpoint,reimaginedcareers,https://reimaginedcareers.pinpointhq.com,5,106,,0.85,R82-102_1012 N Washington St; L28006700_1000 LOUISIANA ST; L21084200_17707 NW MIAMI CT; A30209101_3800 NE 1ST AVE; I22-126_322 E Illinois St,,Senior Data Product Manager; Account Manager ; Airport Parking Location Manager; Valet Parking Attendant - Calgary Sports & Entertainment; Parking Event Ambassador - RiverCentre Parking Ramp ( Part Time )
+Gravityglobal,,pinpoint,Pinpoint,gravityglobal,https://gravityglobal.pinpointhq.com,6,16,,0.802,Minneapolis; Texas (Remote) ; Houston ; Denver,,Associate Media Director; Associate Media Director; Senior Digital Media Executive; Lead Digital Designer ; Senior Account Director 
+Hooli,,pinpoint,Pinpoint,hooli,https://hooli.pinpointhq.com,6,14,,0.794,"Austin, TX; New York",,Testing People HR; Customer Success Specialist; Job that triggers workflow; Rares Test; Elvin new test
+Bright,,pinpoint,Pinpoint,bright,https://bright.pinpointhq.com,6,6,,0.752,Belfast; Petersfield; Duleek; Leamington Spa,,Full Stack Software Engineer; Payroll Specialist & Tutor; CRM/Hubspot Systems Architect - 12 month contract; CRM/Hubspot Systems Architect - 12 month contract; Sales Operations Lead
+Grasshopper,,pinpoint,Pinpoint,grasshopper,https://grasshopper.pinpointhq.com,6,6,,0.752,Remote,,"Senior Financial Analyst; VP/SVP, Fund Banking Relationship Manager; Senior CRA Analyst; Fintech Risk Associate; SBA Senior Credit Officer"
+Mammoth,,pinpoint,Pinpoint,mammoth,https://mammoth.pinpointhq.com,6,6,,0.752,"North Hollywood, CA",,Creative Manager ; HR Generalist - Employee Relations & Culture; Staff Accountant; Delivery Driver ; Production & Packaging Associate
+Performanceautomotive,,pinpoint,Pinpoint,performanceautomotive,https://performanceautomotive.pinpointhq.com,6,6,,0.752,Centerville; Fairfield; Cincinatti,,Sales Professional - Performance Chrysler Jeep Dodge RAM Centerville; Lot Technician - Performance Honda Fairfield; Sales Professional - Performance Honda Fairfield; Payroll Accounting Clerk- Cincinnati; Automotive Technician - Master Certified - Toyota Cincinnati Ohio
+Americanexcelsior,,pinpoint,Pinpoint,americanexcelsior,https://americanexcelsior.pinpointhq.com,6,6,,0.752,"Rice Lake, WI; Arlington, TX; West Chicago, IL; Sheboygan, WI",,General Application - No Weekends; General Application 1st/2nd Shift; Plant Manager; General Production Worker; Foam Fabrication & Molding Operator - 1st & 2nd Shift - Up to $23/hr with Shift Differential
 Abdynamics,,pinpoint,Pinpoint,abdynamics,https://abdynamics.pinpointhq.com,5,17,,0.805,"Chelsea (MI), United States of America; Torrance (CA), United States of America; Bakersfield (CA), United States of America",,"Test Cell Operator; Product Engineer; Accounting Assistant; Senior Engineer - Electrical Design; Health, Safety and Environmental Officer"
+Ascensusspecialties,,pinpoint,Pinpoint,ascensusspecialties,https://ascensusspecialties.pinpointhq.com,5,7,,0.759,"Newburyport, MA; Remote, US; Evans City, PA",,Plant Operator - UK; Senior Research and Development (R&D) Chemist ; Global Sales Manager-Catalog; Chemical Manufacturing Technician; Chemical Operator
+Sproutsocial,,pinpoint,Pinpoint,sproutsocial,https://sproutsocial.pinpointhq.com,5,6,,0.752,Washington; New York,,"Account Executive, Agency Growth (EMEA); Senior Corporate Counsel, Product and Privacy; Global Payroll Manager; Software Engineer - Back End; Engineering Manager"
+Ada,,pinpoint,Pinpoint,ada,https://ada.pinpointhq.com,5,5,,0.745,Chicago; Washington DC,,"Head of DEI - Belfast; Head of DEI - US; Manager, Leadership Communications; Senior Manager, ADA Credentialing Policy and Delegated Services; Manager, Training and Assessment"
+Agomab,,pinpoint,Pinpoint,agomab,https://agomab.pinpointhq.com,5,5,,0.745,Agomab Antwerp; Agomab All Sites ,,"Senior Clinical Trial Associate ; Director, Medical Writing; Safety Physician; Quality Officer; Senior Project Toxicologist"
+Altopharmacy,,pinpoint,Pinpoint,altopharmacy,https://altopharmacy.pinpointhq.com,5,5,,0.745,New York; Washington,,"Pharmacy Technician PRN; Part Time Pharmacy Technician; Senior Director, Commercial FP&A; Revenue Accountant; Principal Architect, Engineering"
+Ats,,pinpoint,Pinpoint,ats,https://ats.pinpointhq.com,5,5,,0.745,"Columbus, OH; Washington; Richmond, VA; San Antonio, TX; New York",,Industrial Athletic Trainer- Multi-site Construction; Industrial Athletic Trainer- Traveling; PRN Industrial Athletic Trainer- On-site Construction; Industrial Athletic Trainer- On-site Construction; Customer Service Rep
+Bassett,,pinpoint,Pinpoint,bassett,https://bassett.pinpointhq.com,5,5,,0.745,"New York; Oneonta, NY",,Head of DEI - UK; Certified Nursing Assistant I; Customer Service Rep; Certified Nursing Assistant I; Physician 
+Caddell,,pinpoint,Pinpoint,caddell,https://caddell.pinpointhq.com,5,5,,0.745,"Hagatna, GU; Montgomery, AL",,Assistant Superintendent - Commercial; CAW- Plumber; Site Safety and Health Officer (SSHO); CAW - Carpenter; CAW- Electrician
+Gohealth,,pinpoint,Pinpoint,gohealth,https://gohealth.pinpointhq.com,5,5,,0.745,New York; Washington,,"Product Manager; Infrastructure Systems Architect; IT Support Analyst; Senior Accountant, External Reporting and Technical Accounting; Vice President, Commercial Partnerships"
+Greenergy,,pinpoint,Pinpoint,greenergy,https://greenergy.pinpointhq.com,5,5,,0.745,Charleville; Acres; Mallow; Thames Navigator,,"Deli Manager; Fresh Food Advisor; Deli Assistant; Driver Manager - Grays, Essex 4 on 4 off days/nights Shift Pattern; Customer Care Agent"
+Halff,,pinpoint,Pinpoint,halff,https://halff.pinpointhq.com,5,5,,0.745,"Tampa, FL; Houston, TX; Jacksonville, FL; Little Rock, AR",,"Construction Inspector; Civil Engineer- Land Development; Administrative Assistant; Water and Wastewater Team Lead; Senior Project Manager, Public Works, PE"
+Howe,,pinpoint,Pinpoint,howe,https://howe.pinpointhq.com,5,5,,0.745,"Sioux Falls, South Dakota",,Estimating Manager; Journeyman Plumber; Mechanical Piping and Plumbing Project Manager; HVAC Construction Foreman; Welder
+Lifting,,pinpoint,Pinpoint,lifting,https://lifting.pinpointhq.com,5,5,,0.745,"Baton Rouge, LA; Angleton, TX; Tampa, FL; Houston, TX",,Test Bed Operator; Branch Manager; Inside Sales Representative; Sewer; Outside Sales
+Medical,,pinpoint,Pinpoint,medical,https://medical.pinpointhq.com,5,5,,0.745,Global,,Nurse; Doctor; Paramedic; Healthcare Assistant; Public Health Officer 
+Primehealthcare,,pinpoint,Pinpoint,primehealthcare,https://primehealthcare.pinpointhq.com,5,5,,0.745,"Coshocton, OH, US; Ontario, CA; Gadsden, AL, US; Redding, CA, US",,Registered Nurse (RN) - Emergency Services; Payroll Analyst; Licensed Practical Nurse - Detox Unit; Licensed Vocational Nurse (LVN)- Emergency Services; Nursing Assistant - Med/Surg
+Promega,,pinpoint,Pinpoint,promega,https://promega.pinpointhq.com,5,5,,0.745,Washington; New York,,Regulatory Affairs Lead; Packaging Engineer 2; Field Service Engineer; Warehouse Technician; Automation Engineer 2
+Rsl,,pinpoint,Pinpoint,rsl,https://rsl.pinpointhq.com,5,5,,0.745,New York; Washington,,Facilities Manager; Inside Sales Representative; VRF & Ductless Technical Support Representative (HVAC/R Industry) ; Emmy Test; Inside Sales Representative
+Sabra,,pinpoint,Pinpoint,sabra,https://sabra.pinpointhq.com,5,5,,0.745,"Colonial Heights, VA; White Plains, NY",,"Safety Manager; Associate Brand Manager; Senior Manager, Quality; Food Product Development Manager; Manager, Process Engineer"
+Sjsustudentunion,,pinpoint,Pinpoint,sjsustudentunion,https://sjsustudentunion.pinpointhq.com,5,5,,0.745,Spartan Recreation and Aquatic Center,,"Trip Supervisor ; Club Sports Coordinator; Climbing Wall Assistant; Manager of Outdoor Recreation and Rental Center; Athletic Trainer, Club Sports (Part-Time)"
 Smartthings,,pinpoint,Pinpoint,smartthings,https://smartthings.pinpointhq.com,5,5,,0.745,"Minneapolis, MN",,"Staff Software Engineer, Hub Platform; Staff Software Engineer, Components & Device Actions; Sr Product Marketing Manager, B2B (Contract); Staff Software Engineer, Rust ; Sr Strategic Partnerships Manager, B2B"
 Workwithus,,pinpoint,Pinpoint,workwithus,https://workwithus.pinpointhq.com,5,5,,0.745,Remote; United Kingdom,,Founding Legal Counsel; Enterprise Implementation Manager; Staff Product Designer; Head of Data; Senior Product Marketing Manager
-Greenergy,,pinpoint,Pinpoint,greenergy,https://greenergy.pinpointhq.com,5,5,,0.745,Charleville; Acres; Mallow; Thames Navigator,,"Deli Manager; Fresh Food Advisor; Deli Assistant; Driver Manager - Grays, Essex 4 on 4 off days/nights Shift Pattern; Customer Care Agent"
-Agomab,,pinpoint,Pinpoint,agomab,https://agomab.pinpointhq.com,5,5,,0.745,Agomab Antwerp; Agomab All Sites ,,"Senior Clinical Trial Associate ; Director, Medical Writing; Safety Physician; Quality Officer; Senior Project Toxicologist"
 Airtanker,,pinpoint,Pinpoint,airtanker,https://airtanker.pinpointhq.com,5,5,,0.745,Brize Norton,,Crew Training and Establishment Manager; Short Term Planner; B1 Line Engineer - SR; Planning Assistant; Campaign Coordinator
+Guardianservice,,pinpoint,Pinpoint,guardianservice,https://guardianservice.pinpointhq.com,4,7,,0.759,"Raleigh, NC",,"Licensed Insurance Agent ; Strategy & Operations, Associate; Senior Strategy & Operations Associate; Licensed Insurance Agent - Texas Market; Licensed Insurance Agent - Florida Specialized"
+Nuggetcomfort,,pinpoint,Pinpoint,nuggetcomfort,https://nuggetcomfort.pinpointhq.com,4,6,,0.752,"Washington; Raleigh-Durham, NC; Atlanta, GA",,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Performance Marketing Strategist (Contract); VP of Operations
+Flowhub,,pinpoint,Pinpoint,flowhub,https://flowhub.pinpointhq.com,4,5,,0.745,Boston; Denver; San Francisco; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Millenniumhealth,,pinpoint,Pinpoint,millenniumhealth,https://millenniumhealth.pinpointhq.com,4,5,,0.745,Washington; Virginia; Baltimore; San Diego,,Laboratory Technician; .Net Developer; Account Manager; Research Biostatistician; Specimen Collector
+Stepup,,pinpoint,Pinpoint,stepup,https://stepup.pinpointhq.com,4,5,,0.745,Chicago; Washington; Dallas; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Adventhealth,,pinpoint,Pinpoint,adventhealth,https://adventhealth.pinpointhq.com,4,4,,0.737,Orlando,,Sr Manager NP Oncology Infusion Center; Physician – Primary Care; Nurse Practitioner; Physician – Primary Care
+Arrivia,,pinpoint,Pinpoint,arrivia,https://arrivia.pinpointhq.com,4,4,,0.737,New York,,Senior Desk Manager; Senior Technical Program Manager; AI Agent Builder; Travel Concierge
+Boldpenguin,,pinpoint,Pinpoint,boldpenguin,https://boldpenguin.pinpointhq.com,4,4,,0.737,"Remote - US; Dublin, OH; Columbus, OH",,Director of Partnerships; Product Marketing Manager; Insurance Support Specialist; Marketing Executive
+Embark,,pinpoint,Pinpoint,embark,https://embark.pinpointhq.com,4,4,,0.737,Head Office,,"Customer Success Representative (Contract); Bilingual Customer Success Representative (French/English); Bilingual Customer Success Representative (Mandarin or Cantonese/English); Supervisor, Contact Centre"
+Forescout,,pinpoint,Pinpoint,forescout,https://forescout.pinpointhq.com,4,4,,0.737,"Remote; Pune, India",,Regional Account Manager	;  Cloud Integrations Product Manager; DevOps Engineer; Customer Success Manager
+Hestia,,pinpoint,Pinpoint,hestia,https://hestia.pinpointhq.com,4,4,,0.737,Barnet; Wandsworth; Medway,,Community Engagement Practitioner; Team Manager; Waking Night Recovery Worker; Marketing Executive
+Landdesign,,pinpoint,Pinpoint,landdesign,https://landdesign.pinpointhq.com,4,4,,0.737,"Denver, CO; Alexandria, VA; New York",,Horticulturist; Designer II; Project Accountant; Marketing Executive
+Malloy,,pinpoint,Pinpoint,malloy,https://malloy.pinpointhq.com,4,4,,0.737,Malloy Ford of Charlottesville; Malloy Ford of Winchester; Malloy Ford of Alexandria; Malloy Chevrolet of Charlottesville,,Automotive Technician; Marketing Manager ; Sales Consultant; Marketing Executive
+Mavis,,pinpoint,Pinpoint,mavis,https://mavis.pinpointhq.com,4,4,,0.737,"Matawan, NJ; Dalton, GA; White Plains, NY",,Automotive Alignment Technicians; Automotive Tire Technician; VP of Finance; Marketing Executive
+Presto,,pinpoint,Pinpoint,presto,https://presto.pinpointhq.com,4,4,,0.737,"San Mateo, CA; Dallas, TX; New York",,"Business Analyst Intern; Backend Engineer, POS & Integrations; Customer Service Rep; Marketing Executive"
+Puttshack,,pinpoint,Pinpoint,puttshack,https://puttshack.pinpointhq.com,4,4,,0.737,Colorado; Georgia; Florida; Arizona,,Server Assistants / Food Runners; Barback; Electronic Game Support / Maintenance Technician; Customer Service Rep
+Renewal,,pinpoint,Pinpoint,renewal,https://renewal.pinpointhq.com,4,4,,0.737,Kansas; Pennsylvania; New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Revolve,,pinpoint,Pinpoint,revolve,https://revolve.pinpointhq.com,4,4,,0.737,"Los Angeles, CA; Shoemakersville, PA; Cerritos, CA",,Patternmaker; Retail Keyholder; Sales Associate; Marketing Executive
+Rxsight,,pinpoint,Pinpoint,rxsight,https://rxsight.pinpointhq.com,4,4,,0.737,"St. Augustine, FL; Orlando, FL; Atlanta, GA",,Customer Development Manager; Clinical Affairs Training Specialist; Programs Manager (Commercial); Marketing Executive
+Sendbird,,pinpoint,Pinpoint,sendbird,https://sendbird.pinpointhq.com,4,4,,0.737,"London, England; Seoul, South Korea; Remote",,Applied AI Engineer; Enterprise Account Executive; Forward Deployed Engineer; Marketing Executive
+Cubico,,pinpoint,Pinpoint,cubico,https://cubico.pinpointhq.com,4,4,,0.737,"Madrid; Rome; Remote, Italy",,"TÉCNICO/A RESPONSABLE O&M ; Técnico/a de Mantenimiento Eléctrico e Instrumentación y Control – (Planta Termosolar); Vice President, Construction ; Vice President, Construction "
+Hopwood,,pinpoint,Pinpoint,hopwood,https://hopwood.pinpointhq.com,4,4,,0.737,Rochdale/Middleton; Middleton,,"Learning Support Assistant (Term Time Only + 2 Weeks) - Various Hours Available ; Lecturer - Maths (Access to HE), 0.5, 17.5 hours p/w; Exam Invigilator ; Instructor - Animal Care, 28 hours p/w, Term Time Only + 4 Weeks (Maternity Cover)"
+Helpinghands,,pinpoint,Pinpoint,helpinghands,https://helpinghands.pinpointhq.com,3,234,,0.85,Durham; Cambridge,,Care Assistant; Care Assistant; Care Assistant; Care Assistant; Care Assistant
+Anthesisgroup,,pinpoint,Pinpoint,anthesisgroup,https://anthesisgroup.pinpointhq.com,3,67,,0.85,"United States; New York City, NY - North America ",,Enterprise Architect; Senior Azure Cloud Engineer; Principal Consultant – Strategy & Transformation ; Consultant - Supply Chain Sustainability; Carbon & Energy Markets Manager – Business Developer 
+Afiniti,,pinpoint,Pinpoint,afiniti,https://afiniti.pinpointhq.com,3,7,,0.759,Washington; New York,,Head of DEI - Romania; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Enfinityglobal,,pinpoint,Pinpoint,enfinityglobal,https://enfinityglobal.pinpointhq.com,3,6,,0.752,Washington; New York,,"Head of DEI - Belfast; Head of DEI - US; Manager - Land Acquisitions (Karnataka); Head of O&M, Americas; Accounting Director"
+Exabeam,,pinpoint,Pinpoint,exabeam,https://exabeam.pinpointhq.com,3,6,,0.752,Broomfield CO,,Threat Detection Analyst; AI Deployment Intern; Senior Security Engineer; Marketing Executive; Enterprise Account Executive
+Hilti,,pinpoint,Pinpoint,hilti,https://hilti.pinpointhq.com,3,6,,0.752,"Kaufering, DE; Plano, US; Austin, US",,Werkstudent Human Resources (m/w/d); Bilingual Outside Sales Account Manager; Marketing Manager; Marketing Automation Technical Architect (H/F); Customer Service Rep
+Relocity,,pinpoint,Pinpoint,relocity,https://relocity.pinpointhq.com,3,6,,0.752,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Groupon,,pinpoint,Pinpoint,groupon,https://groupon.pinpointhq.com,3,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager ; Customer Service Rep
+Kspartners,,pinpoint,Pinpoint,kspartners,https://kspartners.pinpointhq.com,3,5,,0.745,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Architect; Architect
+Pacworldwide,,pinpoint,Pinpoint,pacworldwide,https://pacworldwide.pinpointhq.com,3,5,,0.745,Washington; New York,,ERP Business Analyst; Maintenance Clerk; Team Trainer; Plant Controller; Thermo Machine Packer
+Perforce,,pinpoint,Pinpoint,perforce,https://perforce.pinpointhq.com,3,5,,0.745,"Minneapolis, MN; Portland, OR",,"Sales Development Representative; Enterprise Account Executive-Puppet; Site Coordinator - Fixed Term Contract; Senior Product Designer; Marketing Writer, OpenLogic"
+Samsara,,pinpoint,Pinpoint,samsara,https://samsara.pinpointhq.com,3,5,,0.745,San Francisco,,"Head of DEI - UK; Manager, Video Production; Customer Service Rep; Marketing Executive; Associate Product Manager"
+Accredited,,pinpoint,Pinpoint,accredited,https://accredited.pinpointhq.com,3,4,,0.737,New York,,"Finance Director, Reinsurance; Product Development Manager; Due Diligence Analyst; CAT Risk Portfolio Manager"
+Admarketplace,,pinpoint,Pinpoint,admarketplace,https://admarketplace.pinpointhq.com,3,4,,0.737,New York,,"Senior Partner Manager; Account Lead, Advertiser Sales; Technical Account Specialist; Marketing Executive"
+Alector,,pinpoint,Pinpoint,alector,https://alector.pinpointhq.com,3,4,,0.737,"San Francisco, CA; New York",,Scientist; Senior Research Associate; Medical Director; Marketing Executive
+Boompop,,pinpoint,Pinpoint,boompop,https://boompop.pinpointhq.com,3,4,,0.737,San Francisco; Los Angeles,,Inside Sales Rep; Event Manager; Customer Service Rep; Marketing Executive
+Guideline,,pinpoint,Pinpoint,guideline,https://guideline.pinpointhq.com,3,4,,0.737,United States ; New York; San Diego ,,Operations Associate ; Senior Product Designer ; Customer Service Rep; Marketing Executive
+Lumindigital,,pinpoint,Pinpoint,lumindigital,https://lumindigital.pinpointhq.com,3,4,,0.737,Remote- United States,,"Manager, Incident Response; Product Designer; Product Manager; Marketing Executive"
+Nemahealth,,pinpoint,Pinpoint,nemahealth,https://nemahealth.pinpointhq.com,3,4,,0.737,Remote (United States) ,,Chief of Staff; Staff Trauma Therapist; California Licensed Staff Trauma Therapist; Marketing Executive
+Openx,,pinpoint,Pinpoint,openx,https://openx.pinpointhq.com,3,4,,0.737,"New York; Los Angeles, CA",,Paralegal; Account Manager - Publisher Development Remote; CTV Director EMEA; Marketing Executive
+Pairwise,,pinpoint,Pinpoint,pairwise,https://pairwise.pinpointhq.com,3,4,,0.737,Washington; New York,,"Head of Marketing; Sr. Manager, Agronomy; Customer Service Rep; Marketing Executive"
+Physiciansmutual,,pinpoint,Pinpoint,physiciansmutual,https://physiciansmutual.pinpointhq.com,3,4,,0.737,Washington; New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Spektrix,,pinpoint,Pinpoint,spektrix,https://spektrix.pinpointhq.com,3,4,,0.737,"New York, NY",,Client Success Specialist; Client Success Specialist; Digital Marketing Manager; Client Success Specialist - French speaker
+Stoiclane,,pinpoint,Pinpoint,stoiclane,https://stoiclane.pinpointhq.com,3,4,,0.737,"Chicago, IL; New York",,Property Accountant; Senior Accountant; Operations Manager; Marketing Executive
+Acme,,pinpoint,Pinpoint,acme,https://acme.pinpointhq.com,3,3,,0.728,UK,,Test Job 1; Test Job 2; Test Job 3
+Afm,,pinpoint,Pinpoint,afm,https://afm.pinpointhq.com,3,3,,0.728,"Charlotte, NC; Hope Mills, NC; Jackson, MS",,"Senior Forester; Land Focused Real Estate Agent; Area Manager, Forestry"
+Apcon,,pinpoint,Pinpoint,apcon,https://apcon.pinpointhq.com,3,3,,0.728,New York,,Director of Marketing;   Senior Hardware Engineer; Technical Recruiter
+Apd,,pinpoint,Pinpoint,apd,https://apd.pinpointhq.com,3,3,,0.728,"Fairport, New York",,Director of MEP; Staff Accountant; Mechanical CAD Technician
+Byrne,,pinpoint,Pinpoint,byrne,https://byrne.pinpointhq.com,3,3,,0.728,Washington; New York,,Associate Compliance Specialist; Data Analyst; Business Development Executive
+Cgt,,pinpoint,Pinpoint,cgt,https://cgt.pinpointhq.com,3,3,,0.728,"New Braunfels, Texas",,Environmental Health and Safety Manager; Maintenance Technician - 3rd Shift ; Production Operators - 2nd & 3rd Shift
+Don,,pinpoint,Pinpoint,don,https://don.pinpointhq.com,3,3,,0.728,"Los Angeles; San Diego, CA",,Spring Hire Event; Captain 2; Spring Hire Event
+Elfbeauty,,pinpoint,Pinpoint,elfbeauty,https://elfbeauty.pinpointhq.com,3,3,,0.728,Washington; New York,,"Head of Packaging Design; Director, SEC Reporting; Associate Manager, Planning"
+Flashparking,,pinpoint,Pinpoint,flashparking,https://flashparking.pinpointhq.com,3,3,,0.728,"Houston, TX; Washington, D.C.; New York",,"Accounts Receivable Specialist; Regional Sales Manager- Washington, D.C.; Field Technician"
+Float,,pinpoint,Pinpoint,float,https://float.pinpointhq.com,3,3,,0.728,Remote (EMEA); Remote (AMER); Remote (global),,Customer Support Specialist (EMEA); Customer Support Specialist (AMER); Senior Data Engineer
+Globaldata,,pinpoint,Pinpoint,globaldata,https://globaldata.pinpointhq.com,3,3,,0.728,UK; Rest of the World; US,,Head of DEI - UK; Business Development Manager; Customer Service Rep
+Iventure,,pinpoint,Pinpoint,iventure,https://iventure.pinpointhq.com,3,3,,0.728,"Jacksonville, FL; Tampa, FL",,IT Help Desk Technician; IT Help Desk Technician; Senior Systems Engineer
+Lucasoil,,pinpoint,Pinpoint,lucasoil,https://lucasoil.pinpointhq.com,3,3,,0.728,New York; Indianapolis ,,Accounting Analyst ; Marketing Manager; Customer Service Rep
+Mapbox,,pinpoint,Pinpoint,mapbox,https://mapbox.pinpointhq.com,3,3,,0.728,US; UK,,"Software Development Engineer II (Flutter), Maps SDK; Head of Marketing; Sales Development Representative"
+Marchex,,pinpoint,Pinpoint,marchex,https://marchex.pinpointhq.com,3,3,,0.728,Remote - USA,,"Sales Development Representative; Associate Account Executive, Auto; Technical Support Coordinator (Part Time)"
+Matter,,pinpoint,Pinpoint,matter,https://matter.pinpointhq.com,3,3,,0.728,Bristol,,Senior Mechanical Engineer - Contractor Network Talent Pool; Test and Assembly Engineer - Contractor Network Talent Pool; Marketing Assistant
+Primerica,,pinpoint,Pinpoint,primerica,https://primerica.pinpointhq.com,3,3,,0.728,Georgia; Florida; Ohio,,Cash Reconciliation Manager; Regional Life Sales Manager; Field Auditor
+Reply,,pinpoint,Pinpoint,reply,https://reply.pinpointhq.com,3,3,,0.728,UK; Belgium; Luxembourg,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Thebulwark,,pinpoint,Pinpoint,thebulwark,https://thebulwark.pinpointhq.com,3,3,,0.728,"Washington, DC",,"Managing Editor, Legal Coverage; Accountability Reporter; Video Editor (Contract)"
 Aestrategies,,pinpoint,Pinpoint,aestrategies,https://aestrategies.pinpointhq.com,3,3,,0.728,"Silver Spring, MD",,FDA - Physician - Radiology; FDA - Physician - Nuclear Medicine; FDA - Physician - Endocrinologist
 Afcb,,pinpoint,Pinpoint,afcb,https://afcb.pinpointhq.com,3,3,,0.728,"Vitality Stadium, Bournemouth; AFC Bournemouth Performance Centre, Wimborne",,Concourse Bar Staff (Casual); Academy Driver (Casual); Club Driver
 Ahelpinghome,,pinpoint,Pinpoint,ahelpinghome,https://ahelpinghome.pinpointhq.com,3,3,,0.728,Pittsburgh,,Assistant Director of Residential Services; Residential Program Supervisor (House Supervisor IDD); Direct Support Professional (DSP)
+Freeda,,pinpoint,Pinpoint,freeda,https://freeda.pinpointhq.com,3,3,,0.728,Jersey,,Bank Support Worker ; Independent Domestic Violence Advisor (IDVA); Residential Support Administrator - cover role
+Mountainwarehouse,,pinpoint,Pinpoint,mountainwarehouse,https://mountainwarehouse.pinpointhq.com,2,205,,0.85,Washington (WSH),,Store Manager; CAN Team Leader - Ontario; Christmas Casual Retail Sales Assistant ; Sprzedawca / Doradca klienta; CAN Sales Associate - Ontario
+Bmt,,pinpoint,Pinpoint,bmt,https://bmt.pinpointhq.com,2,54,,0.85,USA; USA - Houston,,Technisch Expert; Maritime Defence Opportunities - Expression of Interest; Principal Nuclear Facilities Safety Engineering Consultant; Part Time - Submarine Safety Engineering Consultant; Submarine Safety Engineering Consultant
+Gardiner,,pinpoint,Pinpoint,gardiner,https://gardiner.pinpointhq.com,2,53,,0.85,G&T LLC. New York; G&T London/Cambridge,,Procurement Manager; Associate Cost Consultant; Project Manager; Supply Chain Manager; Associate/Senior Associate Cost Consultants (Infrastructure)
+Tabby,,pinpoint,Pinpoint,tabby,https://tabby.pinpointhq.com,2,46,,0.85,Georgia; Remote/Georgia,,Customer Support Representative.; People Experience Partner; Customer Service Representative Recruitment Day –   Riyadah; Vendor Risk Manager; Instructional Designer 
+Nyx,,pinpoint,Pinpoint,nyx,https://nyx.pinpointhq.com,2,18,,0.809,New Albany Indiana,,Receptionist; Shipping and Receiving; Truck Driver - CDL; Maintenance Technician (Injection Molding); Ford Shipping Clerk
+Ebiquity,,pinpoint,Pinpoint,ebiquity,https://ebiquity.pinpointhq.com,2,10,,0.776,USA - Remote,,Senior Consultant; Senior Consultant; Data Platform Engineer; Senior Analyst - Market Mix Modelling; Data Scientist
+Hazelcast,,pinpoint,Pinpoint,hazelcast,https://hazelcast.pinpointhq.com,2,9,,0.77,"Remote, United States",,"Senior Java Engineer (Core); VP, Engineering; Senior SDET (Java); Regional Sales Director, APAC; Sales Engineer, US"
+Wearemapp,,pinpoint,Pinpoint,wearemapp,https://wearemapp.pinpointhq.com,2,8,,0.765,17 Columbus Courtyard ,,Paralegal ; Building Manager; Operations Manager - Landmark Building; HSE Consultant; Assistant Building Manager
+Bolt,,pinpoint,Pinpoint,bolt,https://bolt.pinpointhq.com,2,6,,0.752,Washington; New York,,Software Engineer (Internal); Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager
+Livanova,,pinpoint,Pinpoint,livanova,https://livanova.pinpointhq.com,2,6,,0.752,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+128Plumbing,,pinpoint,Pinpoint,128plumbing,https://128plumbing.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Able,,pinpoint,Pinpoint,able,https://able.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Abt,,pinpoint,Pinpoint,abt,https://abt.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Accent,,pinpoint,Pinpoint,accent,https://accent.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Acclime,,pinpoint,Pinpoint,acclime,https://acclime.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Achievers,,pinpoint,Pinpoint,achievers,https://achievers.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Acquisition,,pinpoint,Pinpoint,acquisition,https://acquisition.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Adaptavist,,pinpoint,Pinpoint,adaptavist,https://adaptavist.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Affiliated,,pinpoint,Pinpoint,affiliated,https://affiliated.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Ajinomoto,,pinpoint,Pinpoint,ajinomoto,https://ajinomoto.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Alan,,pinpoint,Pinpoint,alan,https://alan.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Allbirds,,pinpoint,Pinpoint,allbirds,https://allbirds.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Allovue,,pinpoint,Pinpoint,allovue,https://allovue.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Alpineinvestors,,pinpoint,Pinpoint,alpineinvestors,https://alpineinvestors.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Altieri,,pinpoint,Pinpoint,altieri,https://altieri.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Ametek,,pinpoint,Pinpoint,ametek,https://ametek.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Amica,,pinpoint,Pinpoint,amica,https://amica.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Amplitude,,pinpoint,Pinpoint,amplitude,https://amplitude.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Analysysmason,,pinpoint,Pinpoint,analysysmason,https://analysysmason.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Anthonysylvan,,pinpoint,Pinpoint,anthonysylvan,https://anthonysylvan.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Arcadis,,pinpoint,Pinpoint,arcadis,https://arcadis.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Artprocessors,,pinpoint,Pinpoint,artprocessors,https://artprocessors.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Asarco,,pinpoint,Pinpoint,asarco,https://asarco.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Ascot,,pinpoint,Pinpoint,ascot,https://ascot.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Babstcalland,,pinpoint,Pinpoint,babstcalland,https://babstcalland.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Associate Attorney- Environmental; Customer Service Rep
+Base,,pinpoint,Pinpoint,base,https://base.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Bcn,,pinpoint,Pinpoint,bcn,https://bcn.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Bdc,,pinpoint,Pinpoint,bdc,https://bdc.pinpointhq.com,2,5,,0.745,Washington; New York,,"Commercial Account Manager, Business Development; INFOSEC - Cyber Line of Business Advisory Specialist (BISO); Head of DEI - UK; Advisor, Marketing Communications; Director, Economic Research"
+Beam,,pinpoint,Pinpoint,beam,https://beam.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Botify,,pinpoint,Pinpoint,botify,https://botify.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Brave,,pinpoint,Pinpoint,brave,https://brave.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Bridgepoint,,pinpoint,Pinpoint,bridgepoint,https://bridgepoint.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Brother,,pinpoint,Pinpoint,brother,https://brother.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Automation Machinist; Head of DEI - UK; RTC Apprentice Engineer; Automation Mechanical Design Engineer
+Browndistributing,,pinpoint,Pinpoint,browndistributing,https://browndistributing.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Brunel,,pinpoint,Pinpoint,brunel,https://brunel.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Bsi,,pinpoint,Pinpoint,bsi,https://bsi.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Bugaboo,,pinpoint,Pinpoint,bugaboo,https://bugaboo.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Trainer Merchandiser; Customer Service Rep
+Dayshape,,pinpoint,Pinpoint,dayshape,https://dayshape.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Project Manager (Enterprise Software - UK); Head of DEI - UK; Events Assistant (Temporary Position); Data Engineer (Backshift- UK)
+Dechra,,pinpoint,Pinpoint,dechra,https://dechra.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Dms,,pinpoint,Pinpoint,dms,https://dms.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Edenred,,pinpoint,Pinpoint,edenred,https://edenred.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Elastic,,pinpoint,Pinpoint,elastic,https://elastic.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Elmwood,,pinpoint,Pinpoint,elmwood,https://elmwood.pinpointhq.com,2,5,,0.745,Washington; New York,,"Strategy Director; Senior Designer; Head of DEI - UK; MiddleWeight Designer Singapore; Senior Project Manager, London"
+Elwood,,pinpoint,Pinpoint,elwood,https://elwood.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Senior EMS Engineer; (Singapore) Sales Director
+Entegro,,pinpoint,Pinpoint,entegro,https://entegro.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Espace,,pinpoint,Pinpoint,espace,https://espace.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Euromonitor,,pinpoint,Pinpoint,euromonitor,https://euromonitor.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Everflow,,pinpoint,Pinpoint,everflow,https://everflow.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Everflowtechnologies,,pinpoint,Pinpoint,everflowtechnologies,https://everflowtechnologies.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Evernorth,,pinpoint,Pinpoint,evernorth,https://evernorth.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Exocad,,pinpoint,Pinpoint,exocad,https://exocad.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Expedition,,pinpoint,Pinpoint,expedition,https://expedition.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Expressflooring,,pinpoint,Pinpoint,expressflooring,https://expressflooring.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Firstlook,,pinpoint,Pinpoint,firstlook,https://firstlook.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Fiveguys,,pinpoint,Pinpoint,fiveguys,https://fiveguys.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Flagstone,,pinpoint,Pinpoint,flagstone,https://flagstone.pinpointhq.com,2,5,,0.745,Washington; New York,,SEO Content Manager FTC; Senior Salesforce Engineer; Head of DEI - UK; Salesforce Platform Lead; Head of Finance
+Flashfood,,pinpoint,Pinpoint,flashfood,https://flashfood.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Fontes,,pinpoint,Pinpoint,fontes,https://fontes.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Fortus,,pinpoint,Pinpoint,fortus,https://fortus.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Tax Partner; Accounts Senior 
+Fountain,,pinpoint,Pinpoint,fountain,https://fountain.pinpointhq.com,2,5,,0.745,Washington; New York,,Software Engineer- Platform; Software Engineer- Full-Stack (E5); Software Engineer- Backend (E5); Commercial Account Executive; Customer Service Rep
+Frankcrum,,pinpoint,Pinpoint,frankcrum,https://frankcrum.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Freightplus,,pinpoint,Pinpoint,freightplus,https://freightplus.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Truck Driver; Customer Service Rep
+Funnelleasing,,pinpoint,Pinpoint,funnelleasing,https://funnelleasing.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Group Product Manager; Implementation Project Manager; Customer Service Rep
+Futureelectronics,,pinpoint,Pinpoint,futureelectronics,https://futureelectronics.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Georgeclinical,,pinpoint,Pinpoint,georgeclinical,https://georgeclinical.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Globalrelay,,pinpoint,Pinpoint,globalrelay,https://globalrelay.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Gpe,,pinpoint,Pinpoint,gpe,https://gpe.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Greatquestion,,pinpoint,Pinpoint,greatquestion,https://greatquestion.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Greenstreet,,pinpoint,Pinpoint,greenstreet,https://greenstreet.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Habitat,,pinpoint,Pinpoint,habitat,https://habitat.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Harness,,pinpoint,Pinpoint,harness,https://harness.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Hft,,pinpoint,Pinpoint,hft,https://hft.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Hikvision,,pinpoint,Pinpoint,hikvision,https://hikvision.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; External Technical Engineer; Head of DEI - UK; Commercial Display Product Manager; Commercial Pre-Sales Specialist
+Hireright,,pinpoint,Pinpoint,hireright,https://hireright.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Holcim,,pinpoint,Pinpoint,holcim,https://holcim.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Homebrands,,pinpoint,Pinpoint,homebrands,https://homebrands.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Horizoncare,,pinpoint,Pinpoint,horizoncare,https://horizoncare.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Hotelchocolat,,pinpoint,Pinpoint,hotelchocolat,https://hotelchocolat.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Howden,,pinpoint,Pinpoint,howden,https://howden.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Htc,,pinpoint,Pinpoint,htc,https://htc.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Investigo,,pinpoint,Pinpoint,investigo,https://investigo.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Invicti,,pinpoint,Pinpoint,invicti,https://invicti.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Itineris,,pinpoint,Pinpoint,itineris,https://itineris.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Kpmg,,pinpoint,Pinpoint,kpmg,https://kpmg.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Kuda,,pinpoint,Pinpoint,kuda,https://kuda.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Labster,,pinpoint,Pinpoint,labster,https://labster.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Laundryheap,,pinpoint,Pinpoint,laundryheap,https://laundryheap.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Lighter,,pinpoint,Pinpoint,lighter,https://lighter.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Liveintent,,pinpoint,Pinpoint,liveintent,https://liveintent.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Livingcare,,pinpoint,Pinpoint,livingcare,https://livingcare.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Lovisa,,pinpoint,Pinpoint,lovisa,https://lovisa.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Lsh,,pinpoint,Pinpoint,lsh,https://lsh.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Luminacare,,pinpoint,Pinpoint,luminacare,https://luminacare.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Transitional Care Management; Care Coordinator; Nurse Practitioner; Customer Service Rep
+Lvmh,,pinpoint,Pinpoint,lvmh,https://lvmh.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Macmillan,,pinpoint,Pinpoint,macmillan,https://macmillan.pinpointhq.com,2,5,,0.745,Washington; New York,,"Head of DEI - Belfast; Head of DEI - US; Supporter Care Advisor; Macmillan Horizon Centre, Services Support Coordinator; Financial Planning and Analysis Manager"
+Mane,,pinpoint,Pinpoint,mane,https://mane.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Marcusevans,,pinpoint,Pinpoint,marcusevans,https://marcusevans.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Marleyspoon,,pinpoint,Pinpoint,marleyspoon,https://marleyspoon.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Metropolis,,pinpoint,Pinpoint,metropolis,https://metropolis.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Mirion,,pinpoint,Pinpoint,mirion,https://mirion.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Mission,,pinpoint,Pinpoint,mission,https://mission.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Mod,,pinpoint,Pinpoint,mod,https://mod.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Msf,,pinpoint,Pinpoint,msf,https://msf.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Mts,,pinpoint,Pinpoint,mts,https://mts.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Multiplier,,pinpoint,Pinpoint,multiplier,https://multiplier.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Nala,,pinpoint,Pinpoint,nala,https://nala.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Kenyan Community Manager; Head of DEI - UK; People Operations (and Employee Experience); Treasury Manager
+Nasuni,,pinpoint,Pinpoint,nasuni,https://nasuni.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Nederlander,,pinpoint,Pinpoint,nederlander,https://nederlander.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Networkrail,,pinpoint,Pinpoint,networkrail,https://networkrail.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Newleaf,,pinpoint,Pinpoint,newleaf,https://newleaf.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Next,,pinpoint,Pinpoint,next,https://next.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Nhs,,pinpoint,Pinpoint,nhs,https://nhs.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Nivoda,,pinpoint,Pinpoint,nivoda,https://nivoda.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Nonprofithr,,pinpoint,Pinpoint,nonprofithr,https://nonprofithr.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Northhighland,,pinpoint,Pinpoint,northhighland,https://northhighland.pinpointhq.com,2,5,,0.745,"Philadelphia, PA",,"Cloud Architect; Manager, Change Management; Manager; Marketing Executive; Project Manager"
+Novel,,pinpoint,Pinpoint,novel,https://novel.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Novonordisk,,pinpoint,Pinpoint,novonordisk,https://novonordisk.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Ntt,,pinpoint,Pinpoint,ntt,https://ntt.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Nttdata,,pinpoint,Pinpoint,nttdata,https://nttdata.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Numeric,,pinpoint,Pinpoint,numeric,https://numeric.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Odysseylogistics,,pinpoint,Pinpoint,odysseylogistics,https://odysseylogistics.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Ontoinnovation,,pinpoint,Pinpoint,ontoinnovation,https://ontoinnovation.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Openspace,,pinpoint,Pinpoint,openspace,https://openspace.pinpointhq.com,2,5,,0.745,Cupertino,,Data Analyst II; Volunteer Program Lead ; Park Ranger; Public Relations Intern; Marketing Executive
+Oppa,,pinpoint,Pinpoint,oppa,https://oppa.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Opsecsecurity,,pinpoint,Pinpoint,opsecsecurity,https://opsecsecurity.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Osano,,pinpoint,Pinpoint,osano,https://osano.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Otpp,,pinpoint,Pinpoint,otpp,https://otpp.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Oxfordpv,,pinpoint,Pinpoint,oxfordpv,https://oxfordpv.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Pah,,pinpoint,Pinpoint,pah,https://pah.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Pals,,pinpoint,Pinpoint,pals,https://pals.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Papercut,,pinpoint,Pinpoint,papercut,https://papercut.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Peopleservices,,pinpoint,Pinpoint,peopleservices,https://peopleservices.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Peppyhealth,,pinpoint,Pinpoint,peppyhealth,https://peppyhealth.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Percona,,pinpoint,Pinpoint,percona,https://percona.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Petroleumtraders,,pinpoint,Pinpoint,petroleumtraders,https://petroleumtraders.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Pharmeng,,pinpoint,Pinpoint,pharmeng,https://pharmeng.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Phase3,,pinpoint,Pinpoint,phase3,https://phase3.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Picussecurity,,pinpoint,Pinpoint,picussecurity,https://picussecurity.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Pion,,pinpoint,Pinpoint,pion,https://pion.pinpointhq.com,2,5,,0.745,Washington; New York,,Sales Account Manager; Platform Engineer; Head of DEI - UK; Lead Product Designer; Account Management Team Lead
+Pkf,,pinpoint,Pinpoint,pkf,https://pkf.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Plentific,,pinpoint,Pinpoint,plentific,https://plentific.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Senior Systems Administrator; Head of DEI - UK; Senior Software Engineer (Laravel) - Remote; Project Manager
+Plexus,,pinpoint,Pinpoint,plexus,https://plexus.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Pmam,,pinpoint,Pinpoint,pmam,https://pmam.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Powerplus,,pinpoint,Pinpoint,powerplus,https://powerplus.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Priglobal,,pinpoint,Pinpoint,priglobal,https://priglobal.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Primarybid,,pinpoint,Pinpoint,primarybid,https://primarybid.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Primer,,pinpoint,Pinpoint,primer,https://primer.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Proximie,,pinpoint,Pinpoint,proximie,https://proximie.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Pubnub,,pinpoint,Pinpoint,pubnub,https://pubnub.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Senior Software Engineer; Senior Account Manager; Sales Development Representative; Customer Service Rep
+Punch,,pinpoint,Pinpoint,punch,https://punch.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Pushkin,,pinpoint,Pinpoint,pushkin,https://pushkin.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Qlarant,,pinpoint,Pinpoint,qlarant,https://qlarant.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Quantanite,,pinpoint,Pinpoint,quantanite,https://quantanite.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Quontic,,pinpoint,Pinpoint,quontic,https://quontic.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Raiz,,pinpoint,Pinpoint,raiz,https://raiz.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Rand,,pinpoint,Pinpoint,rand,https://rand.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Ranenetwork,,pinpoint,Pinpoint,ranenetwork,https://ranenetwork.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Redsift,,pinpoint,Pinpoint,redsift,https://redsift.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Rehau,,pinpoint,Pinpoint,rehau,https://rehau.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Remotepass,,pinpoint,Pinpoint,remotepass,https://remotepass.pinpointhq.com,2,5,,0.745,New York,,Payroll Team Lead; Sales Manager; Customer Service Rep; Marketing Executive; Sales Manager
+Retailnext,,pinpoint,Pinpoint,retailnext,https://retailnext.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Rhf,,pinpoint,Pinpoint,rhf,https://rhf.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Ridge,,pinpoint,Pinpoint,ridge,https://ridge.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Rigel,,pinpoint,Pinpoint,rigel,https://rigel.pinpointhq.com,2,5,,0.745,Washington; New York,,"Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Director, Clinical Operations; Commercial Analytics Associate Director"
+Rivermountain,,pinpoint,Pinpoint,rivermountain,https://rivermountain.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Outside Account Manager – Foodservice Sales
+Rocketrez,,pinpoint,Pinpoint,rocketrez,https://rocketrez.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Solutions Engineer; Customer Service Rep
+Rsc,,pinpoint,Pinpoint,rsc,https://rsc.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Safetyculture,,pinpoint,Pinpoint,safetyculture,https://safetyculture.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Saga,,pinpoint,Pinpoint,saga,https://saga.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Sage,,pinpoint,Pinpoint,sage,https://sage.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Newcastle; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Sagehospice,,pinpoint,Pinpoint,sagehospice,https://sagehospice.pinpointhq.com,2,5,,0.745,Washington; New York,,Community Liaison; Nurse Practitioner; Social Worker; RN Case Manager; Customer Service Rep
+Samara,,pinpoint,Pinpoint,samara,https://samara.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Saputo,,pinpoint,Pinpoint,saputo,https://saputo.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Schroders,,pinpoint,Pinpoint,schroders,https://schroders.pinpointhq.com,2,5,,0.745,Washington; New York,,Security Architect ; ESG Change Manager; Head of DEI - UK; Financial Accounting Manager; Wealth Planner
+Scsengineers,,pinpoint,Pinpoint,scsengineers,https://scsengineers.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Securitynational,,pinpoint,Pinpoint,securitynational,https://securitynational.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Securly,,pinpoint,Pinpoint,securly,https://securly.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Selective,,pinpoint,Pinpoint,selective,https://selective.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Seon,,pinpoint,Pinpoint,seon,https://seon.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Servicetrade,,pinpoint,Pinpoint,servicetrade,https://servicetrade.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Sfh,,pinpoint,Pinpoint,sfh,https://sfh.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Diversity & Inclusion Officer; Customer Service Rep
+Simplyhealth,,pinpoint,Pinpoint,simplyhealth,https://simplyhealth.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Sinclair,,pinpoint,Pinpoint,sinclair,https://sinclair.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Skit,,pinpoint,Pinpoint,skit,https://skit.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Smith,,pinpoint,Pinpoint,smith,https://smith.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Socure,,pinpoint,Pinpoint,socure,https://socure.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Sonio,,pinpoint,Pinpoint,sonio,https://sonio.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Sonova,,pinpoint,Pinpoint,sonova,https://sonova.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Soprema,,pinpoint,Pinpoint,soprema,https://soprema.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Space,,pinpoint,Pinpoint,space,https://space.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Spearbio,,pinpoint,Pinpoint,spearbio,https://spearbio.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Spin,,pinpoint,Pinpoint,spin,https://spin.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Spire,,pinpoint,Pinpoint,spire,https://spire.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Stan,,pinpoint,Pinpoint,stan,https://stan.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Starrez,,pinpoint,Pinpoint,starrez,https://starrez.pinpointhq.com,2,5,,0.745,Washington; New York,,Director of Workplace Technology; Head of DEI - US; Senior Software Engineer; Product Manager; Director of Engineering
+Steelite,,pinpoint,Pinpoint,steelite,https://steelite.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Stepchange,,pinpoint,Pinpoint,stepchange,https://stepchange.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+You,,pinpoint,Pinpoint,you,https://you.pinpointhq.com,2,5,,0.745,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager; Customer Service Rep
+Alec,,pinpoint,Pinpoint,alec,https://alec.pinpointhq.com,2,4,,0.737,New York; Washington,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Customer Service Rep
+Boldorange,,pinpoint,Pinpoint,boldorange,https://boldorange.pinpointhq.com,2,4,,0.737,New York; Minnesota,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Strategy Intern
+Carawayhome,,pinpoint,Pinpoint,carawayhome,https://carawayhome.pinpointhq.com,2,4,,0.737,New York,,Head of DEI - UK; Caraway Crew ; Customer Service Rep; Marketing Executive
+Decibio,,pinpoint,Pinpoint,decibio,https://decibio.pinpointhq.com,2,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Dermavant,,pinpoint,Pinpoint,dermavant,https://dermavant.pinpointhq.com,2,4,,0.737,Washington; New York,,"Head of DEI - US; Strategic Accounts Manager (Pacific NW - WA, OR, ID, NV, UT); Sales Operations Manager; Data Analytics Manager"
+Eastcoast,,pinpoint,Pinpoint,eastcoast,https://eastcoast.pinpointhq.com,2,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Emmy's Job
+Leavitt,,pinpoint,Pinpoint,leavitt,https://leavitt.pinpointhq.com,2,4,,0.737,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Customer Service Rep
+Logicsource,,pinpoint,Pinpoint,logicsource,https://logicsource.pinpointhq.com,2,4,,0.737,Nashville ,,"Client Engagement Lead; Manager, Indirect Procurement ; Temp Manager - Benefits and Payroll; Marketing Executive"
+Newsilver,,pinpoint,Pinpoint,newsilver,https://newsilver.pinpointhq.com,2,4,,0.737,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Customer Service Rep
+Orbcomm,,pinpoint,Pinpoint,orbcomm,https://orbcomm.pinpointhq.com,2,4,,0.737,"Sterling, VA, US; New York",,Business Operations Analyst; Partner Account Manager; Firmware Manager; Marketing Executive
+Paretohealth,,pinpoint,Pinpoint,paretohealth,https://paretohealth.pinpointhq.com,2,4,,0.737,Philadelphia,,Sales Associate; Quality Assurance Engineer; Senior Financial Analyst; Vice President of Customer Operations
+Patch,,pinpoint,Pinpoint,patch,https://patch.pinpointhq.com,2,4,,0.737,New York,,Head of DEI - UK; Local News Content Producer; Customer Service Rep; Marketing Executive
+Primavera,,pinpoint,Pinpoint,primavera,https://primavera.pinpointhq.com,2,4,,0.737,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Customer Service Rep
+Proconconsulting,,pinpoint,Pinpoint,proconconsulting,https://proconconsulting.pinpointhq.com,2,4,,0.737,Orlando ; New York,,Electrical Engineer; Construction Manager ; Project Manager; Marketing Executive
+Replicant,,pinpoint,Pinpoint,replicant,https://replicant.pinpointhq.com,2,4,,0.737,Washington; New York,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Customer Service Rep
+Absci,,pinpoint,Pinpoint,absci,https://absci.pinpointhq.com,2,3,,0.728,US Remote; New York,,Research Biologist ; Senior AI Data Engineer; Customer Service Rep
+Mayo,,pinpoint,Pinpoint,mayo,https://mayo.pinpointhq.com,2,3,,0.728,New York,,Head of DEI - UK; Internal Auditor; Customer Service Rep
+Pandadoc,,pinpoint,Pinpoint,pandadoc,https://pandadoc.pinpointhq.com,2,3,,0.728,Remote (USA),,"Account Manager, Small Business; Senior Support Operations Manager; Director of Sales Operations"
+Platform9,,pinpoint,Pinpoint,platform9,https://platform9.pinpointhq.com,2,3,,0.728,New York,,Head of DEI - UK; Customer Service Rep; Backend Engineer
+Appquantum,,pinpoint,Pinpoint,appquantum,https://appquantum.pinpointhq.com,2,2,,0.716,Remote,,User Acquisition Manager (SRN); Business Development Manager
+Arkatechture,,pinpoint,Pinpoint,arkatechture,https://arkatechture.pinpointhq.com,2,2,,0.716,Remote,,"Software Engineer; Senior Account Executive, Arkalytics"
+Austrian,,pinpoint,Pinpoint,austrian,https://austrian.pinpointhq.com,2,2,,0.716,Vienna,,Test Job 3; Customer Service Representative
+Dbrand,,pinpoint,Pinpoint,dbrand,https://dbrand.pinpointhq.com,2,2,,0.716,Mississauga,,Order Experience Team Lead; Supply Chain Analyst
+Deister,,pinpoint,Pinpoint,deister,https://deister.pinpointhq.com,2,2,,0.716,Field Based; Deister UK HQ,,Business Development Manager ; Technical Sales Manager
+Flexspace,,pinpoint,Pinpoint,flexspace,https://flexspace.pinpointhq.com,2,2,,0.716,Peterborough; Canterbury,,HR Manager - Part time (16 - 20 hours); Centre Manager - Canterbury - Part Time
+Gkc,,pinpoint,Pinpoint,gkc,https://gkc.pinpointhq.com,2,2,,0.716,Glasgow,,Lecturer - Industrial and Commercial Heating and Plumbing (1.0 FTE) (Permanent); Lecturer - Barbering (Evenings Hours Only 7 hours per week) - Fixed-term until June 2027
+Kodiak,,pinpoint,Pinpoint,kodiak,https://kodiak.pinpointhq.com,2,2,,0.716,"Mountain View, CA",,SWE Controls; Mechanical Design Engineer - Test Job
+Lmh,,pinpoint,Pinpoint,lmh,https://lmh.pinpointhq.com,2,2,,0.716,Oxford,,Scout (Cleaner) - 20 hours per week; Casual Scout (Cleaner)
+Neha,,pinpoint,Pinpoint,neha,https://neha.pinpointhq.com,2,2,,0.716,Washington; New York,,Environmental Scholarship ; Researcher 
+Nodalexchange,,pinpoint,Pinpoint,nodalexchange,https://nodalexchange.pinpointhq.com,2,2,,0.716,Tysons Corner,,"Pricing Manager in Power Markets, Quantitative Risk & Strategic Analysis; Software Engineer (MAC)"
+Steadymd,,pinpoint,Pinpoint,steadymd,https://steadymd.pinpointhq.com,2,2,,0.716,New York,,Nurse Practitioner ; Customer Service Rep
+Sto,,pinpoint,Pinpoint,sto,https://sto.pinpointhq.com,2,2,,0.716,Male',,HR Coordinator; Network Engineer
 Safetywing,,pinpoint,Pinpoint,safetywing,https://safetywing.pinpointhq.com,2,2,,0.716,Remote,,"General Manager, Nomad Insurance; Platform Business Partner"
-Admgroup,,pinpoint,Pinpoint,admgroup,https://admgroup.pinpointhq.com,1,28,,0.84,Hybrid - US (New York),,Technology Portfolio Lead (PMO); Accounts and Finance Operations Executive (Remote - Ahmedabad); Central Service Consultant; Digital Solutions Director; Business Analyst
+Cellandgenetherapycatapult,,pinpoint,Pinpoint,cellandgenetherapycatapult,https://cellandgenetherapycatapult.pinpointhq.com,2,2,,0.716,Stevenage (SMIC),,Interim Quality Control Lead; Interim QA Associate
+Londonyouth,,pinpoint,Pinpoint,londonyouth,https://londonyouth.pinpointhq.com,2,2,,0.716,Woodrow High House; Hindleap Warren,,Swim Teacher; Outdoor Education Instructor 
+Scottishfa,,pinpoint,Pinpoint,scottishfa,https://scottishfa.pinpointhq.com,2,2,,0.716,Hampden,,Kitroom Assistant; Funding Manager
+Admgroup,,pinpoint,Pinpoint,admgroup,https://admgroup.pinpointhq.com,1,30,,0.845,Hybrid - US (New York),,Technology Portfolio Lead (PMO); Accounts and Finance Operations Executive (Remote - Ahmedabad); Central Service Consultant; Digital Solutions Director; Business Analyst
+Lush,,pinpoint,Pinpoint,lush,https://lush.pinpointhq.com,1,29,,0.842,Cambridge,,Temporary Seasonal Till and Stock Assistant 2026; Seasonal Sales Assistant ; Sales Assistant & Party Host; Seasonal Temporary Sales Assistant ; Gift Design Knot Wrap Competition - *Internal only* 
+Georgie,,pinpoint,Pinpoint,georgie,https://georgie.pinpointhq.com,1,15,,0.798,Washington DC,,Account Executive 123; test role permissions; Account Executive; test; Account Executive
 Sobencc,,pinpoint,Pinpoint,sobencc,https://sobencc.pinpointhq.com,1,8,,0.765,United States ,,Assistant Quantity Surveyor w/ Data Center Background | USA Candidates Only; Sr. Construction Manager ; Energy Marshall (New); QA/QC - Construction Project; Electrical Specialist
+Nmc,,pinpoint,Pinpoint,nmc,https://nmc.pinpointhq.com,1,7,,0.759,"London, Portland Place",,Professionals Support and Engagement Adviser ; Communications Officer ; Investigator; Employer Link Officer ; Contact Centre Advisor
+Crcna,,pinpoint,Pinpoint,crcna,https://crcna.pinpointhq.com,1,7,,0.759,Canada or USA,,"Youth-Focused Leadership Developer - Eastern and Southern Africa; Anglophone West Africa Education Consultant - Abuja or Jos, Nigeria; Church Planter and Leadership Developer - Germany ; Diaspora Field Missionary - Mexico; Leadership Developer - Middle East and West Africa"
+Digitalscience,,pinpoint,Pinpoint,digitalscience,https://digitalscience.pinpointhq.com,1,6,,0.752,"USA, Remote",,"APAC Pre-Sales & Engagement Specialist– 12-Month Fixed-Term Contract; Payment Platform Manager – Stripe; Enterprise Sales Director; Revenue Accountant; Growth Marketing Manager, B2C"
+Opentech,,pinpoint,Pinpoint,opentech,https://opentech.pinpointhq.com,1,6,,0.752,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive; Customer Service Rep
+Laporte,,pinpoint,Pinpoint,laporte,https://laporte.pinpointhq.com,1,5,,0.745,Washington,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Mechanical Engineer; Food Process Engineer
+Norit,,pinpoint,Pinpoint,norit,https://norit.pinpointhq.com,1,5,,0.745,"Columbus, OH",,Process Engineer; Chemical Analyst; Maintenance Engineer; Regional Sales Manager; Environmental Officer
+Pixcel,,pinpoint,Pinpoint,pixcel,https://pixcel.pinpointhq.com,1,5,,0.745,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive; Engineer
 Jed,,pinpoint,Pinpoint,jed,https://jed.pinpointhq.com,1,5,,0.745,"New York City, New York",,"Consultant, Mental Health & Suicide Prevention - State of Washington; Consultant, Mental Health & Suicide Prevention (NYC); Regional Director, Intermountain West (Idaho, Montana, Wyoming); Director, AI Strategy & Mental Health ; Consultant, Mental Health & Suicide Prevention District Programs (MT, WY, ID)"
+Abi,,pinpoint,Pinpoint,abi,https://abi.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Advocates,,pinpoint,Pinpoint,advocates,https://advocates.pinpointhq.com,1,4,,0.737,Washington,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager
+Aiven,,pinpoint,Pinpoint,aiven,https://aiven.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Ajaxbuilding,,pinpoint,Pinpoint,ajaxbuilding,https://ajaxbuilding.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Alfanar,,pinpoint,Pinpoint,alfanar,https://alfanar.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Alten,,pinpoint,Pinpoint,alten,https://alten.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Altrata,,pinpoint,Pinpoint,altrata,https://altrata.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Ams,,pinpoint,Pinpoint,ams,https://ams.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Andersonkill,,pinpoint,Pinpoint,andersonkill,https://andersonkill.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Anyhour,,pinpoint,Pinpoint,anyhour,https://anyhour.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Aquis,,pinpoint,Pinpoint,aquis,https://aquis.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Arm,,pinpoint,Pinpoint,arm,https://arm.pinpointhq.com,1,4,,0.737,Boston,,Senior DFT Engineer; Staff Information Developer; Staff Power Analysis Engineer; Marketing Executive
+Arrowinternational,,pinpoint,Pinpoint,arrowinternational,https://arrowinternational.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Atscale,,pinpoint,Pinpoint,atscale,https://atscale.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Bailliegifford,,pinpoint,Pinpoint,bailliegifford,https://bailliegifford.pinpointhq.com,1,4,,0.737,New York,,"Investment Oversight Officer, Baillie Gifford Europe - 12 month fixed term contract; Early Careers: Graduate programme; Compliance & Risk Officer, Baillie Gifford Europe - 18 month fixed term contract; Marketing Executive"
+Bbraun,,pinpoint,Pinpoint,bbraun,https://bbraun.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Bosch,,pinpoint,Pinpoint,bosch,https://bosch.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Braincube,,pinpoint,Pinpoint,braincube,https://braincube.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Built,,pinpoint,Pinpoint,built,https://built.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Butterflymx,,pinpoint,Pinpoint,butterflymx,https://butterflymx.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Bwell,,pinpoint,Pinpoint,bwell,https://bwell.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Canopius,,pinpoint,Pinpoint,canopius,https://canopius.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Dext,,pinpoint,Pinpoint,dext,https://dext.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Drfirst,,pinpoint,Pinpoint,drfirst,https://drfirst.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Dune,,pinpoint,Pinpoint,dune,https://dune.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Editasmedicine,,pinpoint,Pinpoint,editasmedicine,https://editasmedicine.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Eno,,pinpoint,Pinpoint,eno,https://eno.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Section Principal Double Bass; Customer Service Rep; Marketing Executive
+Ensafe,,pinpoint,Pinpoint,ensafe,https://ensafe.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Ericsson,,pinpoint,Pinpoint,ericsson,https://ericsson.pinpointhq.com,1,4,,0.737,USA,,Head of DEI (Anonymisation example); Field Innovation Manager (old); Technology Specialist (9) (Ericsson poc); Deployment (6) (Ericsson poc)
+Esource,,pinpoint,Pinpoint,esource,https://esource.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Exp,,pinpoint,Pinpoint,exp,https://exp.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Firstfun,,pinpoint,Pinpoint,firstfun,https://firstfun.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Flexera,,pinpoint,Pinpoint,flexera,https://flexera.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Focus,,pinpoint,Pinpoint,focus,https://focus.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Gamma,,pinpoint,Pinpoint,gamma,https://gamma.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Goldstandard,,pinpoint,Pinpoint,goldstandard,https://goldstandard.pinpointhq.com,1,4,,0.737,Washington,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager
+Gorascal,,pinpoint,Pinpoint,gorascal,https://gorascal.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Graham,,pinpoint,Pinpoint,graham,https://graham.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Greencore,,pinpoint,Pinpoint,greencore,https://greencore.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Habitatenergy,,pinpoint,Pinpoint,habitatenergy,https://habitatenergy.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Healthtrackrx,,pinpoint,Pinpoint,healthtrackrx,https://healthtrackrx.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Hercules,,pinpoint,Pinpoint,hercules,https://hercules.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Hie,,pinpoint,Pinpoint,hie,https://hie.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Homesale,,pinpoint,Pinpoint,homesale,https://homesale.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Horizonretail,,pinpoint,Pinpoint,horizonretail,https://horizonretail.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Hornet,,pinpoint,Pinpoint,hornet,https://hornet.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Kiwi,,pinpoint,Pinpoint,kiwi,https://kiwi.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Kodelabs,,pinpoint,Pinpoint,kodelabs,https://kodelabs.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Kraken,,pinpoint,Pinpoint,kraken,https://kraken.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Legalzoom,,pinpoint,Pinpoint,legalzoom,https://legalzoom.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Leyton,,pinpoint,Pinpoint,leyton,https://leyton.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Lhh,,pinpoint,Pinpoint,lhh,https://lhh.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Lifeplus,,pinpoint,Pinpoint,lifeplus,https://lifeplus.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Light,,pinpoint,Pinpoint,light,https://light.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Logicmanager,,pinpoint,Pinpoint,logicmanager,https://logicmanager.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Lowell,,pinpoint,Pinpoint,lowell,https://lowell.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Manychat,,pinpoint,Pinpoint,manychat,https://manychat.pinpointhq.com,1,4,,0.737,"Austin, TX",,"Head of Social; Senior Engineering Manager; Senior Partner Development Manager, Meta; Marketing Executive"
+Mcafee,,pinpoint,Pinpoint,mcafee,https://mcafee.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Mejuri,,pinpoint,Pinpoint,mejuri,https://mejuri.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Mgf,,pinpoint,Pinpoint,mgf,https://mgf.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Mha,,pinpoint,Pinpoint,mha,https://mha.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Michaelpage,,pinpoint,Pinpoint,michaelpage,https://michaelpage.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Mks,,pinpoint,Pinpoint,mks,https://mks.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Msamlin,,pinpoint,Pinpoint,msamlin,https://msamlin.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Muji,,pinpoint,Pinpoint,muji,https://muji.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Muse,,pinpoint,Pinpoint,muse,https://muse.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Namecheap,,pinpoint,Pinpoint,namecheap,https://namecheap.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Napier,,pinpoint,Pinpoint,napier,https://napier.pinpointhq.com,1,4,,0.737,USA,,Business Operations Coordinator; Senior Program Manager; Solution Architect; Senior Client Account Executive
+Nationsroof,,pinpoint,Pinpoint,nationsroof,https://nationsroof.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Nec,,pinpoint,Pinpoint,nec,https://nec.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Northleaf,,pinpoint,Pinpoint,northleaf,https://northleaf.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Nothing,,pinpoint,Pinpoint,nothing,https://nothing.pinpointhq.com,1,4,,0.737,"San Francisco, CA",,Head of DEI - UK; Senior E-Commerce Manager; Senior Front-End Engineer; Marketing Executive
+Nscglobal,,pinpoint,Pinpoint,nscglobal,https://nscglobal.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Oaknorth,,pinpoint,Pinpoint,oaknorth,https://oaknorth.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Ocrolus,,pinpoint,Pinpoint,ocrolus,https://ocrolus.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Officeally,,pinpoint,Pinpoint,officeally,https://officeally.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Oldham,,pinpoint,Pinpoint,oldham,https://oldham.pinpointhq.com,1,4,,0.737,New York,,Assistive Technologist; Programme Tutor- ESOL; Youth Work Officer; Marketing Executive
+Oldmill,,pinpoint,Pinpoint,oldmill,https://oldmill.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Overstory,,pinpoint,Pinpoint,overstory,https://overstory.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Owkin,,pinpoint,Pinpoint,owkin,https://owkin.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Data Engineer; Customer Service Rep; Marketing Executive
+Pcc,,pinpoint,Pinpoint,pcc,https://pcc.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Pentera,,pinpoint,Pinpoint,pentera,https://pentera.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Peters,,pinpoint,Pinpoint,peters,https://peters.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Pieinsurance,,pinpoint,Pinpoint,pieinsurance,https://pieinsurance.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Planhat,,pinpoint,Pinpoint,planhat,https://planhat.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Pret,,pinpoint,Pinpoint,pret,https://pret.pinpointhq.com,1,4,,0.737,Washington,,Head of DEI - Belfast; Head of DEI - US; Head of DEI - UK; Marketing Manager
+Priovant,,pinpoint,Pinpoint,priovant,https://priovant.pinpointhq.com,1,4,,0.737,"San Diego, CA",,"Associate, Clinical Operations & Strategy; Manager, CMC Operations; Patient Access Liaison; Marketing Executive"
+Procon,,pinpoint,Pinpoint,procon,https://procon.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Productschool,,pinpoint,Pinpoint,productschool,https://productschool.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Productsup,,pinpoint,Pinpoint,productsup,https://productsup.pinpointhq.com,1,4,,0.737,New York,,Catalog Data Manager; Product Manager; Customer Service Rep; Talent Acquisition Manager
+Prosper,,pinpoint,Pinpoint,prosper,https://prosper.pinpointhq.com,1,4,,0.737,New York,,Sr. Lifecycle Marketing Specialist; Credit Risk Analyst; Desktop Support Engineer; Marketing Executive
+Quantcast,,pinpoint,Pinpoint,quantcast,https://quantcast.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Sales Manager
+Quickplay,,pinpoint,Pinpoint,quickplay,https://quickplay.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Quora,,pinpoint,Pinpoint,quora,https://quora.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Redox,,pinpoint,Pinpoint,redox,https://redox.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Refinelabs,,pinpoint,Pinpoint,refinelabs,https://refinelabs.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Refuge,,pinpoint,Pinpoint,refuge,https://refuge.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Independent Domestic Violence Advocate (IDVA); Customer Service Rep; Marketing Executive
+Remarkable,,pinpoint,Pinpoint,remarkable,https://remarkable.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Reprieve,,pinpoint,Pinpoint,reprieve,https://reprieve.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Riskified,,pinpoint,Pinpoint,riskified,https://riskified.pinpointhq.com,1,4,,0.737,"New York, NY",,Corporate Development Associate; Data Engineer; Technical Account Manager; Marketing Executive
+Roh,,pinpoint,Pinpoint,roh,https://roh.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Royal,,pinpoint,Pinpoint,royal,https://royal.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Senior Personnel Security Manager; Customer Service Rep; Marketing Executive
+Rps,,pinpoint,Pinpoint,rps,https://rps.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Scriptpro,,pinpoint,Pinpoint,scriptpro,https://scriptpro.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Seeq,,pinpoint,Pinpoint,seeq,https://seeq.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Semperis,,pinpoint,Pinpoint,semperis,https://semperis.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Sferra,,pinpoint,Pinpoint,sferra,https://sferra.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Sgc,,pinpoint,Pinpoint,sgc,https://sgc.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Shorelight,,pinpoint,Pinpoint,shorelight,https://shorelight.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Sievo,,pinpoint,Pinpoint,sievo,https://sievo.pinpointhq.com,1,4,,0.737,Chicago,,"Head of DEI - UK; Junior Business Intelligence Specialist; (Senior) Engineering Manager, Machine Learning; Marketing Executive"
+Skyryse,,pinpoint,Pinpoint,skyryse,https://skyryse.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Soona,,pinpoint,Pinpoint,soona,https://soona.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Spray,,pinpoint,Pinpoint,spray,https://spray.pinpointhq.com,1,4,,0.737,"Wheaton, IL",,Service Engineer; Mechanical Design Engineer; CNC Set-Up Operator; Marketing Executive
+Sptlabtech,,pinpoint,Pinpoint,sptlabtech,https://sptlabtech.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Staffline,,pinpoint,Pinpoint,staffline,https://staffline.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Stallergenesgreer,,pinpoint,Pinpoint,stallergenesgreer,https://stallergenesgreer.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Stellix,,pinpoint,Pinpoint,stellix,https://stellix.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+Stratus,,pinpoint,Pinpoint,stratus,https://stratus.pinpointhq.com,1,4,,0.737,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep; Marketing Executive
+57Blocks,,pinpoint,Pinpoint,57blocks,https://57blocks.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+A16Z,,pinpoint,Pinpoint,a16z,https://a16z.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Accuserve,,pinpoint,Pinpoint,accuserve,https://accuserve.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Acilearning,,pinpoint,Pinpoint,acilearning,https://acilearning.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Acin,,pinpoint,Pinpoint,acin,https://acin.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Aerospike,,pinpoint,Pinpoint,aerospike,https://aerospike.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Agamasolutions,,pinpoint,Pinpoint,agamasolutions,https://agamasolutions.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Alixpartners,,pinpoint,Pinpoint,alixpartners,https://alixpartners.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Alliance,,pinpoint,Pinpoint,alliance,https://alliance.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Alphanumeric,,pinpoint,Pinpoint,alphanumeric,https://alphanumeric.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Pharmacovigilance Senior Specialist; Freelance Medical Writer
+Altro,,pinpoint,Pinpoint,altro,https://altro.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Amax,,pinpoint,Pinpoint,amax,https://amax.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Andritz,,pinpoint,Pinpoint,andritz,https://andritz.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Archies,,pinpoint,Pinpoint,archies,https://archies.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Arcomurray,,pinpoint,Pinpoint,arcomurray,https://arcomurray.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Atl,,pinpoint,Pinpoint,atl,https://atl.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Attentivemobile,,pinpoint,Pinpoint,attentivemobile,https://attentivemobile.pinpointhq.com,1,3,,0.728,United States ,,Data Scientist II; Senior Product Marketing Manager; Account Executive 
+Bark,,pinpoint,Pinpoint,bark,https://bark.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Basistechnologies,,pinpoint,Pinpoint,basistechnologies,https://basistechnologies.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Boomi,,pinpoint,Pinpoint,boomi,https://boomi.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Brandonhall,,pinpoint,Pinpoint,brandonhall,https://brandonhall.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Brinker,,pinpoint,Pinpoint,brinker,https://brinker.pinpointhq.com,1,3,,0.728,Dallas,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Cwc,,pinpoint,Pinpoint,cwc,https://cwc.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Dataphone,,pinpoint,Pinpoint,dataphone,https://dataphone.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Decora,,pinpoint,Pinpoint,decora,https://decora.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Denkensolutions,,pinpoint,Pinpoint,denkensolutions,https://denkensolutions.pinpointhq.com,1,3,,0.728,New York,,Office Specialist; Java Full Stack Developer; Chemist
+Edb,,pinpoint,Pinpoint,edb,https://edb.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Ekimetrics,,pinpoint,Pinpoint,ekimetrics,https://ekimetrics.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Elder,,pinpoint,Pinpoint,elder,https://elder.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Enable,,pinpoint,Pinpoint,enable,https://enable.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Enverus,,pinpoint,Pinpoint,enverus,https://enverus.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Growth Marketing Manager; Customer Service Rep
+Everbridge,,pinpoint,Pinpoint,everbridge,https://everbridge.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Faber,,pinpoint,Pinpoint,faber,https://faber.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Faria,,pinpoint,Pinpoint,faria,https://faria.pinpointhq.com,1,3,,0.728,New York,,"Head of DEI - UK; Customer Support Representative, ManageBac; School Experience Manager"
+Fetchrewards,,pinpoint,Pinpoint,fetchrewards,https://fetchrewards.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Fineedge,,pinpoint,Pinpoint,fineedge,https://fineedge.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Food52,,pinpoint,Pinpoint,food52,https://food52.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Forbrightbank,,pinpoint,Pinpoint,forbrightbank,https://forbrightbank.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Formant,,pinpoint,Pinpoint,formant,https://formant.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Fourth,,pinpoint,Pinpoint,fourth,https://fourth.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Franke,,pinpoint,Pinpoint,franke,https://franke.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Fundingcircle,,pinpoint,Pinpoint,fundingcircle,https://fundingcircle.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Glia,,pinpoint,Pinpoint,glia,https://glia.pinpointhq.com,1,3,,0.728,New York,,"Senior Software Engineer, Conversational AI (contract); AI Consultant; Entry-level, Technical Support Engineer (Vancouver)"
+Gmgtransport,,pinpoint,Pinpoint,gmgtransport,https://gmgtransport.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Goldcast,,pinpoint,Pinpoint,goldcast,https://goldcast.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Gregory,,pinpoint,Pinpoint,gregory,https://gregory.pinpointhq.com,1,3,,0.728,New York,,Transport Operator; Class 1 Night Driver; Class 1 Day Trunk Driver
+Greystone,,pinpoint,Pinpoint,greystone,https://greystone.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Groundtruth,,pinpoint,Pinpoint,groundtruth,https://groundtruth.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Hamiltonstaffing,,pinpoint,Pinpoint,hamiltonstaffing,https://hamiltonstaffing.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Harborfreight,,pinpoint,Pinpoint,harborfreight,https://harborfreight.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Hartz,,pinpoint,Pinpoint,hartz,https://hartz.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Healthequity,,pinpoint,Pinpoint,healthequity,https://healthequity.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Hirtlecallaghan,,pinpoint,Pinpoint,hirtlecallaghan,https://hirtlecallaghan.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Hss,,pinpoint,Pinpoint,hss,https://hss.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Kraftkennedy,,pinpoint,Pinpoint,kraftkennedy,https://kraftkennedy.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Ksg,,pinpoint,Pinpoint,ksg,https://ksg.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Larsentoubro,,pinpoint,Pinpoint,larsentoubro,https://larsentoubro.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Lhi,,pinpoint,Pinpoint,lhi,https://lhi.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Lumanity,,pinpoint,Pinpoint,lumanity,https://lumanity.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Marathon,,pinpoint,Pinpoint,marathon,https://marathon.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Senior Analyst; Portfolio Manager
+Marshalls,,pinpoint,Pinpoint,marshalls,https://marshalls.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Matrix,,pinpoint,Pinpoint,matrix,https://matrix.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Mattson,,pinpoint,Pinpoint,mattson,https://mattson.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Medserv,,pinpoint,Pinpoint,medserv,https://medserv.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Merz,,pinpoint,Pinpoint,merz,https://merz.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Microage,,pinpoint,Pinpoint,microage,https://microage.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Nal,,pinpoint,Pinpoint,nal,https://nal.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Nalashaa,,pinpoint,Pinpoint,nalashaa,https://nalashaa.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Nemetschek,,pinpoint,Pinpoint,nemetschek,https://nemetschek.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Ngp,,pinpoint,Pinpoint,ngp,https://ngp.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Ohpolly,,pinpoint,Pinpoint,ohpolly,https://ohpolly.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Onward,,pinpoint,Pinpoint,onward,https://onward.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Optumus,,pinpoint,Pinpoint,optumus,https://optumus.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Outform,,pinpoint,Pinpoint,outform,https://outform.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Pixieset,,pinpoint,Pinpoint,pixieset,https://pixieset.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Pmp,,pinpoint,Pinpoint,pmp,https://pmp.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Priority1,,pinpoint,Pinpoint,priority1,https://priority1.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Prosource,,pinpoint,Pinpoint,prosource,https://prosource.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Quadrature,,pinpoint,Pinpoint,quadrature,https://quadrature.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Quant,,pinpoint,Pinpoint,quant,https://quant.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Quantumintegrators,,pinpoint,Pinpoint,quantumintegrators,https://quantumintegrators.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Rewind,,pinpoint,Pinpoint,rewind,https://rewind.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Rmc,,pinpoint,Pinpoint,rmc,https://rmc.pinpointhq.com,1,3,,0.728,Phoenix,,Regional Director of Business Development ; Project Coordinator; Specialty Maintenance Technician 
+Scc,,pinpoint,Pinpoint,scc,https://scc.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Scope,,pinpoint,Pinpoint,scope,https://scope.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Sepa,,pinpoint,Pinpoint,sepa,https://sepa.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Sharps,,pinpoint,Pinpoint,sharps,https://sharps.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Sheridans,,pinpoint,Pinpoint,sheridans,https://sheridans.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Simspace,,pinpoint,Pinpoint,simspace,https://simspace.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Singlestore,,pinpoint,Pinpoint,singlestore,https://singlestore.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Snappy,,pinpoint,Pinpoint,snappy,https://snappy.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Soci,,pinpoint,Pinpoint,soci,https://soci.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Sonatype,,pinpoint,Pinpoint,sonatype,https://sonatype.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Sporty,,pinpoint,Pinpoint,sporty,https://sporty.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Stellarconsulting,,pinpoint,Pinpoint,stellarconsulting,https://stellarconsulting.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Stonewater,,pinpoint,Pinpoint,stonewater,https://stonewater.pinpointhq.com,1,3,,0.728,New York,,Head of DEI - UK; Marketing Manager; Customer Service Rep
+Ajc,,pinpoint,Pinpoint,ajc,https://ajc.pinpointhq.com,1,2,,0.716,New York,,"Coordinator, Regional Office Development; Regional Director"
+Akka,,pinpoint,Pinpoint,akka,https://akka.pinpointhq.com,1,2,,0.716,"Remote, USA",,Forward Deployed Engineer (Australia); Forward Deployed Engineer (N. America)
+Apexon,,pinpoint,Pinpoint,apexon,https://apexon.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Burohappold,,pinpoint,Pinpoint,burohappold,https://burohappold.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Ckr,,pinpoint,Pinpoint,ckr,https://ckr.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Dornier,,pinpoint,Pinpoint,dornier,https://dornier.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Dotdigital,,pinpoint,Pinpoint,dotdigital,https://dotdigital.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Edc,,pinpoint,Pinpoint,edc,https://edc.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Expereo,,pinpoint,Pinpoint,expereo,https://expereo.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Magna,,pinpoint,Pinpoint,magna,https://magna.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Nutanix,,pinpoint,Pinpoint,nutanix,https://nutanix.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Orbit,,pinpoint,Pinpoint,orbit,https://orbit.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Procurement Specialist - Housing
+Procomservices,,pinpoint,Pinpoint,procomservices,https://procomservices.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Raaonline,,pinpoint,Pinpoint,raaonline,https://raaonline.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Reltio,,pinpoint,Pinpoint,reltio,https://reltio.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Sirva,,pinpoint,Pinpoint,sirva,https://sirva.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Sofi,,pinpoint,Pinpoint,sofi,https://sofi.pinpointhq.com,1,2,,0.716,New York,,Head of DEI - UK; Customer Service Rep
+Ajp,,pinpoint,Pinpoint,ajp,https://ajp.pinpointhq.com,1,1,,0.7,Nottingham,,Customer Service
+Aninebing,,pinpoint,Pinpoint,aninebing,https://aninebing.pinpointhq.com,1,1,,0.7,Melrose,,"Stylist, Full-Time – Melrose"
+Avaaz,,pinpoint,Pinpoint,avaaz,https://avaaz.pinpointhq.com,1,1,,0.7,Remote,,Senior Project Manager (Palestine)
+Ess,,pinpoint,Pinpoint,ess,https://ess.pinpointhq.com,1,1,,0.7,Bedford,,Test Job (Nadia)
+Glp,,pinpoint,Pinpoint,glp,https://glp.pinpointhq.com,1,1,,0.7,Seattle,,Feasibility Development Manager
+Hafele,,pinpoint,Pinpoint,hafele,https://hafele.pinpointhq.com,1,1,,0.7,Rugby,,Maintenance Manager
+Harder,,pinpoint,Pinpoint,harder,https://harder.pinpointhq.com,1,1,,0.7,"Portland, Oregon",,Piping Detailer/Designer
+Hcbrands,,pinpoint,Pinpoint,hcbrands,https://hcbrands.pinpointhq.com,1,1,,0.7,"Jacksonville, FL",,Production & Fulfillment Seasonal Roles: 1st and 2nd shifts
+Leighton,,pinpoint,Pinpoint,leighton,https://leighton.pinpointhq.com,1,1,,0.7,Remote,,Technical Project Manager - Contract
+Livelink,,pinpoint,Pinpoint,livelink,https://livelink.pinpointhq.com,1,1,,0.7,Lavant ,,Senior Electrician
+Loccitane,,pinpoint,Pinpoint,loccitane,https://loccitane.pinpointhq.com,1,1,,0.7,Chichester,,Key Holder Sales Associate 
+Mambu,,pinpoint,Pinpoint,mambu,https://mambu.pinpointhq.com,1,1,,0.7,Dresden,,Account Executive
+Meredith,,pinpoint,Pinpoint,meredith,https://meredith.pinpointhq.com,1,1,,0.7,UK,,Customer Success
+Merge,,pinpoint,Pinpoint,merge,https://merge.pinpointhq.com,1,1,,0.7,US,,Test Job - hiring manager no recruiter
+Obsidian,,pinpoint,Pinpoint,obsidian,https://obsidian.pinpointhq.com,1,1,,0.7,"Irvine, CA",,Test Job 3
+Orla,,pinpoint,Pinpoint,orla,https://orla.pinpointhq.com,1,1,,0.7,UK,,Test Job 4
+Ownershipworks,,pinpoint,Pinpoint,ownershipworks,https://ownershipworks.pinpointhq.com,1,1,,0.7,New York,,"Senior Manager, Annual Giving"
+Photoboothsupply,,pinpoint,Pinpoint,photoboothsupply,https://photoboothsupply.pinpointhq.com,1,1,,0.7,"Santa Ana, California",,Technical and Customer Support Representative
+Samsung,,pinpoint,Pinpoint,samsung,https://samsung.pinpointhq.com,1,1,,0.7,"Cambridge, United Kingdom",,Finance Administrator
+Worldanimalprotection,,pinpoint,Pinpoint,worldanimalprotection,https://worldanimalprotection.pinpointhq.com,1,1,,0.7,International - UK,,Direct Channels Fundraiser
 Jerseypost,,pinpoint,Pinpoint,jerseypost,https://jerseypost.pinpointhq.com,1,1,,0.7,"St Saviour, Jersey",,Mail Sorting Systems Engineer 
 Adalo,,pinpoint,Pinpoint,adalo,https://adalo.pinpointhq.com,1,1,,0.7,Remote,,Senior Software Engineer - React / Node.js
 Adaptix,,pinpoint,Pinpoint,adaptix,https://adaptix.pinpointhq.com,1,1,,0.7,Oxford,,Product Cyber Security Engineer
 Aireon,,pinpoint,Pinpoint,aireon,https://aireon.pinpointhq.com,1,1,,0.7,APAC,,"Sales Manager, APAC – Commercial Data Services "
 Allclearinsurance,,pinpoint,Pinpoint,allclearinsurance,https://allclearinsurance.pinpointhq.com,1,1,,0.7,Romford,,HR Administrator 
+Eventbase,,pinpoint,Pinpoint,eventbase,https://eventbase.pinpointhq.com,1,1,,0.7,"Remote, Canada",,"Engineering Manager, Mobile"
+Qac,,pinpoint,Pinpoint,qac,https://qac.pinpointhq.com,1,1,,0.7,"Umberslade, Selly Oak",,Community Support Worker
+4Imprint,,pinpoint,Pinpoint,4imprint,https://4imprint.pinpointhq.com,0,0,,0.55,,,
+Acrisure,,pinpoint,Pinpoint,acrisure,https://acrisure.pinpointhq.com,0,0,,0.55,,,
+Adamsmith,,pinpoint,Pinpoint,adamsmith,https://adamsmith.pinpointhq.com,0,0,,0.55,,,
+Adecco,,pinpoint,Pinpoint,adecco,https://adecco.pinpointhq.com,0,0,,0.55,,,
+Adswerve,,pinpoint,Pinpoint,adswerve,https://adswerve.pinpointhq.com,0,0,,0.55,,,
+Adverity,,pinpoint,Pinpoint,adverity,https://adverity.pinpointhq.com,0,0,,0.55,,,
+Agencyanalytics,,pinpoint,Pinpoint,agencyanalytics,https://agencyanalytics.pinpointhq.com,0,0,,0.55,,,
+Aggregate,,pinpoint,Pinpoint,aggregate,https://aggregate.pinpointhq.com,0,0,,0.55,,,
+Agi,,pinpoint,Pinpoint,agi,https://agi.pinpointhq.com,0,0,,0.55,,,
+Agilethought,,pinpoint,Pinpoint,agilethought,https://agilethought.pinpointhq.com,0,0,,0.55,,,
+Akeneo,,pinpoint,Pinpoint,akeneo,https://akeneo.pinpointhq.com,0,0,,0.55,,,
+Allinone,,pinpoint,Pinpoint,allinone,https://allinone.pinpointhq.com,0,0,,0.55,,,
+Allurion,,pinpoint,Pinpoint,allurion,https://allurion.pinpointhq.com,0,0,,0.55,,,
+Altius,,pinpoint,Pinpoint,altius,https://altius.pinpointhq.com,0,0,,0.55,,,
+Amber,,pinpoint,Pinpoint,amber,https://amber.pinpointhq.com,0,0,,0.55,,,
+Amberenergy,,pinpoint,Pinpoint,amberenergy,https://amberenergy.pinpointhq.com,0,0,,0.55,,,
+Amihealthcare,,pinpoint,Pinpoint,amihealthcare,https://amihealthcare.pinpointhq.com,0,0,,0.55,,,
+Anatolia,,pinpoint,Pinpoint,anatolia,https://anatolia.pinpointhq.com,0,0,,0.55,,,
+Ancestry,,pinpoint,Pinpoint,ancestry,https://ancestry.pinpointhq.com,0,0,,0.55,,,
+Archibald,,pinpoint,Pinpoint,archibald,https://archibald.pinpointhq.com,0,0,,0.55,,,
+Arco,,pinpoint,Pinpoint,arco,https://arco.pinpointhq.com,0,0,,0.55,,,
+Ascential,,pinpoint,Pinpoint,ascential,https://ascential.pinpointhq.com,0,0,,0.55,,,
+Asnan,,pinpoint,Pinpoint,asnan,https://asnan.pinpointhq.com,0,0,,0.55,,,
+Atalian,,pinpoint,Pinpoint,atalian,https://atalian.pinpointhq.com,0,0,,0.55,,,
+Atida,,pinpoint,Pinpoint,atida,https://atida.pinpointhq.com,0,0,,0.55,,,
+Aui,,pinpoint,Pinpoint,aui,https://aui.pinpointhq.com,0,0,,0.55,,,
+Autotrader,,pinpoint,Pinpoint,autotrader,https://autotrader.pinpointhq.com,0,0,,0.55,,,
+Balsambrands,,pinpoint,Pinpoint,balsambrands,https://balsambrands.pinpointhq.com,0,0,,0.55,,,
+Barcelos,,pinpoint,Pinpoint,barcelos,https://barcelos.pinpointhq.com,0,0,,0.55,,,
+Bat,,pinpoint,Pinpoint,bat,https://bat.pinpointhq.com,0,0,,0.55,,,
+Bbr,,pinpoint,Pinpoint,bbr,https://bbr.pinpointhq.com,0,0,,0.55,,,
+Beazley,,pinpoint,Pinpoint,beazley,https://beazley.pinpointhq.com,0,0,,0.55,,,
+Bedrock,,pinpoint,Pinpoint,bedrock,https://bedrock.pinpointhq.com,0,0,,0.55,,,
+Bflexion,,pinpoint,Pinpoint,bflexion,https://bflexion.pinpointhq.com,0,0,,0.55,,,
+Birchesgroup,,pinpoint,Pinpoint,birchesgroup,https://birchesgroup.pinpointhq.com,0,0,,0.55,,,
+Boxcast,,pinpoint,Pinpoint,boxcast,https://boxcast.pinpointhq.com,0,0,,0.55,,,
+Brandnew,,pinpoint,Pinpoint,brandnew,https://brandnew.pinpointhq.com,0,0,,0.55,,,
+Braven,,pinpoint,Pinpoint,braven,https://braven.pinpointhq.com,0,0,,0.55,,,
+Bricklane,,pinpoint,Pinpoint,bricklane,https://bricklane.pinpointhq.com,0,0,,0.55,,,
+Bridgewater,,pinpoint,Pinpoint,bridgewater,https://bridgewater.pinpointhq.com,0,0,,0.55,,,
+Brightoncenter,,pinpoint,Pinpoint,brightoncenter,https://brightoncenter.pinpointhq.com,0,0,,0.55,,,
+Brompton,,pinpoint,Pinpoint,brompton,https://brompton.pinpointhq.com,0,0,,0.55,,,
+Brown,,pinpoint,Pinpoint,brown,https://brown.pinpointhq.com,0,0,,0.55,,,
+Btp,,pinpoint,Pinpoint,btp,https://btp.pinpointhq.com,0,0,,0.55,,,
+Callfire,,pinpoint,Pinpoint,callfire,https://callfire.pinpointhq.com,0,0,,0.55,,,
+Campari,,pinpoint,Pinpoint,campari,https://campari.pinpointhq.com,0,0,,0.55,,,
+Canadiansolar,,pinpoint,Pinpoint,canadiansolar,https://canadiansolar.pinpointhq.com,0,0,,0.55,,,
+Carbonhealth,,pinpoint,Pinpoint,carbonhealth,https://carbonhealth.pinpointhq.com,0,0,,0.55,,,
+Cprime,,pinpoint,Pinpoint,cprime,https://cprime.pinpointhq.com,0,0,,0.55,,,
+Csm,,pinpoint,Pinpoint,csm,https://csm.pinpointhq.com,0,0,,0.55,,,
+Davisulmer,,pinpoint,Pinpoint,davisulmer,https://davisulmer.pinpointhq.com,0,0,,0.55,,,
+Delaware,,pinpoint,Pinpoint,delaware,https://delaware.pinpointhq.com,0,0,,0.55,,,
+Designity,,pinpoint,Pinpoint,designity,https://designity.pinpointhq.com,0,0,,0.55,,,
+Desmos,,pinpoint,Pinpoint,desmos,https://desmos.pinpointhq.com,0,0,,0.55,,,
+Developers,,pinpoint,Pinpoint,developers,https://developers.pinpointhq.com,0,0,,0.55,,,
+Dietzgen,,pinpoint,Pinpoint,dietzgen,https://dietzgen.pinpointhq.com,0,0,,0.55,,,
+Distilled,,pinpoint,Pinpoint,distilled,https://distilled.pinpointhq.com,0,0,,0.55,,,
+Doehler,,pinpoint,Pinpoint,doehler,https://doehler.pinpointhq.com,0,0,,0.55,,,
+Dolce,,pinpoint,Pinpoint,dolce,https://dolce.pinpointhq.com,0,0,,0.55,,,
+Drs,,pinpoint,Pinpoint,drs,https://drs.pinpointhq.com,0,0,,0.55,,,
+Drsquatch,,pinpoint,Pinpoint,drsquatch,https://drsquatch.pinpointhq.com,0,0,,0.55,,,
+Dynamo,,pinpoint,Pinpoint,dynamo,https://dynamo.pinpointhq.com,0,0,,0.55,,,
+E2Open,,pinpoint,Pinpoint,e2open,https://e2open.pinpointhq.com,0,0,,0.55,,,
+Eastsideenterprises,,pinpoint,Pinpoint,eastsideenterprises,https://eastsideenterprises.pinpointhq.com,0,0,,0.55,,,
+Emerald,,pinpoint,Pinpoint,emerald,https://emerald.pinpointhq.com,0,0,,0.55,,,
+Emissary,,pinpoint,Pinpoint,emissary,https://emissary.pinpointhq.com,0,0,,0.55,,,
+Encompass,,pinpoint,Pinpoint,encompass,https://encompass.pinpointhq.com,0,0,,0.55,,,
+Engie,,pinpoint,Pinpoint,engie,https://engie.pinpointhq.com,0,0,,0.55,,,
+Enhance,,pinpoint,Pinpoint,enhance,https://enhance.pinpointhq.com,0,0,,0.55,,,
+Enova,,pinpoint,Pinpoint,enova,https://enova.pinpointhq.com,0,0,,0.55,,,
+Equashield,,pinpoint,Pinpoint,equashield,https://equashield.pinpointhq.com,0,0,,0.55,,,
+Erg,,pinpoint,Pinpoint,erg,https://erg.pinpointhq.com,0,0,,0.55,,,
+Eriez,,pinpoint,Pinpoint,eriez,https://eriez.pinpointhq.com,0,0,,0.55,,,
+Esidesign,,pinpoint,Pinpoint,esidesign,https://esidesign.pinpointhq.com,0,0,,0.55,,,
+Esper,,pinpoint,Pinpoint,esper,https://esper.pinpointhq.com,0,0,,0.55,,,
+Eusapharma,,pinpoint,Pinpoint,eusapharma,https://eusapharma.pinpointhq.com,0,0,,0.55,,,
+Everi,,pinpoint,Pinpoint,everi,https://everi.pinpointhq.com,0,0,,0.55,,,
+Evertz,,pinpoint,Pinpoint,evertz,https://evertz.pinpointhq.com,0,0,,0.55,,,
+Excella,,pinpoint,Pinpoint,excella,https://excella.pinpointhq.com,0,0,,0.55,,,
+Exprealty,,pinpoint,Pinpoint,exprealty,https://exprealty.pinpointhq.com,0,0,,0.55,,,
+Familyreach,,pinpoint,Pinpoint,familyreach,https://familyreach.pinpointhq.com,0,0,,0.55,,,
+Firstresonance,,pinpoint,Pinpoint,firstresonance,https://firstresonance.pinpointhq.com,0,0,,0.55,,,
+Fluxx,,pinpoint,Pinpoint,fluxx,https://fluxx.pinpointhq.com,0,0,,0.55,,,
+Focalpoint,,pinpoint,Pinpoint,focalpoint,https://focalpoint.pinpointhq.com,0,0,,0.55,,,
+Forcemanagement,,pinpoint,Pinpoint,forcemanagement,https://forcemanagement.pinpointhq.com,0,0,,0.55,,,
+Gabbwireless,,pinpoint,Pinpoint,gabbwireless,https://gabbwireless.pinpointhq.com,0,0,,0.55,,,
+Gal,,pinpoint,Pinpoint,gal,https://gal.pinpointhq.com,0,0,,0.55,,,
+Gen,,pinpoint,Pinpoint,gen,https://gen.pinpointhq.com,0,0,,0.55,,,
+Genesis,,pinpoint,Pinpoint,genesis,https://genesis.pinpointhq.com,0,0,,0.55,,,
+Gfs,,pinpoint,Pinpoint,gfs,https://gfs.pinpointhq.com,0,0,,0.55,,,
+Glendimplex,,pinpoint,Pinpoint,glendimplex,https://glendimplex.pinpointhq.com,0,0,,0.55,,,
+Gocity,,pinpoint,Pinpoint,gocity,https://gocity.pinpointhq.com,0,0,,0.55,,,
+Graceworks,,pinpoint,Pinpoint,graceworks,https://graceworks.pinpointhq.com,0,0,,0.55,,,
+Gungho,,pinpoint,Pinpoint,gungho,https://gungho.pinpointhq.com,0,0,,0.55,,,
+Hansonwade,,pinpoint,Pinpoint,hansonwade,https://hansonwade.pinpointhq.com,0,0,,0.55,,,
+Hayfin,,pinpoint,Pinpoint,hayfin,https://hayfin.pinpointhq.com,0,0,,0.55,,,
+Hfi,,pinpoint,Pinpoint,hfi,https://hfi.pinpointhq.com,0,0,,0.55,,,
+Hibob,,pinpoint,Pinpoint,hibob,https://hibob.pinpointhq.com,0,0,,0.55,,,
+Histosonics,,pinpoint,Pinpoint,histosonics,https://histosonics.pinpointhq.com,0,0,,0.55,,,
+Hopkins,,pinpoint,Pinpoint,hopkins,https://hopkins.pinpointhq.com,0,0,,0.55,,,
+Hostpapa,,pinpoint,Pinpoint,hostpapa,https://hostpapa.pinpointhq.com,0,0,,0.55,,,
+Hrc,,pinpoint,Pinpoint,hrc,https://hrc.pinpointhq.com,0,0,,0.55,,,
+Iota,,pinpoint,Pinpoint,iota,https://iota.pinpointhq.com,0,0,,0.55,,,
+Ipsos,,pinpoint,Pinpoint,ipsos,https://ipsos.pinpointhq.com,0,0,,0.55,,,
+Iriusrisk,,pinpoint,Pinpoint,iriusrisk,https://iriusrisk.pinpointhq.com,0,0,,0.55,,,
+Jacksonconstruction,,pinpoint,Pinpoint,jacksonconstruction,https://jacksonconstruction.pinpointhq.com,0,0,,0.55,,,
+Jacob,,pinpoint,Pinpoint,jacob,https://jacob.pinpointhq.com,0,0,,0.55,,,
+Kingswood,,pinpoint,Pinpoint,kingswood,https://kingswood.pinpointhq.com,0,0,,0.55,,,
+Kinly,,pinpoint,Pinpoint,kinly,https://kinly.pinpointhq.com,0,0,,0.55,,,
+Kip,,pinpoint,Pinpoint,kip,https://kip.pinpointhq.com,0,0,,0.55,,,
+Kith,,pinpoint,Pinpoint,kith,https://kith.pinpointhq.com,0,0,,0.55,,,
+Kiya,,pinpoint,Pinpoint,kiya,https://kiya.pinpointhq.com,0,0,,0.55,,,
+Krispykreme,,pinpoint,Pinpoint,krispykreme,https://krispykreme.pinpointhq.com,0,0,,0.55,,,
+Kubota,,pinpoint,Pinpoint,kubota,https://kubota.pinpointhq.com,0,0,,0.55,,,
+Kus,,pinpoint,Pinpoint,kus,https://kus.pinpointhq.com,0,0,,0.55,,,
+Ladder,,pinpoint,Pinpoint,ladder,https://ladder.pinpointhq.com,0,0,,0.55,,,
+Landmark,,pinpoint,Pinpoint,landmark,https://landmark.pinpointhq.com,0,0,,0.55,,,
+Lanevalente,,pinpoint,Pinpoint,lanevalente,https://lanevalente.pinpointhq.com,0,0,,0.55,,,
+Lantern,,pinpoint,Pinpoint,lantern,https://lantern.pinpointhq.com,0,0,,0.55,,,
+Later,,pinpoint,Pinpoint,later,https://later.pinpointhq.com,0,0,,0.55,,,
+Law,,pinpoint,Pinpoint,law,https://law.pinpointhq.com,0,0,,0.55,,,
+Lcb,,pinpoint,Pinpoint,lcb,https://lcb.pinpointhq.com,0,0,,0.55,,,
+Leapwork,,pinpoint,Pinpoint,leapwork,https://leapwork.pinpointhq.com,0,0,,0.55,,,
+Levelequity,,pinpoint,Pinpoint,levelequity,https://levelequity.pinpointhq.com,0,0,,0.55,,,
+Lexingtonmedical,,pinpoint,Pinpoint,lexingtonmedical,https://lexingtonmedical.pinpointhq.com,0,0,,0.55,,,
+Lgo,,pinpoint,Pinpoint,lgo,https://lgo.pinpointhq.com,0,0,,0.55,,,
+Livingbridge,,pinpoint,Pinpoint,livingbridge,https://livingbridge.pinpointhq.com,0,0,,0.55,,,
+Lockton,,pinpoint,Pinpoint,lockton,https://lockton.pinpointhq.com,0,0,,0.55,,,
+Lpc,,pinpoint,Pinpoint,lpc,https://lpc.pinpointhq.com,0,0,,0.55,,,
+Lucanet,,pinpoint,Pinpoint,lucanet,https://lucanet.pinpointhq.com,0,0,,0.55,,,
+Lummustechnology,,pinpoint,Pinpoint,lummustechnology,https://lummustechnology.pinpointhq.com,0,0,,0.55,,,
+Luno,,pinpoint,Pinpoint,luno,https://luno.pinpointhq.com,0,0,,0.55,,,
+Manifesto,,pinpoint,Pinpoint,manifesto,https://manifesto.pinpointhq.com,0,0,,0.55,,,
+Markle,,pinpoint,Pinpoint,markle,https://markle.pinpointhq.com,0,0,,0.55,,,
+Masabi,,pinpoint,Pinpoint,masabi,https://masabi.pinpointhq.com,0,0,,0.55,,,
+Matheson,,pinpoint,Pinpoint,matheson,https://matheson.pinpointhq.com,0,0,,0.55,,,
+Mcr,,pinpoint,Pinpoint,mcr,https://mcr.pinpointhq.com,0,0,,0.55,,,
+Medcor,,pinpoint,Pinpoint,medcor,https://medcor.pinpointhq.com,0,0,,0.55,,,
+Medic,,pinpoint,Pinpoint,medic,https://medic.pinpointhq.com,0,0,,0.55,,,
+Medica,,pinpoint,Pinpoint,medica,https://medica.pinpointhq.com,0,0,,0.55,,,
+Medit,,pinpoint,Pinpoint,medit,https://medit.pinpointhq.com,0,0,,0.55,,,
+Metabase,,pinpoint,Pinpoint,metabase,https://metabase.pinpointhq.com,0,0,,0.55,,,
+Mg2,,pinpoint,Pinpoint,mg2,https://mg2.pinpointhq.com,0,0,,0.55,,,
+Mitchells,,pinpoint,Pinpoint,mitchells,https://mitchells.pinpointhq.com,0,0,,0.55,,,
+Moneycorp,,pinpoint,Pinpoint,moneycorp,https://moneycorp.pinpointhq.com,0,0,,0.55,,,
+Motivo,,pinpoint,Pinpoint,motivo,https://motivo.pinpointhq.com,0,0,,0.55,,,
+Muller,,pinpoint,Pinpoint,muller,https://muller.pinpointhq.com,0,0,,0.55,,,
+Multiquip,,pinpoint,Pinpoint,multiquip,https://multiquip.pinpointhq.com,0,0,,0.55,,,
+Natus,,pinpoint,Pinpoint,natus,https://natus.pinpointhq.com,0,0,,0.55,,,
+Ndc,,pinpoint,Pinpoint,ndc,https://ndc.pinpointhq.com,0,0,,0.55,,,
+Neptune,,pinpoint,Pinpoint,neptune,https://neptune.pinpointhq.com,0,0,,0.55,,,
+Netography,,pinpoint,Pinpoint,netography,https://netography.pinpointhq.com,0,0,,0.55,,,
+Neuberger,,pinpoint,Pinpoint,neuberger,https://neuberger.pinpointhq.com,0,0,,0.55,,,
+Newpoint,,pinpoint,Pinpoint,newpoint,https://newpoint.pinpointhq.com,0,0,,0.55,,,
+Nexperia,,pinpoint,Pinpoint,nexperia,https://nexperia.pinpointhq.com,0,0,,0.55,,,
+Nicolehollis,,pinpoint,Pinpoint,nicolehollis,https://nicolehollis.pinpointhq.com,0,0,,0.55,,,
+Nightowl,,pinpoint,Pinpoint,nightowl,https://nightowl.pinpointhq.com,0,0,,0.55,,,
+Nio,,pinpoint,Pinpoint,nio,https://nio.pinpointhq.com,0,0,,0.55,,,
+Northernbedrockcorps,,pinpoint,Pinpoint,northernbedrockcorps,https://northernbedrockcorps.pinpointhq.com,0,0,,0.55,,,
+Northernpower,,pinpoint,Pinpoint,northernpower,https://northernpower.pinpointhq.com,0,0,,0.55,,,
+Nowsta,,pinpoint,Pinpoint,nowsta,https://nowsta.pinpointhq.com,0,0,,0.55,,,
+Oatly,,pinpoint,Pinpoint,oatly,https://oatly.pinpointhq.com,0,0,,0.55,,,
+Oceanfirst,,pinpoint,Pinpoint,oceanfirst,https://oceanfirst.pinpointhq.com,0,0,,0.55,,,
+Oneplan,,pinpoint,Pinpoint,oneplan,https://oneplan.pinpointhq.com,0,0,,0.55,,,
+Ooni,,pinpoint,Pinpoint,ooni,https://ooni.pinpointhq.com,0,0,,0.55,,,
+Openphone,,pinpoint,Pinpoint,openphone,https://openphone.pinpointhq.com,0,0,,0.55,,,
+Opiniondynamics,,pinpoint,Pinpoint,opiniondynamics,https://opiniondynamics.pinpointhq.com,0,0,,0.55,,,
+Oxfordmetrics,,pinpoint,Pinpoint,oxfordmetrics,https://oxfordmetrics.pinpointhq.com,0,0,,0.55,,,
+Palmetto,,pinpoint,Pinpoint,palmetto,https://palmetto.pinpointhq.com,0,0,,0.55,,,
+Paynearme,,pinpoint,Pinpoint,paynearme,https://paynearme.pinpointhq.com,0,0,,0.55,,,
+Paytronix,,pinpoint,Pinpoint,paytronix,https://paytronix.pinpointhq.com,0,0,,0.55,,,
+Pbp,,pinpoint,Pinpoint,pbp,https://pbp.pinpointhq.com,0,0,,0.55,,,
+Pharmaron,,pinpoint,Pinpoint,pharmaron,https://pharmaron.pinpointhq.com,0,0,,0.55,,,
+Placemakr,,pinpoint,Pinpoint,placemakr,https://placemakr.pinpointhq.com,0,0,,0.55,,,
+Plain,,pinpoint,Pinpoint,plain,https://plain.pinpointhq.com,0,0,,0.55,,,
+Planable,,pinpoint,Pinpoint,planable,https://planable.pinpointhq.com,0,0,,0.55,,,
+Planet,,pinpoint,Pinpoint,planet,https://planet.pinpointhq.com,0,0,,0.55,,,
+Ports,,pinpoint,Pinpoint,ports,https://ports.pinpointhq.com,0,0,,0.55,,,
+Praxis,,pinpoint,Pinpoint,praxis,https://praxis.pinpointhq.com,0,0,,0.55,,,
+Premierhealth,,pinpoint,Pinpoint,premierhealth,https://premierhealth.pinpointhq.com,0,0,,0.55,,,
+Prescryptive,,pinpoint,Pinpoint,prescryptive,https://prescryptive.pinpointhq.com,0,0,,0.55,,,
+Prime,,pinpoint,Pinpoint,prime,https://prime.pinpointhq.com,0,0,,0.55,,,
+Proact,,pinpoint,Pinpoint,proact,https://proact.pinpointhq.com,0,0,,0.55,,,
+Prologis,,pinpoint,Pinpoint,prologis,https://prologis.pinpointhq.com,0,0,,0.55,,,
+Prontopro,,pinpoint,Pinpoint,prontopro,https://prontopro.pinpointhq.com,0,0,,0.55,,,
+Propelleraero,,pinpoint,Pinpoint,propelleraero,https://propelleraero.pinpointhq.com,0,0,,0.55,,,
+Protrain,,pinpoint,Pinpoint,protrain,https://protrain.pinpointhq.com,0,0,,0.55,,,
+Psc,,pinpoint,Pinpoint,psc,https://psc.pinpointhq.com,0,0,,0.55,,,
+Qlik,,pinpoint,Pinpoint,qlik,https://qlik.pinpointhq.com,0,0,,0.55,,,
+Qualitylogic,,pinpoint,Pinpoint,qualitylogic,https://qualitylogic.pinpointhq.com,0,0,,0.55,,,
+Quantexa,,pinpoint,Pinpoint,quantexa,https://quantexa.pinpointhq.com,0,0,,0.55,,,
+Questanalytics,,pinpoint,Pinpoint,questanalytics,https://questanalytics.pinpointhq.com,0,0,,0.55,,,
+Radial,,pinpoint,Pinpoint,radial,https://radial.pinpointhq.com,0,0,,0.55,,,
+Reachdesk,,pinpoint,Pinpoint,reachdesk,https://reachdesk.pinpointhq.com,0,0,,0.55,,,
+Recentive,,pinpoint,Pinpoint,recentive,https://recentive.pinpointhq.com,0,0,,0.55,,,
+Recentiveanalytics,,pinpoint,Pinpoint,recentiveanalytics,https://recentiveanalytics.pinpointhq.com,0,0,,0.55,,,
+Recollective,,pinpoint,Pinpoint,recollective,https://recollective.pinpointhq.com,0,0,,0.55,,,
+Recycle,,pinpoint,Pinpoint,recycle,https://recycle.pinpointhq.com,0,0,,0.55,,,
+Redbubble,,pinpoint,Pinpoint,redbubble,https://redbubble.pinpointhq.com,0,0,,0.55,,,
+Rehab,,pinpoint,Pinpoint,rehab,https://rehab.pinpointhq.com,0,0,,0.55,,,
+Rei,,pinpoint,Pinpoint,rei,https://rei.pinpointhq.com,0,0,,0.55,,,
+Relievant,,pinpoint,Pinpoint,relievant,https://relievant.pinpointhq.com,0,0,,0.55,,,
+Repdata,,pinpoint,Pinpoint,repdata,https://repdata.pinpointhq.com,0,0,,0.55,,,
+Richter,,pinpoint,Pinpoint,richter,https://richter.pinpointhq.com,0,0,,0.55,,,
+Rimkus,,pinpoint,Pinpoint,rimkus,https://rimkus.pinpointhq.com,0,0,,0.55,,,
+Roadmap,,pinpoint,Pinpoint,roadmap,https://roadmap.pinpointhq.com,0,0,,0.55,,,
+Robertson,,pinpoint,Pinpoint,robertson,https://robertson.pinpointhq.com,0,0,,0.55,,,
+Ruffwear,,pinpoint,Pinpoint,ruffwear,https://ruffwear.pinpointhq.com,0,0,,0.55,,,
+Runna,,pinpoint,Pinpoint,runna,https://runna.pinpointhq.com,0,0,,0.55,,,
+Ruoff,,pinpoint,Pinpoint,ruoff,https://ruoff.pinpointhq.com,0,0,,0.55,,,
+Salesloft,,pinpoint,Pinpoint,salesloft,https://salesloft.pinpointhq.com,0,0,,0.55,,,
+Sangoma,,pinpoint,Pinpoint,sangoma,https://sangoma.pinpointhq.com,0,0,,0.55,,,
+Sanmar,,pinpoint,Pinpoint,sanmar,https://sanmar.pinpointhq.com,0,0,,0.55,,,
+Sasser,,pinpoint,Pinpoint,sasser,https://sasser.pinpointhq.com,0,0,,0.55,,,
+Sastrify,,pinpoint,Pinpoint,sastrify,https://sastrify.pinpointhq.com,0,0,,0.55,,,
+Savannainstitute,,pinpoint,Pinpoint,savannainstitute,https://savannainstitute.pinpointhq.com,0,0,,0.55,,,
+Scancom,,pinpoint,Pinpoint,scancom,https://scancom.pinpointhq.com,0,0,,0.55,,,
+Sdvi,,pinpoint,Pinpoint,sdvi,https://sdvi.pinpointhq.com,0,0,,0.55,,,
+Searles,,pinpoint,Pinpoint,searles,https://searles.pinpointhq.com,0,0,,0.55,,,
+Seera,,pinpoint,Pinpoint,seera,https://seera.pinpointhq.com,0,0,,0.55,,,
+Shein,,pinpoint,Pinpoint,shein,https://shein.pinpointhq.com,0,0,,0.55,,,
+Shift4,,pinpoint,Pinpoint,shift4,https://shift4.pinpointhq.com,0,0,,0.55,,,
+Shipco,,pinpoint,Pinpoint,shipco,https://shipco.pinpointhq.com,0,0,,0.55,,,
+Shipt,,pinpoint,Pinpoint,shipt,https://shipt.pinpointhq.com,0,0,,0.55,,,
+Sibelco,,pinpoint,Pinpoint,sibelco,https://sibelco.pinpointhq.com,0,0,,0.55,,,
+Sibros,,pinpoint,Pinpoint,sibros,https://sibros.pinpointhq.com,0,0,,0.55,,,
+Singleton,,pinpoint,Pinpoint,singleton,https://singleton.pinpointhq.com,0,0,,0.55,,,
+Singularity6,,pinpoint,Pinpoint,singularity6,https://singularity6.pinpointhq.com,0,0,,0.55,,,
+Skedulo,,pinpoint,Pinpoint,skedulo,https://skedulo.pinpointhq.com,0,0,,0.55,,,
+Snap,,pinpoint,Pinpoint,snap,https://snap.pinpointhq.com,0,0,,0.55,,,
+Societegenerale,,pinpoint,Pinpoint,societegenerale,https://societegenerale.pinpointhq.com,0,0,,0.55,,,
+Soitec,,pinpoint,Pinpoint,soitec,https://soitec.pinpointhq.com,0,0,,0.55,,,
+Soltec,,pinpoint,Pinpoint,soltec,https://soltec.pinpointhq.com,0,0,,0.55,,,
+Sourcewhale,,pinpoint,Pinpoint,sourcewhale,https://sourcewhale.pinpointhq.com,0,0,,0.55,,,
+Southwestsolutions,,pinpoint,Pinpoint,southwestsolutions,https://southwestsolutions.pinpointhq.com,0,0,,0.55,,,
+Spark,,pinpoint,Pinpoint,spark,https://spark.pinpointhq.com,0,0,,0.55,,,
+Star,,pinpoint,Pinpoint,star,https://star.pinpointhq.com,0,0,,0.55,,,
+Staris,,pinpoint,Pinpoint,staris,https://staris.pinpointhq.com,0,0,,0.55,,,
+Steeleye,,pinpoint,Pinpoint,steeleye,https://steeleye.pinpointhq.com,0,0,,0.55,,,
+Steer,,pinpoint,Pinpoint,steer,https://steer.pinpointhq.com,0,0,,0.55,,,
+Sterlingsolutions,,pinpoint,Pinpoint,sterlingsolutions,https://sterlingsolutions.pinpointhq.com,0,0,,0.55,,,
+Storyblok,,pinpoint,Pinpoint,storyblok,https://storyblok.pinpointhq.com,0,0,,0.55,,,
+Structure,,pinpoint,Pinpoint,structure,https://structure.pinpointhq.com,0,0,,0.55,,,
+Vega,,pinpoint,Pinpoint,vega,https://vega.pinpointhq.com,0,0,,0.55,,,
+Wonder,,pinpoint,Pinpoint,wonder,https://wonder.pinpointhq.com,0,0,,0.55,,,
 Makepositive,,pinpoint,Pinpoint,makepositive,https://makepositive.pinpointhq.com,0,0,,0.55,,,
 Marketing Assets,,pinpoint,Pinpoint,marketing-assets,https://marketing-assets.pinpointhq.com,0,0,,0.55,,,
 Culturetrip,,pinpoint,Pinpoint,culturetrip,https://culturetrip.pinpointhq.com,0,0,,0.55,,,
@@ -43,7 +937,6 @@ Content,,pinpoint,Pinpoint,content,https://content.pinpointhq.com,0,0,,0.55,,,
 Cognitionx,,pinpoint,Pinpoint,cognitionx,https://cognitionx.pinpointhq.com,0,0,,0.55,,,
 Sepiontechnologies,,pinpoint,Pinpoint,sepiontechnologies,https://sepiontechnologies.pinpointhq.com,0,0,,0.55,,,
 Email,,pinpoint,Pinpoint,email,https://email.pinpointhq.com,0,0,,0.55,,,
-Developers,,pinpoint,Pinpoint,developers,https://developers.pinpointhq.com,0,0,,0.55,,,
 Learn,,pinpoint,Pinpoint,learn,https://learn.pinpointhq.com,0,0,,0.55,,,
 Minna,,pinpoint,Pinpoint,minna,https://minna.pinpointhq.com,0,0,,0.55,,,
 Romerilsjersey,,pinpoint,Pinpoint,romerilsjersey,https://romerilsjersey.pinpointhq.com,0,0,,0.55,,,
@@ -60,8 +953,6 @@ Ccag,,pinpoint,Pinpoint,ccag,https://ccag.pinpointhq.com,0,0,,0.55,,,
 Vaiie,,pinpoint,Pinpoint,vaiie,https://vaiie.pinpointhq.com,0,0,,0.55,,,
 Rawlinsonhunter,,pinpoint,Pinpoint,rawlinsonhunter,https://rawlinsonhunter.pinpointhq.com,0,0,,0.55,,,
 Switch,,pinpoint,Pinpoint,switch,https://switch.pinpointhq.com,0,0,,0.55,,,
-Everi,,pinpoint,Pinpoint,everi,https://everi.pinpointhq.com,0,0,,0.55,,,
-Enhance,,pinpoint,Pinpoint,enhance,https://enhance.pinpointhq.com,0,0,,0.55,,,
 Digitaljersey,,pinpoint,Pinpoint,digitaljersey,https://digitaljersey.pinpointhq.com,0,0,,0.55,,,
 Carewell,,pinpoint,Pinpoint,carewell,https://carewell.pinpointhq.com,0,0,,0.55,,,
 Air Rescue,,pinpoint,Pinpoint,air-rescue,https://air-rescue.pinpointhq.com,0,0,,0.55,,,
@@ -96,7 +987,21 @@ Adenza,,pinpoint,Pinpoint,adenza,https://adenza.pinpointhq.com,0,0,,0.55,,,
 Advantagedental,,pinpoint,Pinpoint,advantagedental,https://advantagedental.pinpointhq.com,0,0,,0.55,,,
 Advita,,pinpoint,Pinpoint,advita,https://advita.pinpointhq.com,0,0,,0.55,,,
 Aesc Group,,pinpoint,Pinpoint,aesc-group,https://aesc-group.pinpointhq.com,0,0,,0.55,,,
-Agencyanalytics,,pinpoint,Pinpoint,agencyanalytics,https://agencyanalytics.pinpointhq.com,0,0,,0.55,,,
 Airhelp,,pinpoint,Pinpoint,airhelp,https://airhelp.pinpointhq.com,0,0,,0.55,,,
 Globeleq,,pinpoint,Pinpoint,globeleq,https://globeleq.pinpointhq.com,0,0,,0.55,,,
 Recruitment Trends,,pinpoint,Pinpoint,recruitment-trends,https://recruitment-trends.pinpointhq.com,0,0,,0.55,,,
+Avenueconsultants,,pinpoint,Pinpoint,avenueconsultants,https://avenueconsultants.pinpointhq.com,0,0,,0.55,,,
+Chancetoshine,,pinpoint,Pinpoint,chancetoshine,https://chancetoshine.pinpointhq.com,0,0,,0.55,,,
+Commonlit,,pinpoint,Pinpoint,commonlit,https://commonlit.pinpointhq.com,0,0,,0.55,,,
+Leadforamerica,,pinpoint,Pinpoint,leadforamerica,https://leadforamerica.pinpointhq.com,0,0,,0.55,,,
+Mimeo Eu,,pinpoint,Pinpoint,mimeo-eu,https://mimeo-eu.pinpointhq.com,0,0,,0.55,,,
+Rivalry,,pinpoint,Pinpoint,rivalry,https://rivalry.pinpointhq.com,0,0,,0.55,,,
+Tenovallc,,pinpoint,Pinpoint,tenovallc,https://tenovallc.pinpointhq.com,0,0,,0.55,,,
+Theimpact,,pinpoint,Pinpoint,theimpact,https://theimpact.pinpointhq.com,0,0,,0.55,,,
+Ynab,,pinpoint,Pinpoint,ynab,https://ynab.pinpointhq.com,0,0,,0.55,,,
+Cnps,,pinpoint,Pinpoint,cnps,https://cnps.pinpointhq.com,0,0,,0.55,,,
+Codexis,,pinpoint,Pinpoint,codexis,https://codexis.pinpointhq.com,0,0,,0.55,,,
+Gameplaygalaxy,,pinpoint,Pinpoint,gameplaygalaxy,https://gameplaygalaxy.pinpointhq.com,0,0,,0.55,,,
+Madfishdigital,,pinpoint,Pinpoint,madfishdigital,https://madfishdigital.pinpointhq.com,0,0,,0.55,,,
+Pivotenergy,,pinpoint,Pinpoint,pivotenergy,https://pivotenergy.pinpointhq.com,0,0,,0.55,,,
+Theidol,,pinpoint,Pinpoint,theidol,https://theidol.pinpointhq.com,0,0,,0.55,,,
