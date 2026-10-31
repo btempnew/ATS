@@ -140,15 +140,18 @@ jobs:
       total_shards: ${{ steps.build-matrix.outputs.total_shards }}
     steps:
       - id: build-matrix
+        env:
+          INPUT_SLUG: ${{ github.event.inputs.single_slug }}
+          INPUT_SHARDS: ${{ github.event.inputs.runner_shards || '4' }}
         run: |
-          python -c '
+          python3 -c '
           import json, os
 
-          slug = "${{ github.event.inputs.single_slug }}"
-          user_shards = "${{ github.event.inputs.runner_shards || "4" }}"
+          slug = os.environ.get("INPUT_SLUG", "").strip()
+          user_shards = os.environ.get("INPUT_SHARDS", "4").strip()
 
           # If single slug is requested, run on 1 shard only
-          if slug.strip():
+          if slug:
               total = 1
           else:
               try:
