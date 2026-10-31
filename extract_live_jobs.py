@@ -31,6 +31,10 @@ import argparse
 import sqlite3
 import html
 import re
+import time
+import random
+import email.utils
+import glob
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
 from typing import List, Dict, Any, Optional, Tuple
@@ -199,22 +203,77 @@ def clean_html(raw_html: str) -> str:
 
 
 class AsyncHTTPClient:
-    """Asynchronous HTTP client with per-host rate-limiting and exponential backoff."""
-    def __init__(self, concurrency: int = 50, per_host_concurrency: int = 10, timeout: float = 15.0):
+    """Asynchronous HTTP client with per-host token pacing, circuit-breaker backoff on 429, and exponential jitter."""
+    def __init__(
+        self,
+        concurrency: int = 40,
+        per_host_concurrency: int = 8,
+        min_host_interval: float = 0.12,  # Enforce <= 8 req/sec max per host
+        timeout: float = 18.0,
+    ):
         self.semaphore = asyncio.Semaphore(concurrency)
         self.per_host_concurrency = per_host_concurrency
-        self._host_semaphores: Dict[str, asyncio.Semaphore] = {}
+        self.min_host_interval = min_host_interval
         self.timeout = timeout
+        self._host_semaphores: Dict[str, asyncio.Semaphore] = {}
+        self._host_locks: Dict[str, asyncio.Lock] = {}
+        self._host_last_request_time: Dict[str, float] = {}
+        self._host_cooldown_until: Dict[str, float] = {}
         self._session = None
 
-    def _get_host_sem(self, url: str) -> asyncio.Semaphore:
+    def _get_host(self, url: str) -> str:
         try:
-            host = (urlparse(url).hostname or "default").lower()
+            return (urlparse(url).hostname or "default").lower()
         except Exception:
-            host = "default"
+            return "default"
+
+    def _get_host_sem(self, host: str) -> asyncio.Semaphore:
         if host not in self._host_semaphores:
             self._host_semaphores[host] = asyncio.Semaphore(self.per_host_concurrency)
         return self._host_semaphores[host]
+
+    def _get_host_lock(self, host: str) -> asyncio.Lock:
+        if host not in self._host_locks:
+            self._host_locks[host] = asyncio.Lock()
+        return self._host_locks[host]
+
+    async def _wait_for_host(self, host: str):
+        """Enforces host-wide cooldowns on 429 and paces inter-request intervals."""
+        lock = self._get_host_lock(host)
+        async with lock:
+            now = time.monotonic()
+            # 1. Cooldown check: if host encountered a 429/503, wait until cooldown expires
+            cooldown = self._host_cooldown_until.get(host, 0.0)
+            if now < cooldown:
+                wait_s = cooldown - now + random.uniform(0.1, 0.5)
+                await asyncio.sleep(wait_s)
+                now = time.monotonic()
+
+            # 2. Minimum inter-request pacing
+            last_time = self._host_last_request_time.get(host, 0.0)
+            elapsed = now - last_time
+            if elapsed < self.min_host_interval:
+                await asyncio.sleep(self.min_host_interval - elapsed)
+
+            self._host_last_request_time[host] = time.monotonic()
+
+    def _parse_retry_after(self, retry_after_val: Optional[str]) -> Optional[float]:
+        if not retry_after_val:
+            return None
+        val_str = str(retry_after_val).strip()
+        # Check integer seconds
+        try:
+            return max(1.0, float(val_str))
+        except ValueError:
+            pass
+        # Check HTTP-date format
+        try:
+            dt = email.utils.parsedate_to_datetime(val_str)
+            now_dt = datetime.now(timezone.utc)
+            diff = (dt - now_dt).total_seconds()
+            return max(1.0, diff)
+        except Exception:
+            return None
 
     async def __aenter__(self):
         if HAS_AIOHTTP:
@@ -235,19 +294,23 @@ class AsyncHTTPClient:
         if self._session:
             await self._session.close()
 
-    async def get_json(self, url: str, max_retries: int = 2) -> Tuple[int, Any]:
-        """Performs async GET and parses JSON with retries on rate limits."""
-        host_sem = self._get_host_sem(url)
+    async def get_json(self, url: str, max_retries: int = 4) -> Tuple[int, Any]:
+        """Performs async GET and parses JSON with host-wide circuit breaker and exponential jitter on 429/503."""
+        host = self._get_host(url)
+        host_sem = self._get_host_sem(host)
+
         for attempt in range(max_retries + 1):
             async with self.semaphore:
                 async with host_sem:
+                    await self._wait_for_host(host)
+
                     if not HAS_AIOHTTP or not self._session:
                         # Fallback for systems without aiohttp
                         import urllib.request
                         try:
                             req = urllib.request.Request(
                                 url,
-                                headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
+                                headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
                             )
                             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                                 status = resp.status
@@ -255,7 +318,11 @@ class AsyncHTTPClient:
                                 return status, data
                         except urllib.error.HTTPError as e:
                             if e.code in (429, 503) and attempt < max_retries:
-                                await asyncio.sleep(1.5 * (attempt + 1))
+                                retry_after = self._parse_retry_after(e.headers.get("Retry-After"))
+                                backoff = retry_after or (2.0 * (2 ** attempt) + random.uniform(0.5, 2.0))
+                                backoff = min(60.0, max(2.0, backoff))
+                                self._host_cooldown_until[host] = time.monotonic() + backoff
+                                await asyncio.sleep(backoff)
                                 continue
                             return e.code, None
                         except Exception:
@@ -271,13 +338,19 @@ class AsyncHTTPClient:
                                     text = await resp.text()
                                     return 200, json.loads(text)
                             elif resp.status in (429, 503) and attempt < max_retries:
-                                await asyncio.sleep(1.5 * (attempt + 1))
+                                retry_after = self._parse_retry_after(resp.headers.get("Retry-After"))
+                                backoff = retry_after or (2.5 * (2 ** attempt) + random.uniform(0.5, 2.0))
+                                backoff = min(60.0, max(2.0, backoff))
+                                # Set host-wide cooldown so all tasks hitting this host will pause
+                                self._host_cooldown_until[host] = time.monotonic() + backoff
+                                await asyncio.sleep(backoff)
                                 continue
                             else:
                                 return resp.status, None
                     except (asyncio.TimeoutError, aiohttp.ClientError):
                         if attempt < max_retries:
-                            await asyncio.sleep(1.0)
+                            backoff = 1.5 * (attempt + 1) + random.uniform(0.2, 1.0)
+                            await asyncio.sleep(backoff)
                             continue
                         return 0, None
                     except Exception:
@@ -709,6 +782,16 @@ PLATFORM_HANDLERS = {
 def enrich_job_record(raw: Dict[str, Any], enable_enrichment: bool = True) -> Dict[str, Any]:
     """Enriches job dictionary with salary, skills, H-1B, and experience facts."""
     out = dict(raw)
+    out.setdefault("company_name", "")
+    out.setdefault("location", "")
+    out.setdefault("apply_url", "")
+    out.setdefault("department", "")
+    out.setdefault("office", "")
+    out.setdefault("employment_type", "")
+    out.setdefault("posted_at", "")
+    out.setdefault("updated_at", "")
+    out.setdefault("raw_timestamp", "")
+    out.setdefault("content", "")
     out.setdefault("salary", "")
     out.setdefault("salary_min", None)
     out.setdefault("salary_max", None)
@@ -954,6 +1037,89 @@ def export_sqlite_to_csv(db_path: str, csv_path: str, only_us: bool = False):
     print(f"Exported {len(rows):,} jobs to '{csv_path}'.")
 
 
+def merge_databases(input_patterns: List[str], output_db: str, export_csv: Optional[str] = None):
+    """Merges multiple shard SQLite databases into a unified database and optional CSV."""
+    resolved_paths = []
+    for pat in input_patterns:
+        for p in pat.split(","):
+            p = p.strip()
+            if not p:
+                continue
+            matched = glob.glob(p)
+            if matched:
+                resolved_paths.extend(matched)
+            elif os.path.exists(p):
+                resolved_paths.append(p)
+
+    resolved_paths = sorted(list(set(resolved_paths)))
+    # Exclude output_db if it was matched in the glob
+    out_abs = os.path.abspath(output_db)
+    resolved_paths = [p for p in resolved_paths if os.path.abspath(p) != out_abs]
+
+    if not resolved_paths:
+        print(f"No valid shard database files found matching: {input_patterns}")
+        return
+
+    print(f"\nMerging {len(resolved_paths)} shard databases into '{output_db}':")
+    for p in resolved_paths:
+        print(f"  • {p}")
+
+    init_db(output_db)
+    conn_out = sqlite3.connect(output_db)
+    cur_out = conn_out.cursor()
+
+    total_merged_boards = 0
+    total_merged_jobs = 0
+
+    for path in resolved_paths:
+        try:
+            conn_in = sqlite3.connect(path)
+            cur_in = conn_in.cursor()
+
+            # Merge scanned_boards
+            try:
+                cur_in.execute("SELECT platform, company_slug, http_status, total_jobs, us_jobs, scanned_at FROM scanned_boards;")
+                boards = cur_in.fetchall()
+                if boards:
+                    cur_out.executemany("""
+                        INSERT OR REPLACE INTO scanned_boards (
+                            platform, company_slug, http_status, total_jobs, us_jobs, scanned_at
+                        ) VALUES (?, ?, ?, ?, ?, ?)
+                    """, boards)
+                    total_merged_boards += len(boards)
+            except Exception as e:
+                print(f"Notice on merging boards from {path}: {e}")
+
+            # Merge live_jobs
+            try:
+                cur_in.execute("SELECT * FROM live_jobs;")
+                cols = [d[0] for d in cur_in.description]
+                jobs = cur_in.fetchall()
+                if jobs:
+                    placeholders = ", ".join(["?"] * len(cols))
+                    col_names = ", ".join(cols)
+                    cur_out.executemany(f"""
+                        INSERT OR REPLACE INTO live_jobs ({col_names})
+                        VALUES ({placeholders})
+                    """, jobs)
+                    total_merged_jobs += len(jobs)
+            except Exception as e:
+                print(f"Notice on merging jobs from {path}: {e}")
+
+            conn_in.close()
+        except Exception as e:
+            print(f"Error reading shard database {path}: {e}")
+
+    conn_out.commit()
+    conn_out.close()
+    print(f"\nMerge Complete! Unified database now contains:")
+    print(f"  • Total Scanned Boards: {total_merged_boards:,}")
+    print(f"  • Total Live Jobs: {total_merged_jobs:,}")
+
+    if export_csv:
+        export_sqlite_to_csv(output_db, export_csv)
+
+
 def load_companies(input_path: str, default_platform: str) -> List[Tuple[str, str]]:
     """Loads list of (platform, slug) pairs from CSV or TXT file."""
     if not os.path.exists(input_path):
@@ -1111,6 +1277,9 @@ def main():
     parser.add_argument("--export-csv", help="Optional CSV file to export extracted jobs to")
     parser.add_argument("--limit", type=int, default=0, help="Limit number of companies to scan (0 = all)")
     parser.add_argument("--offset", type=int, default=0, help="Offset index into input list")
+    parser.add_argument("--shard-index", type=int, default=0, help="Zero-based index of this shard runner")
+    parser.add_argument("--total-shards", type=int, default=1, help="Total number of parallel runner shards")
+    parser.add_argument("--merge-dbs", nargs="+", help="Merge one or more shard databases into --output-db")
     parser.add_argument("--concurrency", type=int, default=40, help="Max async requests concurrency")
     parser.add_argument("--full-content", action="store_true", help="Download complete job descriptions")
     parser.add_argument("--enrich", action="store_true", help="Run deep JD enrichment (salary, skills, H-1B, experience)")
@@ -1119,6 +1288,12 @@ def main():
     parser.add_argument("--keyword", type=str, default="", help="Filter job title/department/location by keyword")
 
     args = parser.parse_args()
+
+    # Mode 0: Database merge mode
+    if args.merge_dbs:
+        merge_databases(args.merge_dbs, args.output_db, export_csv=args.export_csv)
+        return
+
     enable_enrichment = args.enrich or args.full_content
 
     # 1. Single slug mode
@@ -1204,6 +1379,17 @@ def main():
         unique_targets = unique_targets[args.offset:]
     if args.limit > 0:
         unique_targets = unique_targets[:args.limit]
+
+    # Multi-runner sharding: strided modulo partition
+    if args.total_shards > 1:
+        if args.shard_index < 0 or args.shard_index >= args.total_shards:
+            print(f"Error: --shard-index ({args.shard_index}) must be between 0 and {args.total_shards - 1}")
+            sys.exit(1)
+        unique_targets = [t for i, t in enumerate(unique_targets) if i % args.total_shards == args.shard_index]
+        print(f"Shard [{args.shard_index + 1}/{args.total_shards}]: Partitioned {len(unique_targets):,} target boards.")
+        stagger = (args.shard_index * 1.5) + random.uniform(0.1, 0.5)
+        print(f"Applying startup stagger: {stagger:.2f}s to avoid thundering herd...")
+        time.sleep(stagger)
 
     print(f"Total unique target boards to scan: {len(unique_targets):,}")
 

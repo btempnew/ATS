@@ -60,6 +60,17 @@ on:
         required: true
         type: string
         default: '0'
+      runner_shards:
+        description: '⚡ Parallel Runner Shards (Multi-Runner Distribution)'
+        required: true
+        type: choice
+        default: '4'
+        options:
+          - '1'
+          - '2'
+          - '4'
+          - '6'
+          - '8'
       posted_within_days:
         description: '📅 Recency Filter (Keep jobs posted within last N days)'
         required: true
@@ -95,7 +106,7 @@ on:
         type: boolean
         default: false
       concurrency:
-        description: '⚡ Async Concurrency (Max concurrent HTTP workers)'
+        description: '⚡ Async Concurrency per Runner (Concurrent HTTP workers)'
         required: true
         type: choice
         default: '40'
@@ -118,8 +129,56 @@ permissions:
   contents: write
 
 jobs:
-  harvest-jobs:
+  # ============================================================================
+  # JOB 1: Dynamic Matrix Planner for Parallel Sharded Runners
+  # ============================================================================
+  setup-shards:
+    name: "⚙️ Plan Runner Shards"
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+      total_shards: ${{ steps.build-matrix.outputs.total_shards }}
+    steps:
+      - id: build-matrix
+        run: |
+          python -c '
+          import json, os
+
+          slug = "${{ github.event.inputs.single_slug }}"
+          user_shards = "${{ github.event.inputs.runner_shards || "4" }}"
+
+          # If single slug is requested, run on 1 shard only
+          if slug.strip():
+              total = 1
+          else:
+              try:
+                  total = int(user_shards)
+              except Exception:
+                  total = 4
+
+          shards = [{"index": i, "num": i + 1, "total": total} for i in range(total)]
+          matrix = {"include": shards}
+          matrix_json = json.dumps(matrix)
+          print(f"Generated Matrix ({total} shards): {matrix_json}")
+
+          github_output = os.environ.get("GITHUB_OUTPUT")
+          if github_output:
+              with open(github_output, "a") as f:
+                  f.write(f"matrix={matrix_json}\n")
+                  f.write(f"total_shards={total}\n")
+          '
+
+  # ============================================================================
+  # JOB 2: Parallel Sharded Live Job Harvesters
+  # ============================================================================
+  harvest-shard:
+    name: "🚜 Harvest Shard ${{ matrix.num }} of ${{ matrix.total }}"
+    needs: setup-shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup-shards.outputs.matrix) }}
     env:
       PYTHONUNBUFFERED: "1"
     steps:
@@ -137,7 +196,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install aiohttp requests
 
-      - name: Run Universal ATS Job Extractor
+      - name: Run Shard Extractor
         run: |
           PLATFORM="${{ github.event.inputs.platform || 'all' }}"
           SOURCE="${{ github.event.inputs.company_source || 'exports/us_companies_by_ats_master.csv' }}"
@@ -157,12 +216,14 @@ jobs:
             INPUT_FILE="$CUSTOM"
           fi
 
+          SHARD_DB="live_jobs_shard_${{ matrix.index }}.db"
+
           if [ -n "$SLUG" ]; then
             echo "Running Single Slug Mode: Platform=$PLATFORM, Slug=$SLUG"
-            FLAGS="--platform $PLATFORM --slug $SLUG --output-db live_jobs.db --export-csv live_jobs.csv"
+            FLAGS="--platform $PLATFORM --slug $SLUG --output-db $SHARD_DB"
           else
-            echo "Running Batch Mode: Source=$INPUT_FILE, Platform=$PLATFORM, Limit=$LIMIT, Offset=$OFFSET"
-            FLAGS="--platform $PLATFORM --input $INPUT_FILE --output-db live_jobs.db --export-csv live_jobs.csv --limit $LIMIT --offset $OFFSET --concurrency $CONCURRENCY"
+            echo "Running Shard ${{ matrix.num }}/${{ matrix.total }}: Source=$INPUT_FILE, Platform=$PLATFORM, Limit=$LIMIT, Offset=$OFFSET"
+            FLAGS="--platform $PLATFORM --input $INPUT_FILE --output-db $SHARD_DB --limit $LIMIT --offset $OFFSET --concurrency $CONCURRENCY --shard-index ${{ matrix.index }} --total-shards ${{ matrix.total }}"
           fi
 
           if [ "$DAYS" != "0" ] && [ -n "$DAYS" ]; then
@@ -187,6 +248,53 @@ jobs:
 
           echo "Executing: python extract_live_jobs.py $FLAGS"
           python extract_live_jobs.py $FLAGS
+
+      - name: Upload Shard Database Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: "shard-db-${{ matrix.index }}"
+          path: "live_jobs_shard_${{ matrix.index }}.db"
+          retention-days: 7
+
+  # ============================================================================
+  # JOB 3: Merge All Shards, Export Final CSV, and Summarize
+  # ============================================================================
+  merge-and-export:
+    name: "📦 Merge Shards & Export Final Datasets"
+    needs: [setup-shards, harvest-shard]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install aiohttp requests
+
+      - name: Download All Shard Databases
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'shard-db-*'
+          merge-multiple: true
+          path: ./shards
+
+      - name: Merge Shard Databases & Export CSV
+        run: |
+          echo "Discovered shard database files:"
+          ls -lh ./shards/ || true
+          python extract_live_jobs.py --merge-dbs "./shards/*.db" --output-db live_jobs.db --export-csv live_jobs.csv
 
       - name: Generate Extraction Summary
         if: always()
@@ -229,7 +337,7 @@ jobs:
           jobs_with_skills = 0
           jobs_with_h1b = 0
           try:
-              cur.execute("SELECT COUNT(salary_min), COUNT(CASE WHEN skills != '' THEN 1 END), COUNT(CASE WHEN h1b_status != 'unknown' THEN 1 END) FROM live_jobs;")
+              cur.execute("SELECT COUNT(salary_min), COUNT(CASE WHEN skills != \"\" THEN 1 END), COUNT(CASE WHEN h1b_status != \"unknown\" THEN 1 END) FROM live_jobs;")
               row = cur.fetchone()
               if row:
                   jobs_with_sal, jobs_with_skills, jobs_with_h1b = row
@@ -272,7 +380,7 @@ jobs:
           conn.close()
 
           summary = []
-          summary.append("## 🚀 Live ATS Job Extraction Summary\n")
+          summary.append("## 🚀 Multi-Shard Live ATS Job Extraction Summary\n")
           if total_boards > 0:
               summary.append(f"- **Total Company Boards Scanned:** `{total_boards:,}`")
               summary.append(f"- **Boards Returning HTTP 200 (Active):** `{boards_200:,}` / `{total_boards:,}` (**{board_200_rate:.1f}%**)")
@@ -335,6 +443,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Automated: update live_jobs.csv from workflow run [skip ci]"
+            git commit -m "Automated: update live_jobs.csv from multi-shard harvest [skip ci]"
             git push origin main || git push --force-with-lease origin main
           fi
