@@ -1023,11 +1023,22 @@ def save_boards_batch(db_path: str, board_records: List[Tuple[str, str, int, int
 
 
 def sanitize_sqlite_value(val: Any) -> Any:
-    """Ensures values bound to SQLite are primitive types (str, int, float, None)."""
-    if val is None or isinstance(val, (int, float, str, bytes)):
-        return val
+    """Ensures values bound to SQLite are primitive types (str, int, float, None) within 64-bit limits."""
+    if val is None:
+        return None
     if isinstance(val, bool):
         return int(val)
+    if isinstance(val, int):
+        if val > 9223372036854775807 or val < -9223372036854775808:
+            return str(val)
+        return val
+    if isinstance(val, float):
+        import math
+        if math.isnan(val) or math.isinf(val):
+            return None
+        return val
+    if isinstance(val, (str, bytes)):
+        return val
     if isinstance(val, (list, tuple, set)):
         return ", ".join(str(x) for x in val if x is not None)
     if isinstance(val, dict):
