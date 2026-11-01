@@ -1,0 +1,182 @@
+name: US Job Companies ATS Discovery & Verification Pipeline (v9.0 Multi-Corpus 110K+ OpenPostings Edition)
+
+on:
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: "Discovery engines (hf,catalogs,pdns,wayback,commoncrawl)"
+        required: false
+        default: "hf,catalogs,pdns,wayback,commoncrawl"
+      from_date:
+        description: "Historical start date YYYYMMDD (e.g. 20150101 or 20210101)"
+        required: false
+        default: "20150101"
+      to_date:
+        description: "Historical end date YYYYMMDD"
+        required: false
+        default: "20261231"
+      wayback_limit:
+        description: "Max collapsed URLs per Wayback CDX query"
+        required: false
+        default: "50000"
+      concurrency:
+        description: "Async HTTP concurrency per runner"
+        required: false
+        default: "80"
+  schedule:
+    - cron: "0 2 * * 0"
+
+permissions:
+  contents: read
+
+jobs:
+  discover-and-verify-shard:
+    name: "US ATS Shard: ${{ matrix.shard_name }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard_id: "greenhouse"
+            shard_name: "Greenhouse (All Industries)"
+            platforms: "greenhouse"
+          - shard_id: "modern_cloud"
+            shard_name: "Ashby, Lever, Rippling, Workable, Dover, Gem"
+            platforms: "ashby,lever,rippling,workable,dover,gem"
+          - shard_id: "enterprise_core"
+            shard_name: "Workday, iCIMS, SmartRecruiters, Jobvite"
+            platforms: "workday,icims,smartrecruiters,jobvite"
+          - shard_id: "smb_hris"
+            shard_name: "BambooHR, JazzHR, BreezyHR, Trakstar"
+            platforms: "bamboohr,jazzhr,breezy,trakstar"
+          - shard_id: "us_midmarket_payroll"
+            shard_name: "Paylocity, Paycom, UKG, Dayforce, ADP"
+            platforms: "paylocity,paycom,ukg,dayforce,adp"
+          - shard_id: "enterprise_global"
+            shard_name: "Taleo, SuccessFactors, Fountain, Recruitee, Pinpoint"
+            platforms: "taleo,successfactors,fountain,recruitee,pinpoint"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies (DuckDB, PyArrow, cdx_toolkit, warcio, aiohttp)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install "cdx_toolkit>=0.9.37" "warcio>=1.7.5" "duckdb>=1.0.0" "pyarrow>=15.0.0"
+
+      - name: Fetch OpenPostings 110K+ Pre-Verified ATS SQLite Corpus
+        continue-on-error: true
+        run: |
+          git clone --depth 1 https://github.com/Masterjx9/OpenPostings.git openpostings_repo || true
+
+      - name: Run Built-in Self-Test
+        run: |
+          python ats_company_discovery_engine.py self-test
+
+      - name: Step 1 - Multi-Corpus Discovery & Direct Live Chunk Pre-Verification
+        timeout-minutes: 60
+        continue-on-error: true
+        run: |
+          python ats_company_discovery_engine.py discover \
+            --db "ats_${{ matrix.shard_id }}.db" \
+            --platforms "${{ matrix.platforms }}" \
+            --sources "${{ github.event.inputs.sources || 'hf,catalogs,pdns,wayback,commoncrawl' }}" \
+            --from-date "${{ github.event.inputs.from_date || '20150101' }}" \
+            --to-date "${{ github.event.inputs.to_date || '20261231' }}" \
+            --wayback-limit "${{ github.event.inputs.wayback_limit || '50000' }}" \
+            --concurrency "${{ github.event.inputs.concurrency || '80' }}"
+
+      - name: Step 2 - Rate-Limit-Aware HTTP 200 Verification & US Job Count Extraction
+        timeout-minutes: 250
+        continue-on-error: true
+        run: |
+          python ats_company_discovery_engine.py verify \
+            --db "ats_${{ matrix.shard_id }}.db" \
+            --platforms "${{ matrix.platforms }}" \
+            --concurrency "${{ github.event.inputs.concurrency || '80' }}"
+
+      - name: Export Shard Summary & Partial US CSVs
+        if: always()
+        run: |
+          python ats_company_discovery_engine.py export \
+            --db "ats_${{ matrix.shard_id }}.db" \
+            --output-dir "./exports_${{ matrix.shard_id }}"
+          if [ -f "./exports_${{ matrix.shard_id }}/SUMMARY.md" ]; then
+            cat "./exports_${{ matrix.shard_id }}/SUMMARY.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload Shard SQLite Database
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: "shard-db-${{ matrix.shard_id }}"
+          path: |
+            ats_${{ matrix.shard_id }}.db
+            exports_${{ matrix.shard_id }}/*
+          retention-days: 14
+
+  merge-and-export:
+    name: "Merge Shards & Export US Company Lists"
+    needs: discover-and-verify-shard
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download All Shard Databases
+        uses: actions/download-artifact@v4
+        with:
+          path: ./shards
+          pattern: "shard-db-*"
+          merge-multiple: true
+
+      - name: Merge All SQLite Shards
+        run: |
+          SHARD_DBS=$(ls ./shards/ats_*.db | paste -sd "," -)
+          echo "Merging shard databases: $SHARD_DBS"
+          python ats_company_discovery_engine.py merge-dbs \
+            --inputs "$SHARD_DBS" \
+            --output ats_companies_merged.db
+
+      - name: Export Platform-Wise US Company CSVs
+        run: |
+          python ats_company_discovery_engine.py export \
+            --db ats_companies_merged.db \
+            --output-dir ./exports
+          cat ./exports/SUMMARY.md
+          cat ./exports/SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload US Job Companies Dataset Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: "us-ats-job-companies-dataset"
+          path: |
+            ./exports/*.csv
+            ./exports/*.jsonl
+            ./exports/SUMMARY.md
+            ats_companies_merged.db
+          retention-days: 90
