@@ -1712,6 +1712,88 @@ async def extract_successfactors(http: AsyncHTTPClient, slug: str, full_content:
     return 200, extracted
 
 
+async def extract_workday(http: AsyncHTTPClient, slug_or_url: str, full_content: bool) -> Tuple[int, List[Dict[str, Any]]]:
+    """
+    Extracts live jobs from Workday via CXS REST API (https://{host}/wday/cxs/{company}/{site}/jobs).
+    Supports either full board_url or tenant/instance/site slug formats.
+    """
+    api_url = None
+    company_slug = slug_or_url
+    host = ""
+    site = ""
+    company_name = slug_or_url.split("/")[0].title()
+
+    if slug_or_url.startswith("http"):
+        parsed = urlparse(slug_or_url)
+        host = parsed.netloc
+        site = parsed.path.strip("/")
+        company = host.split(".")[0]
+        company_slug = company
+        company_name = company.replace("-", " ").title()
+        api_url = f"https://{host}/wday/cxs/{company}/{site}/jobs"
+    elif "/" in slug_or_url:
+        parts = slug_or_url.strip("/").split("/")
+        if len(parts) >= 3:
+            company, instance, site = parts[0], parts[1], parts[2]
+            host = f"{company}.{instance}.myworkdayjobs.com"
+            company_slug = company
+            company_name = company.replace("-", " ").title()
+            api_url = f"https://{host}/wday/cxs/{company}/{site}/jobs"
+        elif len(parts) == 2:
+            company, site = parts[0], parts[1]
+            host = f"{company}.myworkdayjobs.com"
+            company_slug = company
+            company_name = company.replace("-", " ").title()
+            api_url = f"https://{host}/wday/cxs/{company}/{site}/jobs"
+    else:
+        company = slug_or_url
+        site = "external"
+        host = f"{company}.myworkdayjobs.com"
+        company_slug = company
+        company_name = company.replace("-", " ").title()
+        api_url = f"https://{host}/wday/cxs/{company}/{site}/jobs"
+
+    status, data = await http.post_json(api_url, {"appliedFacets": {}, "limit": 20, "offset": 0})
+    if status != 200 or not isinstance(data, dict):
+        return status, []
+
+    postings = data.get("jobPostings") or []
+    extracted = []
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    for p in postings:
+        title = p.get("title", "").strip()
+        loc = p.get("locationsText") or ""
+        bullets = p.get("bulletFields") or []
+        if not loc and len(bullets) > 1:
+            loc = bullets[1]
+        ext_path = p.get("externalPath") or ""
+        job_id = ext_path.split("_")[-1] if "_" in ext_path else str(hash(title))
+        apply_url = f"https://{host}/{site}{ext_path}" if host and site else ext_path
+        date_p = p.get("postedOn") or ""
+
+        extracted.append({
+            "job_id": f"workday_{company_slug}_{job_id}",
+            "platform": "workday",
+            "company_name": company_name,
+            "company_slug": company_slug,
+            "title": title,
+            "location": loc,
+            "is_us": 1 if is_us_location(loc, extra_text=title) else 0,
+            "apply_url": apply_url,
+            "department": "",
+            "office": "",
+            "employment_type": "",
+            "posted_at": parse_to_iso(date_p),
+            "updated_at": "",
+            "raw_timestamp": str(date_p),
+            "content": "",
+            "extracted_at": now_iso,
+        })
+
+    return 200, extracted
+
+
 PLATFORM_HANDLERS = {
     # Tier 1 & 2 Modern ATS
     "greenhouse": extract_greenhouse,
@@ -1724,6 +1806,7 @@ PLATFORM_HANDLERS = {
     "rippling": extract_rippling,
     "bamboohr": extract_bamboohr,
     "pinpoint": extract_pinpoint,
+    "workday": extract_workday,
     # High-Volume & Enterprise ATS
     "gem": extract_gem,
     "dover": extract_dover,
@@ -2143,8 +2226,11 @@ def load_companies(input_path: str, default_platform: str) -> List[Tuple[str, st
         with open(input_path, "r", encoding="utf-8", errors="ignore") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                slug = (row.get("slug") or row.get("company_slug") or "").strip().lower()
+                slug = (row.get("slug") or row.get("company_slug") or "").strip()
                 ats = (row.get("ats_id") or row.get("platform") or default_platform).strip().lower()
+                board_url = (row.get("board_url") or "").strip()
+                if ats == "workday" and board_url:
+                    slug = board_url
                 if slug:
                     pairs.append((ats, slug))
     else:
