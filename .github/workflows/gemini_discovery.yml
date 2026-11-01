@@ -1,5 +1,4 @@
-name: US Job Companies ATS Discovery & Verification Pipeline (v9.0 Multi-Corpus 110K+ OpenPostings Edition)
-
+name: Gemini Discovery (v9.0 US ATS Companies)
 on:
   workflow_dispatch:
     inputs:
