@@ -29,11 +29,13 @@ on:
           - fountain
           - icims
           - taleo
+          - oracle
           - paycom
           - paylocity
           - dayforce
           - ukg
           - successfactors
+          - sapsuccessfactor
       company_source:
         description: '📁 Companies Dataset Preset'
         required: true

@@ -230,6 +230,46 @@ ATS_REGISTRY: Dict[str, Dict[str, Any]] = {
         "type": "path_slug",
         "test_url": "https://app.dover.com/apply/acme",
         "excluded_slugs": {"login", "static", "api"}
+    },
+    "successfactors": {
+        "name": "SAP SuccessFactors",
+        "registered_domain": "successfactors.com",
+        "tld": "com",
+        "host_pattern": r"^(?:career[0-9]?|jobs[0-9]?)\.successfactors\.(?:com|eu)$",
+        "url_pattern": r"[?&]company=([a-zA-Z0-9_-]+)",
+        "type": "path_slug",
+        "test_url": "https://career.successfactors.com/career?company=boeing",
+        "excluded_slugs": {"login", "help", "static", "error", "api", "soap", "docs"}
+    },
+    "oraclecloud": {
+        "name": "Oracle Cloud",
+        "registered_domain": "oraclecloud.com",
+        "tld": "com",
+        "host_pattern": r"^([^.]+)\.fa\.[a-z0-9]+\.oraclecloud\.com$",
+        "url_pattern": r"^https?://([^.]+)\.fa\.[a-z0-9]+\.oraclecloud\.com",
+        "type": "subdomain",
+        "test_url": "https://eeho.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1",
+        "excluded_slugs": {"login", "static", "help", "www"}
+    },
+    "paycom": {
+        "name": "Paycom",
+        "registered_domain": "paycomonline.net",
+        "tld": "net",
+        "host_pattern": r"^www\.paycomonline\.net$",
+        "url_pattern": r"[?&]clientkey=([a-zA-Z0-9_-]+)",
+        "type": "path_slug",
+        "test_url": "https://www.paycomonline.net/v4/ats/web.php/jobs?clientkey=D5700A2C9F8021BC8",
+        "excluded_slugs": {"login", "static", "help"}
+    },
+    "paylocity": {
+        "name": "Paylocity",
+        "registered_domain": "paylocity.com",
+        "tld": "com",
+        "host_pattern": r"^recruiting\.paylocity\.com$",
+        "url_pattern": r"^https?://recruiting\.paylocity\.com/recruiting/jobs/(?:Details/[^/]+/|api/jobs/list/|intro/)?([a-zA-Z0-9_-]+)",
+        "type": "path_slug",
+        "test_url": "https://recruiting.paylocity.com/recruiting/jobs/api/jobs/list/08e67873-6be7-4852-8700-1c05d8bcad42",
+        "excluded_slugs": {"login", "static", "help", "api"}
     }
 }
 
@@ -244,13 +284,14 @@ def extract_company_slug(url: str, host: Optional[str] = None) -> Optional[tuple
     """
     for ats_key, config in ATS_REGISTRY.items():
         if config["type"] == "path_slug":
-            m = re.match(config["url_pattern"], url, re.IGNORECASE)
+            m = re.search(config["url_pattern"], url, re.IGNORECASE)
             if m:
                 slug = m.group(1).lower().strip()
                 if slug and slug not in config["excluded_slugs"]:
                     return (ats_key, slug)
         elif config["type"] == "subdomain":
-            m = re.match(config["url_pattern"], url, re.IGNORECASE)
+            target = host or url
+            m = re.search(config["host_pattern"], target, re.IGNORECASE) if host else re.search(config["url_pattern"], url, re.IGNORECASE)
             if m:
                 slug = m.group(1).lower().strip()
                 if slug and slug not in config["excluded_slugs"]:

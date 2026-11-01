@@ -1816,11 +1816,16 @@ PLATFORM_HANDLERS = {
     "fountain": extract_fountain,
     "icims": extract_icims,
     "taleo": extract_taleo,
+    "oracle": extract_taleo,
+    "oracletaleo": extract_taleo,
+    "oraclecloud": extract_taleo,
     "paycom": extract_paycom,
     "paylocity": extract_paylocity,
     "dayforce": extract_dayforce,
     "ukg": extract_ukg,
     "successfactors": extract_successfactors,
+    "sapsuccessfactor": extract_successfactors,
+    "sapsuccessfactors": extract_successfactors,
 }
 
 

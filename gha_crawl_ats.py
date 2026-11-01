@@ -189,6 +189,10 @@ PLATFORM_FILES: Dict[str, str] = {
     "Trakstar": "trakstar_companies.txt",
     "Gem": "gem_companies.txt",
     "Dover": "dover_companies.txt",
+    "SAP SuccessFactors": "successfactors_companies.txt",
+    "Oracle Cloud": "oraclecloud_companies.txt",
+    "Paycom": "paycom_companies.txt",
+    "Paylocity": "paylocity_companies.txt",
 }
 
 
