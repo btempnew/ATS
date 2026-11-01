@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ATS Company Discovery & Entity Resolution Engine (US Job Companies — v6.0 TheirStack 100K+ Edition)
+ATS Company Discovery & Entity Resolution Engine (US Job Companies — v8.0 True 200-OK All-Industry Edition)
 ============================================================================================
 
 Upgraded based on real GitHub Actions telemetry from Run #2 and Common Crawl's
@@ -252,7 +252,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "greenhouse": ATSPlatformSpec(
         ats_id="greenhouse",
         display_name="Greenhouse",
-        category="us_tech_startups",
+        category="All Industries (Cloud ATS)",
         url_regexes=(
             r"https?://(?:boards|job-boards)(?:\.eu)?\.greenhouse\.io/(?:embed/job_board(?:/js)?\?for=)?(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
             r"https?://(?:boards-api|api)\.greenhouse\.io/v1/boards/(?P<slug>[a-zA-Z0-9_-]+)",
@@ -277,7 +277,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "ashby": ATSPlatformSpec(
         ats_id="ashby",
         display_name="Ashby",
-        category="us_tech_startups",
+        category="All Industries (Cloud ATS)",
         url_regexes=(
             r"https?://jobs\.ashbyhq\.com/(?P<slug>[a-zA-Z0-9._-]+)(?:/|$|\?)",
             r"https?://api\.ashbyhq\.com/posting-api/job-board/(?P<slug>[a-zA-Z0-9._-]+)",
@@ -297,7 +297,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "lever": ATSPlatformSpec(
         ats_id="lever",
         display_name="Lever",
-        category="us_tech_startups",
+        category="All Industries (Cloud ATS)",
         url_regexes=(
             r"https?://jobs(?:\.eu)?\.lever\.co/(?P<slug>[a-zA-Z0-9._-]+)(?:/|$|\?)",
             r"https?://api(?:\.eu)?\.lever\.co/v0/postings/(?P<slug>[a-zA-Z0-9._-]+)",
@@ -317,7 +317,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "rippling": ATSPlatformSpec(
         ats_id="rippling",
         display_name="Rippling ATS",
-        category="us_tech_startups",
+        category="All Industries (Cloud ATS)",
         url_regexes=(
             r"https?://ats\.rippling\.com/(?:[a-z]{2}-[A-Z]{2}/)?(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
             r"https?://(?P<slug>[a-zA-Z0-9_-]+)\.rippling-ats\.com(?:/|$|\?)",
@@ -336,7 +336,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "workable": ATSPlatformSpec(
         ats_id="workable",
         display_name="Workable",
-        category="us_tech_startups",
+        category="All Industries (Cloud ATS)",
         url_regexes=(
             r"https?://apply\.workable\.com/(?:api/v1/widget/accounts/)?(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
             r"https?://(?P<slug>[a-zA-Z0-9_-]+)\.workable\.com(?:/|$|\?)",
@@ -356,7 +356,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "dover": ATSPlatformSpec(
         ats_id="dover",
         display_name="Dover",
-        category="us_tech_startups",
+        category="All Industries (Cloud ATS)",
         url_regexes=(
             r"https?://app\.dover\.(?:com|io)/(?:apply|jobs)/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
         ),
@@ -370,7 +370,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "gem": ATSPlatformSpec(
         ats_id="gem",
         display_name="Gem ATS",
-        category="us_tech_startups",
+        category="All Industries (Cloud ATS)",
         url_regexes=(r"https?://jobs\.gem\.com/(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",),
         cdx_patterns=("jobs.gem.com/*",),
         is_subdomain_ats=False,
@@ -385,7 +385,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "bamboohr": ATSPlatformSpec(
         ats_id="bamboohr",
         display_name="BambooHR",
-        category="us_mid_market",
+        category="All Industries (Mid-Market)",
         url_regexes=(
             r"https?://(?P<slug>[a-zA-Z0-9-]+)\.bamboohr\.com(?:/(?:careers|jobs))?(?:/|$|\?)",
         ),
@@ -403,7 +403,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "jazzhr": ATSPlatformSpec(
         ats_id="jazzhr",
         display_name="JazzHR",
-        category="us_mid_market",
+        category="All Industries (Mid-Market)",
         url_regexes=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.applytojob\.com(?:/|$|\?)",),
         cdx_patterns=("applytojob.com",),
         is_subdomain_ats=True,
@@ -419,7 +419,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "breezy": ATSPlatformSpec(
         ats_id="breezy",
         display_name="Breezy HR",
-        category="us_mid_market",
+        category="All Industries (Mid-Market)",
         url_regexes=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.breezy\.hr(?:/|$|\?)",),
         cdx_patterns=("breezy.hr",),
         is_subdomain_ats=True,
@@ -435,7 +435,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "recruitee": ATSPlatformSpec(
         ats_id="recruitee",
         display_name="Recruitee",
-        category="us_mid_market",
+        category="All Industries (Mid-Market)",
         url_regexes=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.recruitee\.com(?:/|$|\?)",),
         cdx_patterns=("recruitee.com",),
         is_subdomain_ats=True,
@@ -451,7 +451,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "pinpoint": ATSPlatformSpec(
         ats_id="pinpoint",
         display_name="Pinpoint",
-        category="us_mid_market",
+        category="All Industries (Mid-Market)",
         url_regexes=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.pinpointhq\.com(?:/|$|\?)",),
         cdx_patterns=("pinpointhq.com",),
         is_subdomain_ats=True,
@@ -464,7 +464,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "trakstar": ATSPlatformSpec(
         ats_id="trakstar",
         display_name="Trakstar Hire (Recruiterbox)",
-        category="us_mid_market",
+        category="All Industries (Mid-Market)",
         url_regexes=(
             r"https?://(?P<slug>[a-zA-Z0-9-]+)\.recruiterbox\.com(?:/|$|\?)",
             r"https?://(?P<slug>[a-zA-Z0-9-]+)\.hire\.trakstar\.com(?:/|$|\?)",
@@ -474,7 +474,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
         passive_dns_domains=("recruiterbox.com", "hire.trakstar.com"),
         cname_targets=("recruiterbox.com", "hire.trakstar.com"),
         html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.(?:recruiterbox|hire\.trakstar)\.com",),
-        public_api_url="https://js.recruiterbox.com/v1/openings?client_name={slug}",
+        public_api_url="https://{slug}.hire.trakstar.com",
         board_url_template="https://{slug}.hire.trakstar.com",
     ),
 
@@ -482,14 +482,30 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "workday": ATSPlatformSpec(
         ats_id="workday",
         display_name="Workday",
-        category="us_enterprise",
+        category="All Industries (Enterprise & Fortune 500)",
         url_regexes=(
             r"https?://(?P<slug>[a-zA-Z0-9-]+)\.(?P<shard>wd\d+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?(?P<site>[a-zA-Z0-9_-]+)",
             r"https?://(?P<slug>[a-zA-Z0-9-]+)\.(?P<shard>wd\d+)\.myworkdayjobs\.com(?:/|$|\?)",
+            r"https?://(?P<shard>wd\d+)\.myworkdaysite\.com/recruiting/(?P<slug>[a-zA-Z0-9_-]+)(?:/(?P<site>[a-zA-Z0-9_-]+))?",
         ),
-        cdx_patterns=("myworkdayjobs.com",),
-        is_subdomain_ats=True,
-        passive_dns_domains=("myworkdayjobs.com",),
+        cdx_patterns=(
+            "wd1.myworkdayjobs.com",
+            "wd5.myworkdayjobs.com",
+            "wd3.myworkdayjobs.com",
+            "wd12.myworkdayjobs.com",
+            "wd2.myworkdayjobs.com",
+            "wd102.myworkdayjobs.com",
+            "wd103.myworkdayjobs.com",
+            "wd108.myworkdayjobs.com",
+            "wd501.myworkdayjobs.com",
+            "wd1.myworkdaysite.com/recruiting/*",
+            "wd5.myworkdaysite.com/recruiting/*",
+            "wd3.myworkdaysite.com/recruiting/*",
+            "wd12.myworkdaysite.com/recruiting/*",
+            "wd501.myworkdaysite.com/recruiting/*",
+        ),
+        is_subdomain_ats=False,
+        passive_dns_domains=("myworkdayjobs.com", "myworkdaysite.com"),
         cname_targets=("myworkdayjobs.com", "myworkdaysite.com"),
         html_signatures=(
             r"https?://(?P<slug>[a-zA-Z0-9-]+)\.(?P<shard>wd\d+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?(?P<site>[a-zA-Z0-9_-]+)",
@@ -502,10 +518,9 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "icims": ATSPlatformSpec(
         ats_id="icims",
         display_name="iCIMS",
-        category="us_enterprise",
+        category="All Industries (Enterprise & Fortune 500)",
         url_regexes=(
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.icims\.com(?:/|$|\?)",
-            r"https?://(?:careers|jobs)-(?P<slug>[a-zA-Z0-9-]+)\.icims\.com(?:/|$|\?)",
+            r"https?://(?P<slug>(?!www$|api$|login$|help$|status$|community$|care$)[a-zA-Z0-9-]+)\.icims\.com(?:/|$|\?)",
         ),
         cdx_patterns=("icims.com",),
         is_subdomain_ats=True,
@@ -516,12 +531,12 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
             r"iCIMS_MainWrapper",
         ),
         public_api_url="https://{slug}.icims.com/jobs/search?in_iframe=1",
-        board_url_template="https://{slug}.icims.com",
+        board_url_template="https://{slug}.icims.com/jobs/search?ss=1",
     ),
     "smartrecruiters": ATSPlatformSpec(
         ats_id="smartrecruiters",
         display_name="SmartRecruiters",
-        category="us_enterprise",
+        category="All Industries (Enterprise & Fortune 500)",
         url_regexes=(
             r"https?://(?:jobs|careers)\.smartrecruiters\.com/(?P<slug>[a-zA-Z0-9._-]+)(?:/|$|\?)",
             r"https?://api\.smartrecruiters\.com/v1/companies/(?P<slug>[a-zA-Z0-9._-]+)/postings",
@@ -540,13 +555,14 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "jobvite": ATSPlatformSpec(
         ats_id="jobvite",
         display_name="Jobvite",
-        category="us_enterprise",
+        category="All Industries (Enterprise & Fortune 500)",
         url_regexes=(
-            r"https?://(?:jobs|careers)\.jobvite\.com/(?:CompanyJobs/Xml\.aspx\?c=)?(?:careers/)?(?P<slug>[a-zA-Z0-9._-]+)(?:/|$|\?)",
+            r"https?://(?:jobs|careers|app|hire)\.jobvite\.com/(?:CompanyJobs/(?:Xml|Careers)\.aspx\?c=)?(?:careers/)?(?P<slug>[a-zA-Z0-9._-]+)(?:/|$|\?|&)",
+            r"https?://(?:jobs|careers|app|hire)\.jobvite\.com/[^?#]*[?&]c=(?P<slug>[a-zA-Z0-9._-]+)",
         ),
-        cdx_patterns=("jobs.jobvite.com/*",),
+        cdx_patterns=("jobs.jobvite.com/*", "careers.jobvite.com/*", "app.jobvite.com/CompanyJobs/*"),
         is_subdomain_ats=False,
-        passive_dns_domains=("jobs.jobvite.com",),
+        passive_dns_domains=("jobvite.com", "jobs.jobvite.com"),
         cname_targets=("jobs.jobvite.com", "jobvite.com"),
         html_signatures=(
             r"jobs\.jobvite\.com/(?:careers/)?(?P<slug>[a-zA-Z0-9_-]+)",
@@ -558,12 +574,15 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "paylocity": ATSPlatformSpec(
         ats_id="paylocity",
         display_name="Paylocity",
-        category="us_enterprise",
+        category="All Industries (Enterprise & Fortune 500)",
         url_regexes=(
-            r"https?://recruiting\.paylocity\.com/recruiting/jobs/(?:All|List| Apply)/(?P<slug>[a-zA-Z0-9_-]+)(?:/(?P<site>[^/?#]+))?",
-            r"https?://recruiting\.paylocity\.com/recruiting/jobs/Details/\d+/(?P<slug>[a-zA-Z0-9_-]+)",
+            r"https?://recruiting\.paylocity\.com/recruiting/jobs/(?:All|List|Apply)/(?P<slug>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:/(?P<site>[^/?#]+))?",
         ),
-        cdx_patterns=("recruiting.paylocity.com/recruiting/jobs/All/*", "recruiting.paylocity.com/recruiting/jobs/List/*"),
+        cdx_patterns=(
+            "recruiting.paylocity.com/recruiting/jobs/All/*",
+            "recruiting.paylocity.com/recruiting/jobs/List/*",
+            "recruiting.paylocity.com/recruiting/jobs/Apply/*",
+        ),
         is_subdomain_ats=False,
         passive_dns_domains=("recruiting.paylocity.com",),
         html_signatures=(r"recruiting\.paylocity\.com/recruiting/jobs/(?:All|List)/(?P<slug>[a-zA-Z0-9-]+)",),
@@ -573,7 +592,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "paycom": ATSPlatformSpec(
         ats_id="paycom",
         display_name="Paycom",
-        category="us_enterprise",
+        category="All Industries (Enterprise & Fortune 500)",
         url_regexes=(
             r"https?://(?:www\.)?paycomonline\.net/v4/ats/web\.php/(?:jobs\?clientkey=|portal/)(?P<slug>[a-zA-Z0-9_-]+)",
         ),
@@ -587,50 +606,60 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "ukg": ATSPlatformSpec(
         ats_id="ukg",
         display_name="UKG (UltiPro)",
-        category="us_enterprise",
+        category="All Industries (Enterprise & Fortune 500)",
         url_regexes=(
             r"https?://recruiting2?\.ultipro\.com/(?P<slug>[a-zA-Z0-9_-]+)(?:/JobBoard/(?P<site>[a-zA-Z0-9-]+))?(?:/|$|\?)",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.rec\.pro\.ukg\.net(?:/(?P<site>[a-zA-Z0-9_-]+))?(?:/|$|\?)",
         ),
-        cdx_patterns=("recruiting.ultipro.com/*", "recruiting2.ultipro.com/*"),
+        cdx_patterns=("recruiting.ultipro.com/*", "recruiting2.ultipro.com/*", "rec.pro.ukg.net"),
         is_subdomain_ats=False,
-        passive_dns_domains=("ultipro.com",),
+        passive_dns_domains=("ultipro.com", "rec.pro.ukg.net"),
         html_signatures=(r"recruiting2?\.ultipro\.com/(?P<slug>[a-zA-Z0-9_-]+)/JobBoard/(?P<site>[a-zA-Z0-9-]+)",),
-        public_api_url="https://recruiting2.ultipro.com/{slug}/JobBoard/{site}",
+        public_api_url=None,
         board_url_template="https://recruiting2.ultipro.com/{slug}/JobBoard/{site}",
     ),
     "dayforce": ATSPlatformSpec(
         ats_id="dayforce",
         display_name="Dayforce (Ceridian)",
-        category="us_enterprise",
+        category="All Industries (Enterprise & Fortune 500)",
         url_regexes=(
+            r"https?://[a-zA-Z0-9-]+\.dayforcehcm\.com/CandidatePortal/(?:[a-z]{2}-[A-Z]{2}/)?(?P<slug>[a-zA-Z0-9._-]+)(?:/|$|\?)",
             r"https?://jobs\.dayforcehcm\.com/(?:[a-z]{2}-[A-Z]{2}/)?(?P<slug>[a-zA-Z0-9._-]+)(?:/(?P<site>[a-zA-Z0-9._-]+))?(?:/|$|\?)",
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.dayforcehcm\.com(?:/|$|\?)",
+            r"https?://(?P<slug>(?!jobs$|usr\d+$|can\d+$|anz\d+$|eur\d+$)[a-zA-Z0-9-]+)\.dayforcehcm\.com(?:/|$|\?)",
         ),
-        cdx_patterns=("jobs.dayforcehcm.com/*",),
+        cdx_patterns=("jobs.dayforcehcm.com/*", "jobs.dayforcehcm.com/en-US/*", "dayforcehcm.com"),
         is_subdomain_ats=False,
-        passive_dns_domains=("jobs.dayforcehcm.com",),
+        passive_dns_domains=("dayforcehcm.com", "jobs.dayforcehcm.com"),
         cname_targets=("jobs.dayforcehcm.com", "dayforcehcm.com"),
         html_signatures=(r"jobs\.dayforcehcm\.com/[a-z]{2}-[A-Z]{2}/(?P<slug>[a-zA-Z0-9_-]+)",),
-        public_api_url="https://jobs.dayforcehcm.com/en-US/{slug}/CANDIDATEPORTAL",
+        public_api_url=None,
         board_url_template="https://jobs.dayforcehcm.com/en-US/{slug}/CANDIDATEPORTAL",
     ),
     "taleo": ATSPlatformSpec(
         ats_id="taleo",
         display_name="Oracle Taleo",
-        category="us_enterprise",
-        url_regexes=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.taleo\.net(?:/careersection/(?P<site>[a-zA-Z0-9_-]+))?",),
-        cdx_patterns=("taleo.net",),
-        is_subdomain_ats=True,
-        passive_dns_domains=("taleo.net",),
+        category="All Industries (Enterprise & Fortune 500)",
+        url_regexes=(
+            r"https?://(?:[a-z0-9]+\.)?tbe\.taleo\.net/[^?#]*[?&]org=(?P<slug>[a-zA-Z0-9._-]+)",
+            r"https?://(?P<slug>(?!tbe$|chp$|phf$|chk$|chm$|cho$|chj$|chi$|chc$|che$|chg$)[a-zA-Z0-9-]+)\.taleo\.net(?:/careersection/(?P<site>[a-zA-Z0-9_%+-]+))?",
+        ),
+        cdx_patterns=(
+            "taleo.net",
+            "tbe.taleo.net",
+            "chp.tbe.taleo.net/chp01/ats/careers/v2/jobSearch?org=*",
+            "phf.tbe.taleo.net/phf01/ats/careers/v2/jobSearch?org=*",
+        ),
+        is_subdomain_ats=False,
+        passive_dns_domains=("taleo.net", "tbe.taleo.net"),
         cname_targets=("taleo.net",),
         html_signatures=(r"https?://(?P<slug>[a-zA-Z0-9-]+)\.taleo\.net/careersection",),
-        public_api_url="https://{slug}.taleo.net/careersection/rest/jobboard/searchjobs?lang=en&portal=101430233",
+        public_api_url=None,
         board_url_template="https://{slug}.taleo.net/careersection/ex/jobsearch.ftl",
     ),
     "successfactors": ATSPlatformSpec(
         ats_id="successfactors",
         display_name="SAP SuccessFactors",
-        category="us_enterprise",
+        category="All Industries (Enterprise & Fortune 500)",
         url_regexes=(
             r"https?://career(?P<shard>\d+)?\.successfactors\.(?P<site>com|eu)/career\?company=(?P<slug>[a-zA-Z0-9._-]+)",
             r"https?://(?P<slug>[a-zA-Z0-9-]+)\.successfactors\.(?P<site>com|eu)(?:/|$|\?)",
@@ -652,7 +681,7 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
     "fountain": ATSPlatformSpec(
         ats_id="fountain",
         display_name="Fountain",
-        category="us_enterprise",
+        category="All Industries (Enterprise & Fortune 500)",
         url_regexes=(
             r"https?://(?:apply|jobs|web|www)?\.?fountain\.com/(?:apply/|c/|jobs/)?(?P<slug>[a-zA-Z0-9_-]+)(?:/|$|\?)",
         ),
@@ -669,6 +698,29 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
         html_signatures=(r"(?:apply|jobs)\.fountain\.com/(?P<slug>[a-zA-Z0-9_-]+)",),
         public_api_url="https://apply.fountain.com/{slug}",
         board_url_template="https://apply.fountain.com/{slug}",
+    ),
+    "adp": ATSPlatformSpec(
+        ats_id="adp",
+        display_name="ADP Workforce Now",
+        category="All Industries (Enterprise & Fortune 500)",
+        url_regexes=(
+            r"https?://workforcenow\.adp\.com/mascsr/default/mdf/recruitment/recruitment\.html\?[^#]*cid=(?P<slug>[0-9a-fA-F-]{8,})",
+            r"https?://workforcenow\.adp\.com/jobs/apply/posting\.html\?[^#]*client=(?P<slug>[a-zA-Z0-9_-]+)",
+            r"https?://recruiting\.adp\.com/srccar/public/RTI\.home\?[^#]*c=(?P<slug>[a-zA-Z0-9_-]+)",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)\.myjobs\.adp\.com(?:/|$|\?)",
+        ),
+        cdx_patterns=(
+            "workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=*",
+            "workforcenow.adp.com/jobs/apply/posting.html?client=*",
+            "recruiting.adp.com/srccar/public/RTI.home?c=*",
+            "myjobs.adp.com",
+        ),
+        is_subdomain_ats=False,
+        passive_dns_domains=("myjobs.adp.com", "workforcenow.adp.com"),
+        cname_targets=("adp.com", "myjobs.adp.com"),
+        html_signatures=(r"workforcenow\.adp\.com/mascsr/default/mdf/recruitment/recruitment\.html\?cid=(?P<slug>[0-9a-fA-F-]+)",),
+        public_api_url="https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid={slug}",
+        board_url_template="https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid={slug}",
     ),
 }
 
@@ -846,6 +898,9 @@ def extract_ats_from_url(
                         shard = "wd1"
                     if not site or site.lower() in ("wday", "cxs", "en-us", "job", "jobs"):
                         site = "External"
+                if spec.ats_id == "icims" and not slug.lower().startswith(("careers-", "jobs-", "internal-", "talent-", "us-", "global-", "hub-")):
+                    if "careers-" not in url.lower() and "jobs-" not in url.lower():
+                        slug = f"careers-{slug}"
                 board_url = build_canonical_board_url(spec, slug, shard, site, fallback_url=url)
                 return DiscoveredBoard(
                     ats_id=spec.ats_id,
@@ -866,6 +921,18 @@ def build_canonical_board_url(
     site: str = "",
     fallback_url: str = "",
 ) -> str:
+    # Preserve exact discovered URLs for enterprise portals with tenant-specific paths/GUIDs
+    if fallback_url and spec.ats_id in ("ukg", "dayforce", "taleo", "successfactors", "adp", "paylocity", "paycom", "jobvite"):
+        clean_fb = fallback_url.strip()
+        if clean_fb.startswith("http"):
+            return clean_fb
+    if spec.ats_id == "icims":
+        host_slug = slug if slug.lower().startswith(("careers-", "jobs-", "internal-", "talent-", "us-", "global-", "hub-")) else f"careers-{slug}"
+        return f"https://{host_slug}.icims.com/jobs/search?ss=1"
+    if spec.ats_id == "ukg":
+        if site:
+            return f"https://recruiting2.ultipro.com/{slug}/JobBoard/{site}"
+        return f"https://recruiting2.ultipro.com/{slug}"
     if spec.board_url_template:
         try:
             return spec.board_url_template.format(
@@ -1533,8 +1600,12 @@ class PublicATSCatalogVerifier:
         slug = raw_str.split("|")[0].strip().strip("/")
         if not slug or slug.lower() in RESERVED_SLUGS or len(slug) < 2:
             return None
-        if slug.isdigit() and pid not in ("paylocity", "paycom", "ukg"):
+        if pid == "paylocity" and not re.match(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", slug):
             return None
+        if slug.isdigit() and pid not in ("paycom", "ukg"):
+            return None
+        if pid == "icims" and not slug.lower().startswith(("careers-", "jobs-", "internal-", "talent-", "us-", "global-", "hub-")):
+            slug = f"careers-{slug}"
         return DiscoveredBoard(
             ats_id=pid,
             slug=slug,
@@ -1730,14 +1801,15 @@ class WaybackCDXDiscoverer:
             path_part = "/" + path_part
         else:
             host, path_part = clean, ""
-        host_parts = [p for p in host.lower().split(".") if p]
+        host = re.sub(r"^www\.", "", host.lower())
+        host_parts = [p for p in host.split(".") if p]
         surt_host = ",".join(reversed(host_parts))
         if is_subdomain and not path_part:
-            # e.g. `com,recruitee,<subdomain>` -> collapse after 9 chars of subdomain (before `)/path`)
+            # e.g. `com,recruitee,<subdomain>` or `com,myworkdayjobs,wd1,<subdomain>` -> collapse after 9 chars of subdomain
             return len(surt_host) + 1 + 9
-        # e.g. `com,smartrecruiters,jobs)/<slug>` -> collapse after 9 chars of company slug
+        # e.g. `com,smartrecruiters,jobs)/<slug>` -> collapse after 10 chars of company slug
         surt_base = f"{surt_host}){path_part.lower()}"
-        return len(surt_base) + 9
+        return len(surt_base) + 10
 
     @staticmethod
     def build_wayback_url(
@@ -1750,18 +1822,31 @@ class WaybackCDXDiscoverer:
         clean_dom = pattern.replace("*.", "").rstrip("/*")
         is_sub = spec.is_subdomain_ats or ("/" not in pattern and not pattern.endswith("*"))
         if is_sub:
+            collapse_n = WaybackCDXDiscoverer.compute_surt_collapse_len(pattern, True)
             return (
                 f"https://web.archive.org/cdx/search/cdx"
                 f"?url={quote_plus(clean_dom)}&matchType=domain&output=json&fl=original"
                 f"&filter=statuscode:200&from={from_date}&to={to_date}"
-                f"&collapse=urlkey:38&limit={min(max(limit, 40000), 60000)}"
+                f"&collapse=urlkey:{collapse_n}&limit={min(max(limit, 50000), 75000)}"
             )
-        else:
+        elif "?" in pattern:
+            # Query-param patterns (`?clientkey=*`, `?cid=*`, `?org=*`, `?for=*`) have 1 URL per company
             return (
                 f"https://web.archive.org/cdx/search/cdx"
                 f"?url={quote_plus(pattern)}&output=json&fl=original"
                 f"&filter=statuscode:200&from={from_date}&to={to_date}"
                 f"&collapse=urlkey&limit={limit}"
+            )
+        else:
+            # Path-based patterns (`apply.workable.com/a*`, `jobs.smartrecruiters.com/a*`, `recruiting.paylocity.com/recruiting/jobs/All/a*`)
+            # Collapse after 10 chars of the company slug so 1 company with 5,000 jobs takes only 1 row!
+            base_pat_for_surt = re.sub(r"[a-z0-9]\*$", "*", pattern)
+            collapse_n = WaybackCDXDiscoverer.compute_surt_collapse_len(base_pat_for_surt, False)
+            return (
+                f"https://web.archive.org/cdx/search/cdx"
+                f"?url={quote_plus(pattern)}&output=json&fl=original"
+                f"&filter=statuscode:200&from={from_date}&to={to_date}"
+                f"&collapse=urlkey:{collapse_n}&limit={limit}"
             )
 
     async def discover_for_platform(self, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
@@ -1781,7 +1866,7 @@ class WaybackCDXDiscoverer:
 
         tasks = []
         for pat in spec.cdx_patterns:
-            if spec.is_subdomain_ats:
+            if spec.is_subdomain_ats or ("/" not in pat and not pat.endswith("*")):
                 tasks.append(_query_pattern(pat, self.limit_per_pattern))
             elif pat.endswith("*"):
                 # Fan out 36 fast alphanumeric prefix queries (`a*`..`9*`) with limit=3500 each
@@ -2043,23 +2128,10 @@ class PublicATSPayloadParser:
         archive_or_dns_sources = {
             "wayback_cdx", "whirlwind_cdx_toolkit", "crt_sh", "rapiddns",
             "certspotter", "anubis_pdns", "alienvault_otx", "hackertarget_pdns",
-            "urlscan_io", "hf_open_apply",
+            "urlscan_io", "hf_open_apply", "hf_latmay_catalog", "cc_vendored_slugs",
+            "cc_harvester_json", "state_of_ats_2026",
         }
         if http_status != 200 or not raw_body.strip():
-            # Any board from `archive_or_dns_sources` was ALREADY verified to have returned HTTP 200
-            # in the 2021-2026 window (Wayback `filter=statuscode:200`, CommonCrawl `status:200`, or
-            # active SSL/DNS in CT/RapidDNS). Even if the company currently has 0 open jobs and
-            # unpublished its board today (HTTP 404) or rate-limited the probe (429/403), keep it as
-            # `verified_3_5yr_historical` so our 3-5 year company count matches TheirStack!
-            if (
-                board.discovery_source in archive_or_dns_sources
-                and not is_explicitly_foreign_only([], verified.resolved_domain)
-            ):
-                verified.is_active = True
-                verified.board_status = "verified_3_5yr_historical"
-                verified.has_us_jobs = True
-                verified.company_name = board.slug.replace("-", " ").replace("_", " ").title()
-                return verified
             verified.is_active = False
             verified.board_status = "dead"
             return verified
@@ -2438,78 +2510,104 @@ class PublicATSPayloadParser:
 
     @staticmethod
     def _parse_trakstar(v: VerifiedATSBoard, body: str) -> None:
-        data = json.loads(body)
-        if not isinstance(data, list):
+        if body.lstrip().startswith("["):
+            data = json.loads(body)
+            if not isinstance(data, list):
+                v.is_active = False
+                return
+            v.is_active = True
+            v.active_job_count = len(data)
+            v.us_job_count = len(data)
+            v.has_us_jobs = True
+            return
+        low = body.lower()
+        if "page not found" in low or "doesn't exist" in low:
             v.is_active = False
             return
-        v.is_active = True
-        v.active_job_count = len(data)
-        us_count = 0
-        for j in data:
-            if not isinstance(j, dict):
-                continue
-            loc_obj = j.get("location") or {}
-            loc = ", ".join(filter(None, [loc_obj.get("city"), loc_obj.get("state"), loc_obj.get("country")]))
-            if loc and loc not in v.locations:
-                v.locations.append(loc)
-            if is_us_location(loc) or bool(j.get("allows_remote")):
-                us_count += 1
-            title = str(j.get("title") or "")
-            if title and len(v.sample_job_titles) < 10:
-                v.sample_job_titles.append(title)
-        v.us_job_count = us_count
-        v.has_us_jobs = us_count > 0
+        if "trakstar" in low or "recruiterbox" in low or "js-card" in low or "/jobs/" in low:
+            v.is_active = True
+            v.active_job_count = len(re.findall(r"js-card|rb-job-listing|/jobs/fk0", body))
+            v.us_job_count = v.active_job_count
+            v.has_us_jobs = True
 
     @staticmethod
     def _parse_jazzhr(v: VerifiedATSBoard, body: str) -> None:
-        if "resumator-job" in body or "applytojob.com/apply/" in body:
+        low = body.lower()
+        if "no longer active" in low or "account not found" in low:
+            v.is_active = False
+            return
+        if "resumator-job" in body or "applytojob.com/apply/" in body or "jazzhr" in low:
             v.is_active = True
-            v.active_job_count = max(1, len(re.findall(r"resumator-job-title", body)))
+            v.active_job_count = len(re.findall(r"resumator-job-title", body))
             v.us_job_count = v.active_job_count
-            v.has_us_jobs = is_us_location(body[:40000])
+            v.has_us_jobs = True
 
     @staticmethod
     def _parse_icims(v: VerifiedATSBoard, body: str) -> None:
-        if "iCIMS" in body or "icims.com/jobs/" in body:
+        low = body.lower()
+        if "page cannot be found" in low or "site is not available" in low:
+            v.is_active = False
+            return
+        if "icims" in low or "icims.com/jobs/" in low:
             v.is_active = True
-            v.active_job_count = max(1, len(re.findall(r"iCIMS_JobListingRow|/jobs/\d+/[^\"'\s>]+/job", body)))
+            v.active_job_count = len(re.findall(r"iCIMS_JobListingRow|/jobs/\d+/[^\"'\s>]+/job", body))
             v.us_job_count = v.active_job_count
             v.has_us_jobs = True
 
     @staticmethod
     def _parse_jobvite(v: VerifiedATSBoard, body: str) -> None:
-        if "jv-job-list" in body or "jobvite.com" in body:
+        low = body.lower()
+        if "page not found" in low or "error-page" in low:
+            v.is_active = False
+            return
+        if "jv-job-list" in body or "jv-careersite" in body or "jobvite" in low:
             v.is_active = True
-            v.active_job_count = max(1, len(re.findall(r"/job/[a-zA-Z0-9]+", body)))
+            v.active_job_count = len(re.findall(r"/job/[a-zA-Z0-9]+", body))
             v.us_job_count = v.active_job_count
             v.has_us_jobs = True
 
     @staticmethod
     def _parse_paylocity(v: VerifiedATSBoard, body: str) -> None:
-        if "paylocity" in body.lower() and ("job" in body.lower() or "Apply" in body):
+        low = body.lower()
+        if "page not found" in low or "invalid company" in low:
+            v.is_active = False
+            return
+        if "paylocity" in low and ("job" in low or "recruiting" in low or "apply" in low):
             v.is_active = True
-            v.active_job_count = max(1, len(re.findall(r"JobDetails", body)))
+            v.active_job_count = len(re.findall(r"JobDetails|/recruiting/jobs/Details/", body))
             v.us_job_count = v.active_job_count
             v.has_us_jobs = True
 
     @staticmethod
     def _parse_paycom(v: VerifiedATSBoard, body: str) -> None:
-        if "paycom" in body.lower():
+        low = body.lower()
+        if "invalid client" in low or "page not found" in low:
+            v.is_active = False
+            return
+        if "paycom" in low:
             v.is_active = True
-            v.active_job_count = max(1, len(re.findall(r"jobInfo|job-row", body)))
+            v.active_job_count = len(re.findall(r"jobInfo|job-row|JobListing", body))
             v.us_job_count = v.active_job_count
             v.has_us_jobs = True
 
     @staticmethod
     def _parse_fountain(v: VerifiedATSBoard, body: str) -> None:
-        if "fountain" in body.lower():
+        low = body.lower()
+        if "page not found" in low or "404" in low[:500]:
+            v.is_active = False
+            return
+        if "fountain" in low:
             v.is_active = True
-            v.active_job_count = max(1, len(re.findall(r'"@type"\s*:\s*"JobPosting"', body)))
+            v.active_job_count = len(re.findall(r'"@type"\s*:\s*"JobPosting"', body))
             v.us_job_count = v.active_job_count
             v.has_us_jobs = True
 
     @staticmethod
     def _parse_generic(v: VerifiedATSBoard, body: str) -> None:
+        low = body.lower()
+        if any(err in low[:2000] for err in ("404 not found", "page not found", "site not found", "invalid tenant")):
+            v.is_active = False
+            return
         v.is_active = True
         title_match = re.search(r"<title[^>]*>([^<]+)</title>", body, re.IGNORECASE)
         if title_match:
@@ -2518,8 +2616,8 @@ class PublicATSPayloadParser:
             if cleaned:
                 v.company_name = cleaned
         job_postings = re.findall(r'"@type"\s*:\s*"JobPosting"', body)
-        v.active_job_count = max(1, len(job_postings))
-        v.has_us_jobs = is_us_location(body[:50000])
+        v.active_job_count = len(job_postings)
+        v.has_us_jobs = is_us_location(body[:50000]) or not is_explicitly_foreign_only(v.locations, v.resolved_domain)
         if v.has_us_jobs:
             v.us_job_count = v.active_job_count
 
@@ -2698,7 +2796,7 @@ class ATSDatabase:
                     END
                 """,
                 (
-                    b.board_key, b.ats_id, b.slug.lower(), b.shard, b.site,
+                    b.board_key, b.ats_id, b.slug, b.shard, b.site,
                     b.board_url, b.discovery_source, b.source_company_domain or "", b.discovered_at,
                 ),
             )
@@ -2747,10 +2845,7 @@ class ATSDatabase:
                     END,
                     active_job_count = MAX(verified_boards.active_job_count, excluded.active_job_count),
                     us_job_count = MAX(verified_boards.us_job_count, excluded.us_job_count),
-                    has_us_jobs = CASE
-                        WHEN excluded.http_status = 200 AND excluded.active_job_count > 0 AND excluded.has_us_jobs = 0 THEN 0
-                        ELSE MAX(verified_boards.has_us_jobs, excluded.has_us_jobs)
-                    END,
+                    has_us_jobs = MAX(verified_boards.has_us_jobs, excluded.has_us_jobs),
                     latest_posted_at = CASE
                         WHEN excluded.latest_posted_at > verified_boards.latest_posted_at THEN excluded.latest_posted_at
                         ELSE verified_boards.latest_posted_at
@@ -2770,7 +2865,7 @@ class ATSDatabase:
                     verified_at = excluded.verified_at
                 """,
                 (
-                    board_key, b.ats_id, b.ats_display_name, b.slug.lower(), b.shard, b.site,
+                    board_key, b.ats_id, b.ats_display_name, b.slug, b.shard, b.site,
                     b.board_url, 1 if b.is_active else 0, b.http_status, b.company_name,
                     b.resolved_domain, b.domain_resolution_method, b.confidence_score,
                     b.board_status, b.active_job_count, b.us_job_count, 1 if b.has_us_jobs else 0,
@@ -2845,7 +2940,7 @@ class ATSDatabase:
         conditions = []
         if only_active:
             conditions.append(
-                "is_active = 1 AND board_status IN ('primary_active', 'secondary_active', 'active_empty', 'verified_3_5yr_historical')"
+                "is_active = 1 AND http_status = 200 AND board_status IN ('primary_active', 'secondary_active', 'active_empty')"
             )
         if only_us:
             conditions.append("has_us_jobs = 1")
@@ -2915,7 +3010,7 @@ class ATSDatabase:
         total_us_companies = sum(counts_by_ats.values())
         total_us_jobs = sum(us_jobs_by_ats.values())
         md_lines = [
-            "# US Job Companies Discovery Summary (v6.0 TheirStack 100K+ Edition)",
+            "# US Job Companies Discovery Summary (v8.0 True 200-OK All-Industry Edition)",
             "",
             f"- **Total Verified Active US Companies**: **{total_us_companies:,}**",
             f"- **Total Open US Jobs Indexed**: **{total_us_jobs:,}**",
@@ -2948,22 +3043,22 @@ def run_self_test() -> None:
     import tempfile
 
     print("=" * 76)
-    print("RUNNING US JOB COMPANIES ATS ENGINE SELF-TEST (v6.0 THEIRSTACK 100K+ EDITION)")
+    print("RUNNING US JOB COMPANIES ATS ENGINE SELF-TEST (v8.0 TRUE 200-OK ALL-INDUSTRY EDITION)")
     print("=" * 76)
 
     # 1. Verify Top 24 US Platforms
-    assert len(ATS_PLATFORMS) == 24, f"Expected 24 US ATS platforms, found {len(ATS_PLATFORMS)}"
+    assert len(ATS_PLATFORMS) == 25, f"Expected 25 US ATS platforms, found {len(ATS_PLATFORMS)}"
     print(f"[PASS] 1. Registered {len(ATS_PLATFORMS)} Top US ATS Platforms.")
 
     # 2. Verify Wayback CDX URL Builder uses `matchType=domain` for subdomain ATS and `collapse=urlkey:30` for path ATS
     wb_recruitee = WaybackCDXDiscoverer.build_wayback_url(
         ATS_PLATFORMS["recruitee"], "recruitee.com", "20210101", "20261231", 50000
     )
-    assert "matchType=domain" in wb_recruitee and "collapse=urlkey:38" in wb_recruitee
+    assert "matchType=domain" in wb_recruitee and "collapse=urlkey:23" in wb_recruitee
     wb_gh = WaybackCDXDiscoverer.build_wayback_url(
         ATS_PLATFORMS["greenhouse"], "boards.greenhouse.io/*", "20210101", "20261231", 50000
     )
-    assert "collapse=urlkey&" in wb_gh
+    assert "collapse=urlkey:32" in wb_gh
     print("[PASS] 2. Wayback CDX Subdomain (`matchType=domain`) & Path Collapsing verified.")
 
     # 3. Verify US location detection
@@ -2982,6 +3077,7 @@ def run_self_test() -> None:
         ats_display_name="Greenhouse",
         slug="stripe",
         is_active=True,
+        http_status=200,
         active_job_count=100,
         us_job_count=85,
         has_us_jobs=True,
@@ -2992,6 +3088,7 @@ def run_self_test() -> None:
         ats_display_name="Greenhouse",
         slug="zalando",
         is_active=True,
+        http_status=200,
         active_job_count=50,
         us_job_count=0,
         has_us_jobs=False,
@@ -3017,7 +3114,14 @@ def run_self_test() -> None:
     assert extract_ats_from_url("https://careers.jobvite.com/acme", platforms=["jobvite"]) is not None
     assert extract_ats_from_url("https://www.paycomonline.net/v4/ats/web.php/portal/1234AB", platforms=["paycom"]) is not None
     assert extract_ats_from_url("https://recruiting2.ultipro.com/ABC1000", platforms=["ukg"]) is not None
-    assert extract_ats_from_url("https://careers-acme.icims.com/jobs", platforms=["icims"]) is not None
+    icims_b = extract_ats_from_url("https://careers-acme.icims.com/jobs", platforms=["icims"])
+    assert icims_b is not None and icims_b.slug == "careers-acme" and "careers-acme.icims.com" in icims_b.board_url
+    paylocity_bad = PublicATSCatalogVerifier._parse_cc_json_entry("paylocity", ATS_PLATFORMS["paylocity"], "Acme-Corp")
+    assert paylocity_bad is None, "Non-UUID Paylocity company name should be rejected"
+    paylocity_ok = PublicATSCatalogVerifier._parse_cc_json_entry(
+        "paylocity", ATS_PLATFORMS["paylocity"], "12345678-1234-1234-1234-1234567890ab"
+    )
+    assert paylocity_ok is not None
     wd_ok = PublicATSCatalogVerifier._parse_cc_json_entry("workday", ATS_PLATFORMS["workday"], "7eleven|wd3|Search")
     assert wd_ok is not None and wd_ok.slug == "7eleven" and wd_ok.shard == "wd3" and wd_ok.site == "Search"
     wd_junk = PublicATSCatalogVerifier._parse_cc_json_entry("workday", ATS_PLATFORMS["workday"], "wd12|wd1|external_careers")
@@ -3041,7 +3145,7 @@ async def cmd_discover(args: argparse.Namespace) -> None:
     )
     sources = {s.strip() for s in args.sources.split(",") if s.strip()}
 
-    async with AsyncHTTPClient(concurrency=args.concurrency, per_host_concurrency=10) as http:
+    async with AsyncHTTPClient(concurrency=args.concurrency, per_host_concurrency=25, timeout=12.0, max_retries=1) as http:
         total_saved = 0
 
         # 1A. Direct Hugging Face Parquet Verification (`edwarddgao/open-apply-jobs`)
@@ -3060,14 +3164,12 @@ async def cmd_discover(args: argparse.Namespace) -> None:
         # 1B. Public ATS Catalogs (`latmay/ats-career-page-urls` 69.6k CSV + `Riley-Dorrington` 95k CC JSONs + Vendored Gzip Slugs)
         if "hf" in sources or "catalogs" in sources or "commoncrawl" in sources:
             cat_verifier = PublicATSCatalogVerifier(http)
-            cat_disc, cat_ver = await cat_verifier.ingest_and_verify_platforms(platforms)
+            cat_disc, _ = await cat_verifier.ingest_and_verify_platforms(platforms)
             saved_disc = db.upsert_discovered_boards(cat_disc)
-            saved_ver = db.upsert_verified_boards(cat_ver)
             total_saved += saved_disc
             logger.info(
-                "[Public ATS Catalogs] Saved %d discovered & %d pre-verified 3-5yr boards!",
+                "[Public ATS Catalogs] Saved %d candidate boards for live HTTP 200 verification!",
                 saved_disc,
-                saved_ver,
             )
 
         # 2. 7x Passive DNS & Subdomain Aggregators (RapidDNS, CertSpotter, Anubis, OTX, HackerTarget, URLScan, crt.sh)
@@ -3078,9 +3180,8 @@ async def cmd_discover(args: argparse.Namespace) -> None:
                 logger.info("[Passive DNS + URLScan + CT] Discovering boards for %s...", spec.display_name)
                 boards = await pdns.discover_for_platform(spec)
                 saved = db.upsert_discovered_boards(boards)
-                db.upsert_verified_boards(boards_to_preverified(boards))
                 total_saved += saved
-                logger.info("[Passive DNS + URLScan + CT] Found & pre-verified %d boards for %s", saved, spec.display_name)
+                logger.info("[Passive DNS + URLScan + CT] Queued %d candidate boards for %s", saved, spec.display_name)
 
         # 3. Hybrid 36-Prefix & Domain Wayback Machine CDX (2021-2026 `statuscode:200`)
         if "wayback" in sources:
@@ -3095,9 +3196,8 @@ async def cmd_discover(args: argparse.Namespace) -> None:
                 logger.info("[Wayback CDX] Streaming collapsed boards for %s...", spec.display_name)
                 boards = await wb.discover_for_platform(spec)
                 saved = db.upsert_discovered_boards(boards)
-                db.upsert_verified_boards(boards_to_preverified(boards))
                 total_saved += saved
-                logger.info("[Wayback CDX] Found & pre-verified %d boards for %s", saved, spec.display_name)
+                logger.info("[Wayback CDX] Queued %d candidate boards for %s", saved, spec.display_name)
 
         # 4. Whirlwind `cdx_toolkit` Common Crawl Discoverer (Strict 150s Cap per Platform)
         if "commoncrawl" in sources or "cdx_toolkit" in sources:
@@ -3107,9 +3207,8 @@ async def cmd_discover(args: argparse.Namespace) -> None:
                 logger.info("[Whirlwind cdx_toolkit] Streaming Common Crawl boards for %s (max 150s)...", spec.display_name)
                 boards = await cc_tk.discover_for_platform(spec)
                 saved = db.upsert_discovered_boards(boards)
-                db.upsert_verified_boards(boards_to_preverified(boards))
                 total_saved += saved
-                logger.info("[Whirlwind cdx_toolkit] Found & pre-verified %d boards for %s", saved, spec.display_name)
+                logger.info("[Whirlwind cdx_toolkit] Queued %d candidate boards for %s", saved, spec.display_name)
 
     db.close()
     logger.info("Discovery complete. Upserted %d total candidate board records into %s", total_saved, args.db)
@@ -3133,8 +3232,7 @@ async def cmd_verify(args: argparse.Namespace) -> None:
             SELECT d.* FROM discovered_boards d
             LEFT JOIN verified_boards v ON d.board_key = v.board_key
             WHERE d.ats_id = ?
-              AND (v.board_key IS NULL OR v.board_status = 'verified_3_5yr_historical')
-            LIMIT 1200
+              AND v.board_key IS NULL
             """,
             (pid,),
         ).fetchall()
@@ -3164,7 +3262,7 @@ async def cmd_verify(args: argparse.Namespace) -> None:
         args.concurrency,
     )
 
-    async with AsyncHTTPClient(concurrency=args.concurrency, per_host_concurrency=10) as http:
+    async with AsyncHTTPClient(concurrency=args.concurrency, per_host_concurrency=25, timeout=12.0, max_retries=1) as http:
         verifier = ATSBoardVerifier(http)
         chunk_size = 1500
         for idx in range(0, len(candidates), chunk_size):
@@ -3206,7 +3304,7 @@ def cmd_export(args: argparse.Namespace) -> None:
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="US Job Companies ATS Discovery Engine (v6.0 TheirStack 100K+ Edition)"
+        description="US Job Companies ATS Discovery Engine (v8.0 True 200-OK All-Industry Edition)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
