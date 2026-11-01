@@ -1,0 +1,116 @@
+name: US iCIMS and Taleo Jobs
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_boards:
+        description: "Boards per ATS (0 = all discovered boards)"
+        type: number
+        default: 0
+      boards_per_slice:
+        description: "Boards handled by each parallel runner"
+        type: number
+        default: 100
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.10"
+          cache: false
+      - name: Build pinned ATS adapters
+        run: python tools/board_export/build.py --test
+      - id: plan
+        name: Partition employer boards
+        run: >-
+          python tools/board_export/pipeline.py prepare
+          --output run-plan
+          --max-boards '${{ inputs.max_boards }}'
+          --boards-per-slice '${{ inputs.boards_per_slice }}'
+          --github-output "$GITHUB_OUTPUT"
+      - name: Package runtime and plan
+        run: tar -czf runtime-plan.tar.gz tools/board_export/bin run-plan
+      - uses: actions/upload-artifact@v5
+        with:
+          name: icims-taleo-runtime-plan
+          path: runtime-plan.tar.gz
+          retention-days: 3
+
+  crawl:
+    name: ${{ matrix.provider }} / ${{ matrix.id }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - uses: actions/download-artifact@v5
+        with:
+          name: icims-taleo-runtime-plan
+      - run: tar -xzf runtime-plan.tar.gz
+      - name: Crawl jobs and JDs
+        run: >-
+          python tools/board_export/pipeline.py crawl
+          --binary tools/board_export/bin/getworkin-ingest
+          --catalog 'run-plan/slices/${{ matrix.id }}.json'
+          --provider '${{ matrix.provider }}'
+          --slice-id '${{ matrix.id }}'
+          --output 'result-${{ matrix.id }}'
+          --state 'state-${{ matrix.id }}'
+          --workers 8
+          --board-timeout 5m
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: ats-slice-${{ matrix.id }}
+          path: result-${{ matrix.id }}/
+          if-no-files-found: error
+          retention-days: 7
+
+  merge:
+    needs: [prepare, crawl]
+    if: always() && needs.prepare.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - uses: actions/download-artifact@v5
+        with:
+          name: icims-taleo-runtime-plan
+      - run: tar -xzf runtime-plan.tar.gz
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: ats-slice-*
+          path: slice-results
+      - name: Merge CSVs
+        run: >-
+          python tools/board_export/pipeline.py merge
+          --manifest run-plan/manifest.json
+          --input slice-results
+          --output final
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: icims-taleo-usa-jobs
+          path: final/
+          if-no-files-found: error
+          retention-days: 14

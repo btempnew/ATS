@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/strelov1/freehire.git",
+  "commit": "24be4c6726b1340633b8166f375c1c3ff498f02f",
+  "go_version": "1.26.10",
+  "license": "MIT",
+  "providers": ["greenhouse", "lever", "ashby", "workday", "smartrecruiters", "workable", "bamboohr", "icims", "jobvite", "teamtailor", "oracle", "successfactors", "adp", "paylocity", "dayforce", "taleo"]
+}
