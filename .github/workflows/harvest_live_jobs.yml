@@ -20,6 +20,19 @@ on:
           - rippling
           - bamboohr
           - pinpoint
+          - gem
+          - dover
+          - jobvite
+          - jazzhr
+          - trakstar
+          - fountain
+          - icims
+          - taleo
+          - paycom
+          - paylocity
+          - dayforce
+          - ukg
+          - successfactors
       company_source:
         description: '📁 Companies Dataset Preset'
         required: true
@@ -64,13 +77,15 @@ on:
         description: '⚡ Parallel Runner Shards (Multi-Runner Distribution)'
         required: true
         type: choice
-        default: '4'
+        default: '8'
         options:
           - '1'
           - '2'
           - '4'
           - '6'
           - '8'
+          - '10'
+          - '12'
       posted_within_days:
         description: '📅 Recency Filter (Keep jobs posted within last N days)'
         required: true
@@ -178,7 +193,7 @@ jobs:
     name: "🚜 Harvest Shard ${{ matrix.num }} of ${{ matrix.total }}"
     needs: setup-shards
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup-shards.outputs.matrix) }}
@@ -451,10 +466,22 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
           cp /tmp/live_jobs_export.csv live_jobs.csv
-          git add live_jobs.csv
+          
+          # Check CSV file size against GitHub 100MB git push limit
+          CSV_SIZE=$(stat -c%s "live_jobs.csv" 2>/dev/null || stat -f%z "live_jobs.csv" 2>/dev/null || echo 0)
+          echo "live_jobs.csv size: $CSV_SIZE bytes"
+          if [ "$CSV_SIZE" -gt 95000000 ]; then
+            echo "⚠️ File exceeds 95MB limit for GitHub git push! Compressing to live_jobs.csv.gz..."
+            gzip -9 -c live_jobs.csv > live_jobs.csv.gz
+            rm live_jobs.csv
+            git add live_jobs.csv.gz
+          else
+            git add live_jobs.csv
+          fi
+          
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Automated: update live_jobs.csv from multi-shard harvest [skip ci]"
+            git commit -m "Automated: update live_jobs dataset from multi-shard harvest [skip ci]"
             git push origin main || git push --force-with-lease origin main
           fi
