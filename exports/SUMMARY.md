@@ -1,18 +1,18 @@
 # Master Verified ATS Company Directory
 
-- **Total Verified Company Boards**: **175,187**
+- **Total Verified Company Boards**: **175,205**
 - **Distinct Supported ATS Platforms**: **28**
-- **Enterprise Cohort (Oracle, SAP, Workday, ADP, iCIMS)**: **25,617**
+- **Enterprise Cohort (Oracle, SAP, Workday, ADP, iCIMS)**: **25,618**
 
 ## Platform Breakdown
 
 | ATS Platform | Total Verified Companies | Canonical Export File |
 | :--- | :--- | :--- |
-| **BambooHR** (`bamboohr`) | 24,576 | [`us_bamboohr_companies.csv`](us_bamboohr_companies.csv) |
+| **BambooHR** (`bamboohr`) | 24,593 | [`us_bamboohr_companies.csv`](us_bamboohr_companies.csv) |
 | **Join.com** (`join`) | 23,547 | [`join_companies.csv`](join_companies.csv) |
 | **Workable** (`workable`) | 19,270 | [`us_workable_companies.csv`](us_workable_companies.csv) |
 | **Greenhouse** (`greenhouse`) | 15,434 | [`us_greenhouse_companies.csv`](us_greenhouse_companies.csv) |
-| **iCIMS** (`icims`) | 13,380 | [`us_icims_companies.csv`](us_icims_companies.csv) |
+| **iCIMS** (`icims`) | 13,381 | [`us_icims_companies.csv`](us_icims_companies.csv) |
 | **Lever** (`lever`) | 10,938 | [`us_lever_companies.csv`](us_lever_companies.csv) |
 | **Paycom** (`paycom`) | 10,889 | [`us_paycom_companies.csv`](us_paycom_companies.csv) |
 | **Workday** (`workday`) | 10,419 | [`us_workday_companies.csv`](us_workday_companies.csv) |
@@ -38,6 +38,6 @@
 | **Fountain** (`fountain`) | 96 | [`us_fountain_companies.csv`](us_fountain_companies.csv) |
 
 ## Key Consolidated Master Files
-- [`us_companies_by_ats_master.csv`](us_companies_by_ats_master.csv): Full master dataset containing all 175,187 company career boards.
+- [`us_companies_by_ats_master.csv`](us_companies_by_ats_master.csv): Full master dataset containing all 175,205 company career boards.
 - [`us_companies_by_ats_master.jsonl`](us_companies_by_ats_master.jsonl): NDJSON format for distributed streaming and database imports.
-- [`oracle_sap_workday_adp_icims_boards.csv`](oracle_sap_workday_adp_icims_boards.csv): Focused enterprise dataset of 25,617 validated direct apply links.
+- [`oracle_sap_workday_adp_icims_boards.csv`](oracle_sap_workday_adp_icims_boards.csv): Focused enterprise dataset of 25,618 validated direct apply links.
