@@ -74,6 +74,17 @@ QUESTION = re.compile(r'^(?:\W)*(do you|will you|would you|are you|does the appl
 NON_EMPLOYMENT_PATTERN = r'(^|[^a-z])(event sponsorship|charitable sponsorship|donor sponsorship|sports sponsorship|conference sponsorship|sponsorship for an? export (license|licence))($|[^a-z])'
 NON_EMPLOYMENT = re.compile(NON_EMPLOYMENT_PATTERN, re.I)
 
+# Pre-compiled high-performance regex patterns
+RE_H1 = re.compile(H1, re.I)
+RE_NO = re.compile(NO, re.I)
+RE_YES = re.compile(YES, re.I)
+RE_CONDITIONAL = re.compile(CONDITIONAL, re.I)
+RE_H1_YES = re.compile(H1_YES, re.I)
+RE_H1_NO = re.compile(H1_NO, re.I)
+RE_SPLIT = re.compile(r'(?<=[.!?;])\s+|\n+')
+RE_SPONSOR_GATE = re.compile(r'(?:visa|sponsor|h[ ‐‑–—-]?1[ ‐‑–—-]?b|immigration|citizen|work authoriz)', re.I)
+RE_REPORT_GATE = re.compile(r'\breport', re.I)
+
 
 def plain_text(value: str) -> str:
     value = re.sub(r'<(?:br\s*/?|/p|/div|/li|/h[1-6])\s*>', '\n', value or '', flags=re.I)
@@ -90,19 +101,24 @@ def plain_sql(body: str) -> str:
 
 
 def sponsorship(text: str) -> dict:
+    if not text or not RE_SPONSOR_GATE.search(text):
+        return dict(h1b_status='unknown', visa_sponsorship_status='unknown', sponsorship_evidence=[])
+
     positive, negative, conditional, h1_positive, h1_negative, h1_conditional = [], [], [], [], [], []
-    for sentence in re.split(r'(?<=[.!?;])\s+|\n+', plain_text(text)):
+    for sentence in RE_SPLIT.split(plain_text(text)):
         sentence = sentence.strip(' •-*\t')
         if not sentence or QUESTION.search(sentence) or NON_EMPLOYMENT.search(sentence):
             continue
-        no, yes, maybe = (bool(re.search(pattern, sentence, re.I)) for pattern in (NO, YES, CONDITIONAL))
-        h1 = bool(re.search(H1, sentence, re.I))
+        no = bool(RE_NO.search(sentence))
+        yes = bool(RE_YES.search(sentence))
+        maybe = bool(RE_CONDITIONAL.search(sentence))
+        h1 = bool(RE_H1.search(sentence))
         # Refusals take precedence inside a sentence; contradictory sentences
         # are preserved as conflicting rather than silently choosing one.
         if no:
             negative.append(sentence)
             h1_negative.append(sentence)  # a blanket visa refusal also excludes H-1B
-        elif re.search(H1_NO, sentence, re.I):
+        elif RE_H1_NO.search(sentence):
             h1_negative.append(sentence)
         elif maybe:
             conditional.append(sentence)
@@ -110,7 +126,7 @@ def sponsorship(text: str) -> dict:
                 h1_conditional.append(sentence)
         elif yes:
             positive.append(sentence)
-            if re.search(H1_YES, sentence, re.I):
+            if RE_H1_YES.search(sentence):
                 h1_positive.append(sentence)
 
     def status(yes, no, maybe):
@@ -225,6 +241,8 @@ _MANAGER_TITLE = re.compile(r'\b(manager|director|head|president|officer|supervi
 
 
 def reporting_line(text: str) -> tuple[str | None, str | None]:
+    if not text or not RE_REPORT_GATE.search(text):
+        return None, None
     found = []
     for match in _REPORT.finditer(text):
         title = re.split(r',?\s+(?:and (?:will|is|be|you|has|have|works|manages|supports|oversees|leads|provides)|who\b|while\b|where\b|with responsibility\b)', match[1], maxsplit=1, flags=re.I)[0].strip(' ,:')
@@ -238,9 +256,9 @@ def reporting_line(text: str) -> tuple[str | None, str | None]:
     return found[0] if len(unique) == 1 else (None, None)
 
 
-def extract_jd_facts(text: str, structured_industry: str | None = None) -> JDFacts:
+def extract_jd_facts(text: str, structured_industry: str | None = None, include_industry: bool = False) -> JDFacts:
     text = plain_text(text)
-    label, industry_evidence = industry(text, structured_industry)
+    label, industry_evidence = (industry(text, structured_industry) if include_industry else (None, None))
     reports_to, reports_evidence = reporting_line(text)
     return JDFacts(industry=label, industry_evidence=industry_evidence,
                    reports_to=reports_to, reports_to_evidence=reports_evidence,

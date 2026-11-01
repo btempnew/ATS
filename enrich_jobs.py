@@ -61,6 +61,7 @@ def enrich_record(raw: Dict[str, Any]) -> Dict[str, Any]:
     out.setdefault("visa_sponsorship_status", "unknown")
     out.setdefault("sponsorship_evidence", "")
     out.setdefault("reports_to", "")
+    out["is_enriched"] = 1
 
     # 1. Main JD extraction engine
     if desc:
@@ -113,7 +114,7 @@ def enrich_record(raw: Dict[str, Any]) -> Dict[str, Any]:
     # 4. JD Facts: H-1B, Visa Sponsorship, and Reporting Line
     if desc:
         try:
-            facts = extract_jd_facts(desc)
+            facts = extract_jd_facts(desc, include_industry=False)
             if facts:
                 out["h1b_status"] = facts.h1b_status or "unknown"
                 out["visa_sponsorship_status"] = facts.visa_sponsorship_status or "unknown"
@@ -239,8 +240,9 @@ def enrich_sqlite_db(
     export_csv: str | None = None,
     include_content_in_csv: bool = False,
     workers: int | None = None,
+    force: bool = False,
 ) -> int:
-    """Enriches all jobs in an existing SQLite database in-place with multi-core parallelism."""
+    """Enriches jobs in an existing SQLite database in-place with multi-core parallelism."""
     import concurrent.futures
 
     if not os.path.exists(db_path):
@@ -249,6 +251,12 @@ def enrich_sqlite_db(
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
+
+    # Enable high-throughput SQLite PRAGMAs
+    cur.execute("PRAGMA synchronous = OFF;")
+    cur.execute("PRAGMA journal_mode = MEMORY;")
+    cur.execute("PRAGMA cache_size = -200000;")
+    cur.execute("PRAGMA temp_store = MEMORY;")
 
     # Ensure all enriched columns exist
     cur.execute("PRAGMA table_info(live_jobs);")
@@ -270,24 +278,40 @@ def enrich_sqlite_db(
         ("visa_sponsorship_status", "TEXT"),
         ("sponsorship_evidence", "TEXT"),
         ("reports_to", "TEXT"),
+        ("is_enriched", "INTEGER DEFAULT 0"),
     ]
     for col_name, col_type in columns_to_add:
         if col_name not in existing_cols:
             cur.execute(f"ALTER TABLE live_jobs ADD COLUMN {col_name} {col_type};")
     conn.commit()
 
-    cur.execute("SELECT * FROM live_jobs;")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_live_jobs_job_id ON live_jobs(job_id);")
+    conn.commit()
+
+    if not force:
+        cur.execute("""
+            SELECT * FROM live_jobs 
+            WHERE (is_enriched IS NULL OR is_enriched = 0)
+              AND (content IS NOT NULL AND length(content) > 30);
+        """)
+    else:
+        cur.execute("SELECT * FROM live_jobs;")
+
     jobs = [dict(r) for r in cur.fetchall()]
     total = len(jobs)
     if total == 0:
-        print("No jobs found in database.")
+        cur.execute("SELECT COUNT(*) FROM live_jobs;")
+        total_in_db = cur.fetchone()[0]
+        print(f"All {total_in_db:,} jobs in {db_path} are already fully enriched! Skipping redundant processing.")
+        if export_csv:
+            export_sqlite_to_csv(db_path, export_csv, include_content=include_content_in_csv)
         conn.close()
         return 0
 
     if workers is None:
-        workers = min(os.cpu_count() or 4, 8)
+        workers = min(os.cpu_count() or 4, 16)
 
-    print(f"Enriching {total:,} jobs in {db_path} (Parallel Workers: {workers})...")
+    print(f"Enriching {total:,} un-enriched jobs in {db_path} (Parallel Workers: {workers}, Force={force})...")
 
     update_sql = """
         UPDATE live_jobs SET
@@ -306,7 +330,8 @@ def enrich_sqlite_db(
             h1b_status = :h1b_status,
             visa_sponsorship_status = :visa_sponsorship_status,
             sponsorship_evidence = :sponsorship_evidence,
-            reports_to = :reports_to
+            reports_to = :reports_to,
+            is_enriched = 1
         WHERE job_id = :job_id;
     """
 
@@ -361,6 +386,9 @@ def enrich_sqlite_db(
                     flush=True,
                 )
 
+    # Mark all rows as enriched so future runs skip redundant checks
+    cur.execute("UPDATE live_jobs SET is_enriched = 1 WHERE is_enriched IS NULL OR is_enriched = 0;")
+    conn.commit()
     conn.close()
     print(f"\nDone! Database {db_path} enriched successfully.")
     print(f"  • With Identified Compensation: {has_salary:,} / {total:,}")
@@ -381,6 +409,7 @@ def main():
     parser.add_argument("--export-csv", help="Optional path to export enriched SQLite database to CSV")
     parser.add_argument("--include-content", action="store_true", help="Include full raw HTML descriptions in exported CSV")
     parser.add_argument("--workers", type=int, default=None, help="Number of parallel worker processes")
+    parser.add_argument("--force", action="store_true", help="Force re-enrichment of already enriched records")
     args = parser.parse_args()
 
     if args.db:
@@ -389,6 +418,7 @@ def main():
             export_csv=args.export_csv,
             include_content_in_csv=args.include_content,
             workers=args.workers,
+            force=args.force,
         )
     elif args.csv:
         out = args.output or args.csv.replace(".csv", "_enriched.csv")

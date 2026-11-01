@@ -80,7 +80,7 @@ on:
         description: '⚡ Parallel Runner Shards (Multi-Runner Distribution)'
         required: true
         type: choice
-        default: '8'
+        default: '12'
         options:
           - '1'
           - '2'
@@ -89,6 +89,8 @@ on:
           - '8'
           - '10'
           - '12'
+          - '16'
+          - '20'
       posted_within_days:
         description: '📅 Recency Filter (Keep jobs posted within last N days)'
         required: true
@@ -122,7 +124,7 @@ on:
         description: '🧠 Deep JD Enrichment (Extract Salary, Skills, H-1B, Experience, Education)'
         required: true
         type: boolean
-        default: false
+        default: true
       concurrency:
         description: '⚡ Async Concurrency per Runner (Concurrent HTTP workers)'
         required: true
@@ -286,7 +288,7 @@ jobs:
     needs: [setup-shards, harvest-shard]
     if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       PYTHONUNBUFFERED: "1"
     steps:

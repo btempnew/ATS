@@ -1863,10 +1863,13 @@ def enrich_job_record(raw: Dict[str, Any], enable_enrichment: bool = True) -> Di
     out.setdefault("visa_sponsorship_status", "unknown")
     out.setdefault("sponsorship_evidence", "")
     out.setdefault("reports_to", "")
+    out.setdefault("is_enriched", 0)
     out.setdefault("extracted_at", datetime.now(timezone.utc).isoformat())
 
     if not enable_enrichment or not HAS_ENRICHMENT:
         return out
+
+    out["is_enriched"] = 1
 
     desc = raw.get("content") or raw.get("description") or ""
     title = raw.get("title") or ""
@@ -1924,7 +1927,7 @@ def enrich_job_record(raw: Dict[str, Any], enable_enrichment: bool = True) -> Di
 
         # 4. JD Facts: H-1B, Visa Sponsorship, and Reporting Line
         try:
-            facts = extract_jd_facts(desc)
+            facts = extract_jd_facts(desc, include_industry=False)
             if facts:
                 out["h1b_status"] = facts.h1b_status or "unknown"
                 out["visa_sponsorship_status"] = facts.visa_sponsorship_status or "unknown"
@@ -1981,6 +1984,7 @@ def init_db(db_path: str):
             visa_sponsorship_status TEXT,
             sponsorship_evidence TEXT,
             reports_to TEXT,
+            is_enriched INTEGER DEFAULT 0,
             extracted_at TEXT NOT NULL
         );
     """)
@@ -2005,6 +2009,7 @@ def init_db(db_path: str):
         ("visa_sponsorship_status", "TEXT"),
         ("sponsorship_evidence", "TEXT"),
         ("reports_to", "TEXT"),
+        ("is_enriched", "INTEGER DEFAULT 0"),
     ]
     for col_name, col_type in columns_to_add:
         if col_name not in existing_cols:
@@ -2087,6 +2092,8 @@ def save_jobs_batch(db_path: str, jobs: List[Dict[str, Any]], enable_enrichment:
         prepared.append(clean)
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
+    cur.execute("PRAGMA synchronous = OFF;")
+    cur.execute("PRAGMA journal_mode = WAL;")
     cur.executemany("""
         INSERT OR REPLACE INTO live_jobs (
             job_id, platform, company_name, company_slug, title, location, is_us,
@@ -2094,14 +2101,14 @@ def save_jobs_batch(db_path: str, jobs: List[Dict[str, Any]], enable_enrichment:
             raw_timestamp, content, salary, salary_min, salary_max, salary_currency,
             salary_period, skills, skills_required, skills_preferred, work_mode,
             experience_min, experience_max, education, h1b_status,
-            visa_sponsorship_status, sponsorship_evidence, reports_to, extracted_at
+            visa_sponsorship_status, sponsorship_evidence, reports_to, is_enriched, extracted_at
         ) VALUES (
             :job_id, :platform, :company_name, :company_slug, :title, :location, :is_us,
             :apply_url, :department, :office, :employment_type, :posted_at, :updated_at,
             :raw_timestamp, :content, :salary, :salary_min, :salary_max, :salary_currency,
             :salary_period, :skills, :skills_required, :skills_preferred, :work_mode,
             :experience_min, :experience_max, :education, :h1b_status,
-            :visa_sponsorship_status, :sponsorship_evidence, :reports_to, :extracted_at
+            :visa_sponsorship_status, :sponsorship_evidence, :reports_to, :is_enriched, :extracted_at
         )
     """, prepared)
     conn.commit()
