@@ -181,6 +181,14 @@ PLATFORM_FILES: Dict[str, str] = {
     "JazzHR": "jazzhr_companies.txt",
     "Breezy HR": "breezy_companies.txt",
     "Pinpoint": "pinpoint_companies.txt",
+    "iCIMS": "icims_companies.txt",
+    "Oracle Taleo": "taleo_companies.txt",
+    "Dayforce": "dayforce_companies.txt",
+    "UKG (UltiPro)": "ukg_companies.txt",
+    "Fountain": "fountain_companies.txt",
+    "Trakstar": "trakstar_companies.txt",
+    "Gem": "gem_companies.txt",
+    "Dover": "dover_companies.txt",
 }
 
 

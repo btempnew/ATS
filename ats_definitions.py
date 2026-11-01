@@ -150,6 +150,86 @@ ATS_REGISTRY: Dict[str, Dict[str, Any]] = {
         "type": "subdomain",
         "test_url": "https://growth.pinpointhq.com/jobs/123",
         "excluded_slugs": {"app", "api", "support", "www"}
+    },
+    "icims": {
+        "name": "iCIMS",
+        "registered_domain": "icims.com",
+        "tld": "com",
+        "host_pattern": r"^([^.]+)\.icims\.com$",
+        "url_pattern": r"^https?://([^.]+)\.icims\.com",
+        "type": "subdomain",
+        "test_url": "https://careers-acme.icims.com/jobs/123",
+        "excluded_slugs": {"www", "app", "api", "help", "developer", "careermaster"}
+    },
+    "taleo": {
+        "name": "Oracle Taleo",
+        "registered_domain": "taleo.net",
+        "tld": "net",
+        "host_pattern": r"^([^.]+)\.taleo\.net$",
+        "url_pattern": r"^https?://([^.]+)\.taleo\.net",
+        "type": "subdomain",
+        "test_url": "https://acme.taleo.net/careersection/ex/jobsearch.ftl",
+        "excluded_slugs": {"www", "app", "static", "login"}
+    },
+    "dayforce": {
+        "name": "Dayforce",
+        "registered_domain": "dayforcehcm.com",
+        "tld": "com",
+        "host_pattern": r"^jobs\.dayforcehcm\.com$",
+        "url_pattern": r"^https?://jobs\.dayforcehcm\.com/[^/]+/([^/?#]+)",
+        "type": "path_slug",
+        "test_url": "https://jobs.dayforcehcm.com/en-US/acme/CANDIDATEPORTAL",
+        "excluded_slugs": {"mydayforce", "static", "login"}
+    },
+    "ukg": {
+        "name": "UKG (UltiPro)",
+        "registered_domain": "ultipro.com",
+        "tld": "com",
+        "host_pattern": r"^recruiting2?\.ultipro\.com$",
+        "url_pattern": r"^https?://recruiting2?\.ultipro\.com/([^/?#]+)",
+        "type": "path_slug",
+        "test_url": "https://recruiting2.ultipro.com/ACM1001/JobBoard",
+        "excluded_slugs": {"login", "help", "static"}
+    },
+    "fountain": {
+        "name": "Fountain",
+        "registered_domain": "fountain.com",
+        "tld": "com",
+        "host_pattern": r"^apply\.fountain\.com$",
+        "url_pattern": r"^https?://apply\.fountain\.com/([^/?#]+)",
+        "type": "path_slug",
+        "test_url": "https://apply.fountain.com/acme/opening",
+        "excluded_slugs": {"static", "assets", "help"}
+    },
+    "trakstar": {
+        "name": "Trakstar",
+        "registered_domain": "recruiterbox.com",
+        "tld": "com",
+        "host_pattern": r"^([^.]+)\.recruiterbox\.com$",
+        "url_pattern": r"^https?://([^.]+)\.recruiterbox\.com",
+        "type": "subdomain",
+        "test_url": "https://acme.recruiterbox.com/jobs",
+        "excluded_slugs": {"app", "js", "api", "support", "www"}
+    },
+    "gem": {
+        "name": "Gem",
+        "registered_domain": "gem.com",
+        "tld": "com",
+        "host_pattern": r"^(?:jobs|api)\.gem\.com$",
+        "url_pattern": r"^https?://(?:jobs|api)\.gem\.com/(?:job_board/v0/)?([^/?#]+)",
+        "type": "path_slug",
+        "test_url": "https://jobs.gem.com/bohler-",
+        "excluded_slugs": {"static", "login", "docs"}
+    },
+    "dover": {
+        "name": "Dover",
+        "registered_domain": "dover.com",
+        "tld": "com",
+        "host_pattern": r"^app\.dover\.com$",
+        "url_pattern": r"^https?://app\.dover\.com/(?:apply|careers-page)/([^/?#]+)",
+        "type": "path_slug",
+        "test_url": "https://app.dover.com/apply/acme",
+        "excluded_slugs": {"login", "static", "api"}
     }
 }
 
