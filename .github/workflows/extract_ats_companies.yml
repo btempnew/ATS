@@ -67,8 +67,16 @@ jobs:
             --greenhouse-file "greenhouse_companies.txt"
 
       - name: Commit and Push Updated Company List
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Automated: update ATS company lists from Common Crawl [skip ci]"
-          file_pattern: "*.txt *.csv *.parquet"
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git rebase origin/main || (git reset --hard origin/main)
+          git add *.txt *.csv exports/*.csv 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Automated: update ATS company lists from Common Crawl [skip ci]"
+            git push origin main || git push --force-with-lease origin main
+          fi
 

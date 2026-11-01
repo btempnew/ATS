@@ -145,7 +145,15 @@ jobs:
           retention-days: 90
 
       - name: Commit and Push Verified Lists
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Automated: update verified Greenhouse company lists [skip ci]"
-          file_pattern: "greenhouse_companies_active.txt greenhouse_companies_us_active.txt exports_greenhouse/*"
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git rebase origin/main || (git reset --hard origin/main)
+          git add greenhouse_companies_active.txt greenhouse_companies_us_active.txt exports_greenhouse/* 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Automated: update verified Greenhouse company lists [skip ci]"
+            git push origin main || git push --force-with-lease origin main
+          fi
