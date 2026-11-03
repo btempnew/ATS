@@ -764,6 +764,7 @@ async def extract_breezy(http: AsyncHTTPClient, slug: str, full_content: bool) -
 
         pub_date = j.get("published_date") or ""
         job_id = j.get("id") or j.get("friendly_id")
+        content_raw = j.get("description", "") if full_content else ""
 
         extracted.append({
             "job_id": f"breezy_{slug}_{job_id}",
@@ -780,7 +781,7 @@ async def extract_breezy(http: AsyncHTTPClient, slug: str, full_content: bool) -
             "posted_at": parse_to_iso(pub_date),
             "updated_at": parse_to_iso(pub_date),
             "raw_timestamp": str(pub_date),
-            "content": "",
+            "content": clean_html(content_raw) if full_content else "",
             "extracted_at": now_iso,
         })
     return status, extracted
@@ -1817,6 +1818,59 @@ PLATFORM_HANDLERS = {
 }
 
 
+COMMON_TECH_SKILLS = [
+    (re.compile(r"\bpython\b", re.I), "Python"),
+    (re.compile(r"\bjava\b", re.I), "Java"),
+    (re.compile(r"\bgolang\b|\bgo\b", re.I), "Go"),
+    (re.compile(r"\brust\b", re.I), "Rust"),
+    (re.compile(r"\bc\+\+\b", re.I), "C++"),
+    (re.compile(r"\bc#\b|\b\.net\b", re.I), ".NET/C#"),
+    (re.compile(r"\breact\b", re.I), "React"),
+    (re.compile(r"\bnode\.?js\b", re.I), "Node.js"),
+    (re.compile(r"\btypescript\b", re.I), "TypeScript"),
+    (re.compile(r"\bjavascript\b", re.I), "JavaScript"),
+    (re.compile(r"\bangular\b", re.I), "Angular"),
+    (re.compile(r"\bvue\.?js\b", re.I), "Vue.js"),
+    (re.compile(r"\bnext\.?js\b", re.I), "Next.js"),
+    (re.compile(r"\bswift\b", re.I), "Swift"),
+    (re.compile(r"\bkotlin\b", re.I), "Kotlin"),
+    (re.compile(r"\baws\b", re.I), "AWS"),
+    (re.compile(r"\bazure\b", re.I), "Azure"),
+    (re.compile(r"\bgcp\b", re.I), "GCP"),
+    (re.compile(r"\bdocker\b", re.I), "Docker"),
+    (re.compile(r"\bkubernetes\b|\bk8s\b", re.I), "Kubernetes"),
+    (re.compile(r"\bterraform\b", re.I), "Terraform"),
+    (re.compile(r"\blinux\b", re.I), "Linux"),
+    (re.compile(r"\bsql\b", re.I), "SQL"),
+    (re.compile(r"\bpostgresql\b|\bpostgres\b", re.I), "PostgreSQL"),
+    (re.compile(r"\bsnowflake\b", re.I), "Snowflake"),
+    (re.compile(r"\bdatabricks\b", re.I), "Databricks"),
+    (re.compile(r"\bspark\b", re.I), "Apache Spark"),
+    (re.compile(r"\bkafka\b", re.I), "Kafka"),
+    (re.compile(r"\bsalesforce\b", re.I), "Salesforce"),
+    (re.compile(r"\bworkday\b", re.I), "Workday"),
+    (re.compile(r"\bservicenow\b", re.I), "ServiceNow"),
+    (re.compile(r"\bsap\b", re.I), "SAP"),
+    (re.compile(r"\bmachine learning\b|\bdeep learning\b|\bai/ml\b", re.I), "Machine Learning"),
+    (re.compile(r"\bllm\b|\bgenai\b|\bgenerative ai\b", re.I), "Generative AI"),
+    (re.compile(r"\bdata engineer\b", re.I), "Data Engineering"),
+    (re.compile(r"\bdevops\b", re.I), "DevOps"),
+    (re.compile(r"\bsre\b", re.I), "SRE"),
+    (re.compile(r"\bsecurity\b|\bcybersecurity\b", re.I), "Cybersecurity"),
+]
+
+
+def extract_title_skills(title: str) -> List[str]:
+    """Fast regex-based skill extraction from job title when JD body is brief."""
+    if not title:
+        return []
+    found = []
+    for pat, name in COMMON_TECH_SKILLS:
+        if pat.search(title):
+            found.append(name)
+    return found
+
+
 def enrich_job_record(raw: Dict[str, Any], enable_enrichment: bool = True) -> Dict[str, Any]:
     """Enriches job dictionary with salary, skills, H-1B, and experience facts."""
     out = dict(raw)
@@ -1904,16 +1958,7 @@ def enrich_job_record(raw: Dict[str, Any], enable_enrichment: bool = True) -> Di
             except Exception:
                 pass
 
-        # 3. Work mode fallback
-        if not out.get("work_mode"):
-            try:
-                wm = detect_work_mode(raw)
-                if wm:
-                    out["work_mode"] = wm.title()
-            except Exception:
-                pass
-
-        # 4. JD Facts: H-1B, Visa Sponsorship, and Reporting Line
+        # 3. JD Facts: H-1B, Visa Sponsorship, and Reporting Line
         try:
             facts = extract_jd_facts(desc, include_industry=False)
             if facts:
@@ -1923,14 +1968,36 @@ def enrich_job_record(raw: Dict[str, Any], enable_enrichment: bool = True) -> Di
                 out["reports_to"] = facts.reports_to or ""
         except Exception:
             pass
-    else:
-        # Without full description, still attempt basic work mode detection from location
+
+    # 4. Work mode fallback (checks title and location strings)
+    if not out.get("work_mode"):
         try:
             wm = detect_work_mode(raw)
             if wm:
                 out["work_mode"] = wm.title()
         except Exception:
             pass
+
+    # 5. Title-based Skill Extraction fallback
+    if not out.get("skills_required") and not out.get("skills_preferred") and not out.get("skills"):
+        t_skills = extract_title_skills(title)
+        if t_skills:
+            out["skills_required"] = ", ".join(t_skills)
+            out["skills"] = ", ".join(t_skills)
+
+    # 6. Title-based Seniority / Experience fallback
+    if out.get("experience_min") is None:
+        t_low = title.lower()
+        if any(w in t_low for w in ["intern", "internship", "co-op", "apprentice"]):
+            out["experience_min"] = 0.0
+        elif any(w in t_low for w in ["junior", "entry level", "associate"]):
+            out["experience_min"] = 1.0
+        elif any(w in t_low for w in ["senior", "sr.", "sr ", "lead"]):
+            out["experience_min"] = 5.0
+        elif any(w in t_low for w in ["staff", "principal"]):
+            out["experience_min"] = 8.0
+        elif any(w in t_low for w in ["director", "vp", "head of", "chief"]):
+            out["experience_min"] = 10.0
 
     return out
 
@@ -2070,12 +2137,14 @@ def sanitize_sqlite_value(val: Any) -> Any:
     return str(val)
 
 
-def save_jobs_batch(db_path: str, jobs: List[Dict[str, Any]], enable_enrichment: bool = False):
+def save_jobs_batch(db_path: str, jobs: List[Dict[str, Any]], enable_enrichment: bool = False, keep_content: bool = False):
     if not jobs:
         return
     prepared = []
     for j in jobs:
         enr = enrich_job_record(j, enable_enrichment=enable_enrichment)
+        if not keep_content and "content" in enr:
+            enr["content"] = ""
         clean = {k: sanitize_sqlite_value(v) for k, v in enr.items()}
         prepared.append(clean)
     conn = sqlite3.connect(db_path)
@@ -2319,7 +2388,7 @@ async def run_extractor(
                 if job_buffer:
                     to_write_jobs = list(job_buffer)
                     job_buffer.clear()
-                    save_jobs_batch(output_db, to_write_jobs, enable_enrichment=enable_enrichment)
+                    save_jobs_batch(output_db, to_write_jobs, enable_enrichment=enable_enrichment, keep_content=full_content)
                     total_jobs_saved += len(to_write_jobs)
 
     # 3. Continuous worker pool with strict per-board timeout
@@ -2328,6 +2397,7 @@ async def run_extractor(
 
         async def worker():
             nonlocal boards_with_200, boards_with_jobs, jobs_with_post_time, scanned_count
+            fetch_content = full_content or enable_enrichment
             while True:
                 try:
                     platform, slug = queue.get_nowait()
@@ -2338,7 +2408,7 @@ async def run_extractor(
                 status_code, comp_jobs = 0, []
                 if handler:
                     try:
-                        res = await asyncio.wait_for(handler(http, slug, full_content), timeout=10.0)
+                        res = await asyncio.wait_for(handler(http, slug, fetch_content), timeout=10.0)
                         if isinstance(res, tuple):
                             status_code, comp_jobs = res
                         elif isinstance(res, list):
@@ -2442,7 +2512,8 @@ def main():
 
         async def run_single():
             async with AsyncHTTPClient(concurrency=10) as http:
-                status, jobs = await handler(http, args.slug, args.full_content)
+                fetch_content = args.full_content or enable_enrichment
+                status, jobs = await handler(http, args.slug, fetch_content)
                 filtered = []
                 cutoff_dt = datetime.now(timezone.utc) - timedelta(days=args.days) if args.days > 0 else None
                 kw = args.keyword.lower().strip()
@@ -2472,7 +2543,7 @@ def main():
                 if args.output_db:
                     init_db(args.output_db)
                     save_boards_batch(args.output_db, [(platform, args.slug, status, len(jobs), len(filtered), datetime.now(timezone.utc).isoformat())])
-                    save_jobs_batch(args.output_db, filtered, enable_enrichment=enable_enrichment)
+                    save_jobs_batch(args.output_db, filtered, enable_enrichment=enable_enrichment, keep_content=args.full_content)
                     print(f"Saved to {args.output_db}")
 
                 if args.export_csv:

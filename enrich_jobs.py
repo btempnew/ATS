@@ -33,6 +33,59 @@ if CURRENT_DIR not in sys.path:
 from scrapers.job_extraction.engine import extract_job
 from scrapers.job_extraction.jd_enricher import parse_salary, detect_work_mode
 from matching.jd_facts import extract_jd_facts
+import re
+
+COMMON_TECH_SKILLS = [
+    (re.compile(r"\bpython\b", re.I), "Python"),
+    (re.compile(r"\bjava\b", re.I), "Java"),
+    (re.compile(r"\bgolang\b|\bgo\b", re.I), "Go"),
+    (re.compile(r"\brust\b", re.I), "Rust"),
+    (re.compile(r"\bc\+\+\b", re.I), "C++"),
+    (re.compile(r"\bc#\b|\b\.net\b", re.I), ".NET/C#"),
+    (re.compile(r"\breact\b", re.I), "React"),
+    (re.compile(r"\bnode\.?js\b", re.I), "Node.js"),
+    (re.compile(r"\btypescript\b", re.I), "TypeScript"),
+    (re.compile(r"\bjavascript\b", re.I), "JavaScript"),
+    (re.compile(r"\bangular\b", re.I), "Angular"),
+    (re.compile(r"\bvue\.?js\b", re.I), "Vue.js"),
+    (re.compile(r"\bnext\.?js\b", re.I), "Next.js"),
+    (re.compile(r"\bswift\b", re.I), "Swift"),
+    (re.compile(r"\bkotlin\b", re.I), "Kotlin"),
+    (re.compile(r"\baws\b", re.I), "AWS"),
+    (re.compile(r"\bazure\b", re.I), "Azure"),
+    (re.compile(r"\bgcp\b", re.I), "GCP"),
+    (re.compile(r"\bdocker\b", re.I), "Docker"),
+    (re.compile(r"\bkubernetes\b|\bk8s\b", re.I), "Kubernetes"),
+    (re.compile(r"\bterraform\b", re.I), "Terraform"),
+    (re.compile(r"\blinux\b", re.I), "Linux"),
+    (re.compile(r"\bsql\b", re.I), "SQL"),
+    (re.compile(r"\bpostgresql\b|\bpostgres\b", re.I), "PostgreSQL"),
+    (re.compile(r"\bsnowflake\b", re.I), "Snowflake"),
+    (re.compile(r"\bdatabricks\b", re.I), "Databricks"),
+    (re.compile(r"\bspark\b", re.I), "Apache Spark"),
+    (re.compile(r"\bkafka\b", re.I), "Kafka"),
+    (re.compile(r"\bsalesforce\b", re.I), "Salesforce"),
+    (re.compile(r"\bworkday\b", re.I), "Workday"),
+    (re.compile(r"\bservicenow\b", re.I), "ServiceNow"),
+    (re.compile(r"\bsap\b", re.I), "SAP"),
+    (re.compile(r"\bmachine learning\b|\bdeep learning\b|\bai/ml\b", re.I), "Machine Learning"),
+    (re.compile(r"\bllm\b|\bgenai\b|\bgenerative ai\b", re.I), "Generative AI"),
+    (re.compile(r"\bdata engineer\b", re.I), "Data Engineering"),
+    (re.compile(r"\bdevops\b", re.I), "DevOps"),
+    (re.compile(r"\bsre\b", re.I), "SRE"),
+    (re.compile(r"\bsecurity\b|\bcybersecurity\b", re.I), "Cybersecurity"),
+]
+
+
+def extract_title_skills(title: str) -> List[str]:
+    """Fast regex-based skill extraction from job title when JD body is brief."""
+    if not title:
+        return []
+    found = []
+    for pat, name in COMMON_TECH_SKILLS:
+        if pat.search(title):
+            found.append(name)
+    return found
 
 
 def enrich_record(raw: Dict[str, Any]) -> Dict[str, Any]:
@@ -122,6 +175,27 @@ def enrich_record(raw: Dict[str, Any]) -> Dict[str, Any]:
                 out["reports_to"] = facts.reports_to or ""
         except Exception:
             pass
+
+    # 5. Title-based Skill Extraction fallback
+    if not out.get("skills_required") and not out.get("skills_preferred") and not out.get("skills"):
+        t_skills = extract_title_skills(title)
+        if t_skills:
+            out["skills_required"] = ", ".join(t_skills)
+            out["skills"] = ", ".join(t_skills)
+
+    # 6. Title-based Seniority / Experience fallback
+    if out.get("experience_min") is None:
+        t_low = title.lower()
+        if any(w in t_low for w in ["intern", "internship", "co-op", "apprentice"]):
+            out["experience_min"] = 0.0
+        elif any(w in t_low for w in ["junior", "entry level", "associate"]):
+            out["experience_min"] = 1.0
+        elif any(w in t_low for w in ["senior", "sr.", "sr ", "lead"]):
+            out["experience_min"] = 5.0
+        elif any(w in t_low for w in ["staff", "principal"]):
+            out["experience_min"] = 8.0
+        elif any(w in t_low for w in ["director", "vp", "head of", "chief"]):
+            out["experience_min"] = 10.0
 
     return out
 
@@ -292,7 +366,9 @@ def enrich_sqlite_db(
         cur.execute("""
             SELECT * FROM live_jobs 
             WHERE (is_enriched IS NULL OR is_enriched = 0)
-              AND (content IS NOT NULL AND length(content) > 30);
+               OR (content IS NOT NULL AND length(content) > 30 AND (salary IS NULL OR salary = ""))
+               OR (skills IS NULL OR skills = "")
+               OR (work_mode IS NULL OR work_mode = "");
         """)
     else:
         cur.execute("SELECT * FROM live_jobs;")
