@@ -228,7 +228,9 @@ def prune(connection, retention_days: int, max_rows: int) -> dict[str, int]:
     ).rowcount
     overflow = 0
     if max_rows > 0:
-        total = connection.execute("SELECT count(*) FROM public.job_catalog").fetchone()[0]
+        total = connection.execute(
+            "SELECT count(*) AS total FROM public.job_catalog"
+        ).fetchone()["total"]
         excess = max(0, total - max_rows)
         if excess:
             overflow = connection.execute(
@@ -245,7 +247,9 @@ def prune_overflow(connection, max_rows: int) -> int:
     """Keep incremental inserts inside the row budget during a large harvest."""
     if max_rows <= 0:
         return 0
-    total = connection.execute("SELECT count(*) FROM public.job_catalog").fetchone()[0]
+    total = connection.execute(
+        "SELECT count(*) AS total FROM public.job_catalog"
+    ).fetchone()["total"]
     excess = max(0, total - max_rows)
     if not excess:
         return 0
