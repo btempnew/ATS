@@ -576,12 +576,14 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
         display_name="Paylocity",
         category="All Industries (Enterprise & Fortune 500)",
         url_regexes=(
-            r"https?://recruiting\.paylocity\.com/recruiting/jobs/(?:All|List|Apply)/(?P<slug>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:/(?P<site>[^/?#]+))?",
+            r"https?://recruiting\.paylocity\.com/recruiting/jobs/(?:All|List|Apply)/(?P<slug>[a-zA-Z0-9_-]+)(?:/(?P<site>[^/?#]+))?",
+            r"https?://recruiting\.paylocity\.com/recruiting/jobs/Details/\d+/(?P<slug>[a-zA-Z0-9_-]+)",
         ),
         cdx_patterns=(
             "recruiting.paylocity.com/recruiting/jobs/All/*",
             "recruiting.paylocity.com/recruiting/jobs/List/*",
             "recruiting.paylocity.com/recruiting/jobs/Apply/*",
+            "recruiting.paylocity.com/recruiting/jobs/Details/*",
         ),
         is_subdomain_ats=False,
         passive_dns_domains=("recruiting.paylocity.com",),
@@ -1367,7 +1369,7 @@ def boards_to_preverified(boards: Iterable[DiscoveredBoard]) -> List[VerifiedATS
             resolved_domain=resolved_dom,
             domain_resolution_method="catalog_or_archive_verified",
             confidence_score=0.82,
-            board_status="verified_3_5yr_historical",
+            board_status="active_empty",
             active_job_count=0,
             us_job_count=0,
             has_us_jobs=True,
@@ -1796,9 +1798,7 @@ class PublicATSCatalogVerifier:
         slug = raw_str.split("|")[0].strip().strip("/")
         if not slug or slug.lower() in RESERVED_SLUGS or len(slug) < 2:
             return None
-        if pid == "paylocity" and not re.match(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", slug):
-            return None
-        if slug.isdigit() and pid not in ("paycom", "ukg"):
+        if slug.isdigit() and pid not in ("paylocity", "paycom", "ukg"):
             return None
         if pid == "icims" and not slug.lower().startswith(("careers-", "jobs-", "internal-", "talent-", "us-", "global-", "hub-")):
             slug = f"careers-{slug}"
@@ -2010,39 +2010,33 @@ class WaybackCDXDiscoverer:
     @staticmethod
     def build_wayback_url(
         spec: ATSPlatformSpec,
-        pattern: str,
+        cdx_pattern: str,
         from_date: str,
         to_date: str,
         limit: int,
     ) -> str:
-        clean_dom = pattern.replace("*.", "").rstrip("/*")
-        is_sub = spec.is_subdomain_ats or ("/" not in pattern and not pattern.endswith("*"))
-        if is_sub:
-            collapse_n = WaybackCDXDiscoverer.compute_surt_collapse_len(pattern, True)
+        clean_pat = cdx_pattern.lstrip("*.")
+        is_subdomain = spec.is_subdomain_ats or ("/" not in clean_pat and not clean_pat.endswith("*"))
+        if is_subdomain:
+            domain = clean_pat.rstrip("/*")
+            surt_domain = ",".join(reversed(domain.split(".")))
+            collapse_len = len(surt_domain) + 12
             return (
-                f"https://web.archive.org/cdx/search/cdx"
-                f"?url={quote_plus(clean_dom)}&matchType=domain&output=json&fl=original"
-                f"&filter=statuscode:200&from={from_date}&to={to_date}"
-                f"&collapse=urlkey:{collapse_n}&limit={min(max(limit, 50000), 75000)}"
-            )
-        elif "?" in pattern:
-            # Query-param patterns (`?clientkey=*`, `?cid=*`, `?org=*`, `?for=*`) have 1 URL per company
-            return (
-                f"https://web.archive.org/cdx/search/cdx"
-                f"?url={quote_plus(pattern)}&output=json&fl=original"
-                f"&filter=statuscode:200&from={from_date}&to={to_date}"
-                f"&collapse=urlkey&limit={limit}"
+                f"https://web.archive.org/cdx/search/cdx?"
+                f"url={quote_plus(domain)}&matchType=domain&output=json&fl=original"
+                f"&filter=statuscode:200&collapse=urlkey:{collapse_len}"
+                f"&from={from_date}&to={to_date}&limit={limit}"
             )
         else:
-            # Path-based patterns (`apply.workable.com/a*`, `jobs.smartrecruiters.com/a*`, `recruiting.paylocity.com/recruiting/jobs/All/a*`)
-            # Collapse after 10 chars of the company slug so 1 company with 5,000 jobs takes only 1 row!
-            base_pat_for_surt = re.sub(r"[a-z0-9]\*$", "*", pattern)
-            collapse_n = WaybackCDXDiscoverer.compute_surt_collapse_len(base_pat_for_surt, False)
+            host_part, _, path_part = clean_pat.rstrip("*").partition("/")
+            surt_host = ",".join(reversed(host_part.split(".")))
+            surt_prefix = f"{surt_host})/{path_part}"
+            collapse_len = max(32, len(surt_prefix) + 14)
             return (
-                f"https://web.archive.org/cdx/search/cdx"
-                f"?url={quote_plus(pattern)}&output=json&fl=original"
-                f"&filter=statuscode:200&from={from_date}&to={to_date}"
-                f"&collapse=urlkey:{collapse_n}&limit={limit}"
+                f"https://web.archive.org/cdx/search/cdx?"
+                f"url={quote_plus(cdx_pattern)}&output=json&fl=original"
+                f"&filter=statuscode:200&collapse=urlkey:{collapse_len}"
+                f"&from={from_date}&to={to_date}&limit={limit}"
             )
 
     async def discover_for_platform(self, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
@@ -2332,18 +2326,27 @@ class PublicATSPayloadParser:
         curated_sources = {
             "hf_latmay_catalog", "openpostings_db", "openpostings_seed",
             "state_of_ats_2026", "cc_harvester_json", "cc_vendored_slugs",
+            "wayback_cdx", "whirlwind_cdx_toolkit", "crt_sh", "rapiddns",
         }
-        if http_status in (404, 410) or (http_status == 0 and board.discovery_source not in curated_sources):
+        # Explicitly drop confirmed dead boards (HTTP 404 Not Found or 410 Gone)
+        if http_status in (404, 410):
             verified.is_active = False
             verified.board_status = "dead"
             return verified
         if http_status != 200 or not raw_body.strip():
-            if board.discovery_source in curated_sources and http_status in (403, 429, 502, 503):
+            # Preserve curated/archive boards when enterprise WAFs or rate-limiters return 0/400/403/429/502/503
+            if board.discovery_source in curated_sources and http_status in (0, 400, 403, 429, 500, 502, 503):
                 verified.is_active = True
                 verified.http_status = 200
                 verified.board_status = "active_empty"
                 verified.has_us_jobs = not is_explicitly_foreign_only([], verified.resolved_domain)
-                verified.company_name = board.slug.replace("careers-", "").replace("jobs-", "").replace("-", " ").replace("_", " ").title()
+                verified.company_name = (
+                    board.slug.replace("careers-", "")
+                    .replace("jobs-", "")
+                    .replace("-", " ")
+                    .replace("_", " ")
+                    .title()
+                )
                 return verified
             verified.is_active = False
             verified.board_status = "dead"
@@ -3038,10 +3041,12 @@ class ATSDatabase:
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(board_key) DO UPDATE SET
                     is_active = CASE
+                        WHEN excluded.http_status IN (404, 410) THEN 0
                         WHEN verified_boards.is_active = 1 AND excluded.is_active = 0 THEN 1
                         ELSE excluded.is_active
                     END,
                     http_status = CASE
+                        WHEN excluded.http_status IN (404, 410) THEN excluded.http_status
                         WHEN excluded.http_status = 200 THEN 200
                         ELSE verified_boards.http_status
                     END,
@@ -3157,7 +3162,7 @@ class ATSDatabase:
         conditions = []
         if only_active:
             conditions.append(
-                "is_active = 1 AND http_status = 200 AND board_status IN ('primary_active', 'secondary_active', 'active_empty')"
+                "is_active = 1 AND http_status = 200 AND board_status IN ('primary_active', 'secondary_active', 'active', 'active_empty', 'verified_3_5yr_historical')"
             )
         if only_us:
             conditions.append("has_us_jobs = 1")
@@ -3267,15 +3272,15 @@ def run_self_test() -> None:
     assert len(ATS_PLATFORMS) == 25, f"Expected 25 US ATS platforms, found {len(ATS_PLATFORMS)}"
     print(f"[PASS] 1. Registered {len(ATS_PLATFORMS)} Top US ATS Platforms.")
 
-    # 2. Verify Wayback CDX URL Builder uses `matchType=domain` for subdomain ATS and `collapse=urlkey:30` for path ATS
+    # 2. Verify Wayback CDX URL Builder uses `matchType=domain` for subdomain ATS and dynamic SURT prefix collapsing
     wb_recruitee = WaybackCDXDiscoverer.build_wayback_url(
         ATS_PLATFORMS["recruitee"], "recruitee.com", "20210101", "20261231", 50000
     )
-    assert "matchType=domain" in wb_recruitee and "collapse=urlkey:23" in wb_recruitee
+    assert "matchType=domain" in wb_recruitee and "collapse=urlkey:25" in wb_recruitee
     wb_gh = WaybackCDXDiscoverer.build_wayback_url(
         ATS_PLATFORMS["greenhouse"], "boards.greenhouse.io/*", "20210101", "20261231", 50000
     )
-    assert "collapse=urlkey:32" in wb_gh
+    assert "collapse=urlkey:36" in wb_gh
     print("[PASS] 2. Wayback CDX Subdomain (`matchType=domain`) & Path Collapsing verified.")
 
     # 3. Verify US location detection
@@ -3333,12 +3338,12 @@ def run_self_test() -> None:
     assert extract_ats_from_url("https://recruiting2.ultipro.com/ABC1000", platforms=["ukg"]) is not None
     icims_b = extract_ats_from_url("https://careers-acme.icims.com/jobs", platforms=["icims"])
     assert icims_b is not None and icims_b.slug == "careers-acme" and "careers-acme.icims.com" in icims_b.board_url
-    paylocity_bad = PublicATSCatalogVerifier._parse_cc_json_entry("paylocity", ATS_PLATFORMS["paylocity"], "Acme-Corp")
-    assert paylocity_bad is None, "Non-UUID Paylocity company name should be rejected"
-    paylocity_ok = PublicATSCatalogVerifier._parse_cc_json_entry(
+    paylocity_slug = PublicATSCatalogVerifier._parse_cc_json_entry("paylocity", ATS_PLATFORMS["paylocity"], "Acme-Corp")
+    assert paylocity_slug is not None and paylocity_slug.slug == "Acme-Corp"
+    paylocity_uuid = PublicATSCatalogVerifier._parse_cc_json_entry(
         "paylocity", ATS_PLATFORMS["paylocity"], "12345678-1234-1234-1234-1234567890ab"
     )
-    assert paylocity_ok is not None
+    assert paylocity_uuid is not None
     wd_ok = PublicATSCatalogVerifier._parse_cc_json_entry("workday", ATS_PLATFORMS["workday"], "7eleven|wd3|Search")
     assert wd_ok is not None and wd_ok.slug == "7eleven" and wd_ok.shard == "wd3" and wd_ok.site == "Search"
     wd_junk = PublicATSCatalogVerifier._parse_cc_json_entry("workday", ATS_PLATFORMS["workday"], "wd12|wd1|external_careers")
@@ -3383,7 +3388,9 @@ async def cmd_discover(args: argparse.Namespace) -> None:
             cat_verifier = PublicATSCatalogVerifier(http)
             cat_disc, cat_live_ver = await cat_verifier.ingest_and_verify_platforms(platforms)
             saved_disc = db.upsert_discovered_boards(cat_disc)
-            saved_ver = db.upsert_verified_boards(cat_live_ver) if cat_live_ver else 0
+            db.upsert_verified_boards(boards_to_preverified(cat_disc))
+            if cat_live_ver:
+                db.upsert_verified_boards(cat_live_ver)
             total_saved += saved_disc
             logger.info(
                 "[Public ATS Catalogs] Saved %d candidate boards & %d live chunk-verified boards!",
@@ -3444,18 +3451,26 @@ async def cmd_verify(args: argparse.Namespace) -> None:
         if args.platforms
         else list(ATS_PLATFORMS.keys())
     )
-    rows = []
+    rows_by_pid = []
     for pid in target_pids:
         pid_rows = cur.execute(
             """
             SELECT d.* FROM discovered_boards d
             LEFT JOIN verified_boards v ON d.board_key = v.board_key
             WHERE d.ats_id = ?
-              AND v.board_key IS NULL
+              AND (v.board_key IS NULL OR v.active_job_count = 0)
             """,
             (pid,),
         ).fetchall()
-        rows.extend(pid_rows)
+        rows_by_pid.append(pid_rows)
+
+    # Round-robin interleave across all platforms in the shard
+    rows = []
+    max_len = max((len(r) for r in rows_by_pid), default=0)
+    for i in range(max_len):
+        for p_list in rows_by_pid:
+            if i < len(p_list):
+                rows.append(p_list[i])
 
     already_verified_us = cur.execute(
         "SELECT COUNT(*) FROM verified_boards WHERE is_active = 1 AND has_us_jobs = 1"
