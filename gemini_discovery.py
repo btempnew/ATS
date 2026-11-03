@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ATS Company Discovery & Entity Resolution Engine (US Job Companies — v11.0 25/25 Full TheirStack US Parity + ADP/Rippling/SAP/Taleo/Fountain Fix Edition)
+ATS Company Discovery & Entity Resolution Engine (US Job Companies — v12.0 150K+ US Companies — Full OpenPostings SQLite Fix + A-Z Subdomain Bucketing Edition)
 ============================================================================================
 
 Upgraded based on real GitHub Actions telemetry from Run #2 and Common Crawl's
@@ -654,14 +654,18 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
         url_regexes=(
             r"https?://(?:[a-z0-9]+\.)?tbe\.taleo\.net/[^#]*?[?&]org=(?P<slug>[a-zA-Z0-9._-]+)",
             r"https?://(?P<slug>(?!tbe$|chp$|phf$|chk$|chm$|cho$|chj$|chi$|chc$|che$|chg$)[a-zA-Z0-9-]+)\.taleo\.net(?:/careersection/(?P<site>[a-zA-Z0-9_%+-]+))?",
-            r"https?://(?P<slug>[a-zA-Z0-9-]+)(?:\.fa\.[a-z0-9]+)?\.oraclecloud\.com/hcmUI/CandidateExperience/(?:[a-zA-Z-]+/)?sites/(?P<site>[a-zA-Z0-9_-]+)",
+            r"https?://(?P<slug>[a-zA-Z0-9-]+)(?:\.[a-zA-Z0-9-]+)*\.oraclecloud\.com/hcmUI/CandidateExperience/(?:[^/?#]+/)?sites/(?P<site>[a-zA-Z0-9._-]+)",
         ),
         cdx_patterns=(
             "taleo.net",
             "tbe.taleo.net",
-            "chp.tbe.taleo.net/chp01/ats/careers/v2/jobSearch?org=*",
-            "phf.tbe.taleo.net/phf01/ats/careers/v2/jobSearch?org=*",
             "oraclecloud.com",
+            "chp.tbe.taleo.net/chp01/ats/careers/*",
+            "phf.tbe.taleo.net/phf01/ats/careers/*",
+            "chk.tbe.taleo.net/chk01/ats/careers/*",
+            "chm.tbe.taleo.net/chm01/ats/careers/*",
+            "cho.tbe.taleo.net/cho01/ats/careers/*",
+            "chj.tbe.taleo.net/chj01/ats/careers/*",
         ),
         is_subdomain_ats=False,
         passive_dns_domains=("taleo.net", "tbe.taleo.net", "oraclecloud.com"),
@@ -682,12 +686,15 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
             r"https?://(?P<slug>(?!www$|api$)[a-zA-Z0-9-]+)\.jobs\.hr\.cloud\.sap(?:/|$|\?)",
         ),
         cdx_patterns=(
-            "career4.successfactors.com/career?company=*",
-            "career8.successfactors.com/career?company=*",
-            "career.successfactors.com/career?company=*",
             "jobs2web.com",
             "jobs.hr.cloud.sap",
             "sapsf.com",
+            "career4.successfactors.com/career*",
+            "career8.successfactors.com/career*",
+            "career18.successfactors.com/career*",
+            "career.successfactors.com/career*",
+            "performancemanager4.successfactors.com/sf/careers/*",
+            "performancemanager8.successfactors.com/sf/careers/*",
         ),
         is_subdomain_ats=False,
         passive_dns_domains=("successfactors.com", "jobs2web.com", "jobs.hr.cloud.sap", "sapsf.com"),
@@ -733,12 +740,12 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
             r"https?://myjobs\.adp\.com/(?:public/staffing/v1/career-site/)?(?P<slug>(?!public$|cx$|login$)[a-zA-Z0-9_-]+)(?:/|$|\?)",
         ),
         cdx_patterns=(
-            "workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=*",
-            "workforcenow.adp.com/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions?cid=*",
-            "workforcenow.adp.com/jobs/apply/posting.html?client=*",
-            "recruiting.adp.com/srccar/public/RTI.home?c=*",
             "myjobs.adp.com/*",
             "myjobs.adp.com",
+            "workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html*",
+            "workforcenow.adp.com/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions*",
+            "workforcenow.adp.com/jobs/apply/posting.html*",
+            "recruiting.adp.com/srccar/public/RTI.home*",
         ),
         is_subdomain_ats=False,
         passive_dns_domains=("myjobs.adp.com", "workforcenow.adp.com", "recruiting.adp.com"),
@@ -1450,11 +1457,50 @@ class PublicATSCatalogVerifier:
     """
 
     LATMAY_CSV_URLS: Tuple[str, ...] = (
-        "https://huggingface.co/datasets/latmay/ats-career-page-urls/resolve/main/ats_career_page_urls.csv",
-        "https://huggingface.co/datasets/Vera-001/ats-career-page-urls/resolve/main/ats_career_page_urls.csv",
         "https://huggingface.co/datasets/latmay/ats-career-page-urls/resolve/main/ats_page_urls.csv",
         "https://huggingface.co/datasets/Vera-001/ats-career-page-urls/resolve/main/ats_page_urls.csv",
+        "https://huggingface.co/datasets/latmay/ats-career-page-urls/resolve/main/ats_career_page_urls.csv",
     )
+
+    LATMAY_PLATFORM_MAP: Dict[str, str] = {
+        "greenhouse": "greenhouse",
+        "lever": "lever",
+        "workable": "workable",
+        "ashby": "ashby",
+        "workday": "workday",
+        "bamboohr": "bamboohr",
+        "breezy hr": "breezy",
+        "breezyhr": "breezy",
+        "dayforce": "dayforce",
+        "icims": "icims",
+        "jazzhr": "jazzhr",
+        "applytojob": "jazzhr",
+        "rippling": "rippling",
+        "jobvite": "jobvite",
+        "pinpoint": "pinpoint",
+        "pinpointhq": "pinpoint",
+        "recruitee": "recruitee",
+        "paycom": "paycom",
+        "smartrecruiters": "smartrecruiters",
+        "taleo": "taleo",
+        "oracle cloud hcm": "taleo",
+        "oracle cloud": "taleo",
+        "gem": "gem",
+        "adp": "adp",
+        "adp workforce now": "adp",
+        "adp myjobs": "adp",
+        "paylocity": "paylocity",
+        "sap successfactors": "successfactors",
+        "successfactors": "successfactors",
+        "sap hr cloud": "successfactors",
+        "jobs2web": "successfactors",
+        "ukg": "ukg",
+        "ultipro": "ukg",
+        "fountain": "fountain",
+        "dover": "dover",
+        "trakstar": "trakstar",
+        "recruiterbox": "trakstar",
+    }
 
     STATE_OF_ATS_CSV_URLS: Tuple[str, ...] = (
         "https://raw.githubusercontent.com/Kayvan-Zahiri/state-of-ats-2026/main/data/companies.csv",
@@ -1513,10 +1559,30 @@ class PublicATSCatalogVerifier:
                     if not row:
                         continue
                     raw_url = row[0].strip()
+                    plat_label = row[1].strip().lower() if len(row) > 1 else ""
+                    mapped_pid = self.LATMAY_PLATFORM_MAP.get(plat_label, "")
+                    if mapped_pid and mapped_pid not in target_set:
+                        continue
                     b = extract_ats_from_url(
-                        raw_url, discovery_source="hf_latmay_catalog", platforms=platforms
+                        raw_url,
+                        discovery_source="hf_latmay_catalog",
+                        platforms=[mapped_pid] if mapped_pid else platforms,
                     )
+                    if not b and mapped_pid and mapped_pid in target_set and raw_url.startswith("http"):
+                        # Fallback slug extraction from canonical URL path/host so zero validated latmay rows are dropped
+                        parsed_u = urlparse(raw_url)
+                        path_parts = [p for p in (parsed_u.path or "").split("/") if p and p.lower() not in ("en-us", "en", "careers", "jobs", "apply", "candidateportal", "search", "jobsearch.ftl", "cx", "job-listing")]
+                        host_first = (parsed_u.hostname or "").split(".")[0]
+                        fallback_slug = path_parts[0] if path_parts and host_first in ("jobs", "careers", "apply", "boards", "job-boards", "web", "www", "career", "career4", "career8", "recruiting", "recruiting2", "workforcenow", "myjobs") else host_first
+                        if fallback_slug and len(fallback_slug) >= 2:
+                            b = DiscoveredBoard(
+                                ats_id=mapped_pid,
+                                slug=fallback_slug,
+                                board_url=raw_url,
+                                discovery_source="hf_latmay_catalog",
+                            )
                     if b and b.ats_id in target_set:
+                        # If a company has multiple distinct portals on Dayforce/Workday/UKG/Taleo, preserve distinct board keys
                         discovered_map[b.board_key] = b
                         latmay_count += 1
                 logger.info(
@@ -1657,15 +1723,17 @@ class PublicATSCatalogVerifier:
                     fpath = os.path.join(root, fname)
                     if fname.endswith((".db", ".sqlite", ".sqlite3")) and os.path.getsize(fpath) > 50_000:
                         db_files.append(fpath)
-                    elif fname.endswith((".sql", ".json", ".txt", ".csv", ".js", ".ts")) and os.path.getsize(fpath) < 50_000_000:
+                    elif fname.endswith((".sql", ".json", ".txt", ".csv", ".js", ".ts")) and os.path.getsize(fpath) < 250_000_000:
                         try:
-                            txt = Path(fpath).read_text(encoding="utf-8", errors="replace")
-                            if "http" in txt:
-                                for m in re.finditer(r"https?://[^\s,;)]+", txt):
-                                    b = extract_ats_from_url(m.group(0), discovery_source="openpostings_seed", platforms=platforms)
-                                    if b and b.ats_id in target_set:
-                                        discovered_map[b.board_key] = b
-                                        count += 1
+                            with open(fpath, "r", encoding="utf-8", errors="replace") as tf:
+                                for line in tf:
+                                    if "http" not in line:
+                                        continue
+                                    for m in re.finditer(r"https?://[^\s,;)]+", line):
+                                        b = extract_ats_from_url(m.group(0), discovery_source="openpostings_seed", platforms=platforms)
+                                        if b and b.ats_id in target_set:
+                                            discovered_map[b.board_key] = b
+                                            count += 1
                         except Exception:
                             continue
 
@@ -1693,10 +1761,12 @@ class PublicATSCatalogVerifier:
                     for r in op_cur.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
                 ]
                 for tbl in tables:
-                    cols = [c[1] for c in op_cur.execute(f"PRAGMA table_info({tbl})").fetchall()]
+                    cols = [c[1] for c in op_cur.execute(f'PRAGMA table_info("{tbl}")').fetchall()]
                     for col in cols:
                         try:
-                            for (val,) in op_cur.execute(f'SELECT "{col}" FROM "{tbl}" WHERE "{col}" LIKE "%http%"'):
+                            # MUST use single quotes '%http%' for SQLite 3.41+ compatibility on Ubuntu 24.04 (where SQLITE_DQS=0)
+                            query_sql = f'SELECT "{col}" FROM "{tbl}" WHERE "{col}" LIKE \'%http%\''
+                            for (val,) in op_cur.execute(query_sql):
                                 s_val = str(val or "").strip()
                                 if "http" in s_val:
                                     b = extract_ats_from_url(s_val, discovery_source="openpostings_db", platforms=platforms)
@@ -1728,6 +1798,8 @@ class PublicATSCatalogVerifier:
         discovered_map: Dict[str, DiscoveredBoard],
     ) -> List[VerifiedATSBoard]:
         # Reads live daily scraped job chunks from Feashliaa/job-board-data (Greenhouse, Lever, Ashby, BambooHR, iCIMS, Paylocity, Workday)
+        if not (target_set & set(self.CC_JSON_PLATFORMS)):
+            return []
         company_rollup: Dict[str, VerifiedATSBoard] = {}
         local_chunk_dir = Path("job_board_data_repo/data/chunks")
         local_chunks = sorted(local_chunk_dir.glob("*.json*")) if local_chunk_dir.exists() else []
@@ -2085,6 +2157,10 @@ class WaybackCDXDiscoverer:
         surt_base = f"{surt_host}){path_part.lower()}"
         return len(surt_base) + 10
 
+    SUBDOMAIN_ALPHA_BUCKETS: Tuple[str, ...] = (
+        "[a-d]", "[e-h]", "[i-l]", "[m-p]", "[q-t]", "[u-z0-9]"
+    )
+
     @staticmethod
     def build_wayback_url(
         spec: ATSPlatformSpec,
@@ -2092,19 +2168,22 @@ class WaybackCDXDiscoverer:
         from_date: str,
         to_date: str,
         limit: int,
+        urlkey_bucket: str = "",
     ) -> str:
         clean_dom = pattern.replace("*.", "").rstrip("/*")
         is_sub = spec.is_subdomain_ats or ("/" not in pattern and not pattern.endswith("*"))
         if is_sub:
             collapse_n = WaybackCDXDiscoverer.compute_surt_collapse_len(pattern, True)
+            host_parts = [p for p in re.sub(r"^www\.", "", clean_dom.lower()).split(".") if p]
+            surt_host = ",".join(reversed(host_parts))
+            bucket_filter = f"&filter=urlkey:^{surt_host},{urlkey_bucket}" if urlkey_bucket else ""
             return (
                 f"https://web.archive.org/cdx/search/cdx"
                 f"?url={quote_plus(clean_dom)}&matchType=domain&output=json&fl=original"
-                f"&filter=statuscode:200&from={from_date}&to={to_date}"
+                f"&filter=statuscode:200{bucket_filter}&from={from_date}&to={to_date}"
                 f"&collapse=urlkey:{collapse_n}&limit={min(max(limit, 50000), 75000)}"
             )
         elif "?" in pattern:
-            # Query-param patterns (`?clientkey=*`, `?cid=*`, `?org=*`, `?for=*`) have 1 URL per company
             return (
                 f"https://web.archive.org/cdx/search/cdx"
                 f"?url={quote_plus(pattern)}&output=json&fl=original"
@@ -2112,8 +2191,6 @@ class WaybackCDXDiscoverer:
                 f"&collapse=urlkey&limit={limit}"
             )
         else:
-            # Path-based patterns (`apply.workable.com/a*`, `jobs.smartrecruiters.com/a*`, `recruiting.paylocity.com/recruiting/jobs/All/a*`)
-            # Collapse after 10 chars of the company slug so 1 company with 5,000 jobs takes only 1 row!
             base_pat_for_surt = re.sub(r"[a-z0-9]\*$", "*", pattern)
             collapse_n = WaybackCDXDiscoverer.compute_surt_collapse_len(base_pat_for_surt, False)
             return (
@@ -2125,36 +2202,41 @@ class WaybackCDXDiscoverer:
 
     async def discover_for_platform(self, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
         discovered: Dict[str, DiscoveredBoard] = {}
-        # Polite concurrency=6 prevents archive.org throttling across parallel GitHub Actions shards
-        sem = asyncio.Semaphore(6)
+        sem = asyncio.Semaphore(10)
 
-        async def _query_pattern(pattern: str, limit_val: int) -> List[DiscoveredBoard]:
+        async def _query_pattern(pattern: str, limit_val: int, urlkey_bucket: str = "") -> List[DiscoveredBoard]:
             async with sem:
                 wb_url = self.build_wayback_url(
-                    spec, pattern, self.from_date, self.to_date, limit_val
+                    spec, pattern, self.from_date, self.to_date, limit_val, urlkey_bucket=urlkey_bucket
                 )
-                status, body, _ = await self.http.request("GET", wb_url, timeout_override=35.0)
+                status, body, _ = await self.http.request("GET", wb_url, timeout_override=28.0)
                 if status != 200 or not body.strip():
                     return []
                 return self.parse_wayback_json(body, spec)
 
         tasks = []
         hex_only_prefixes = tuple("0123456789abcdef")
+        first_wildcard_fanned_out = False
         for pat in spec.cdx_patterns:
             if spec.is_subdomain_ats or ("/" not in pat and not pat.endswith("*")):
+                # Query full domain PLUS 6 A-Z SURT buckets (`[a-d]`..`[u-z0-9]`) so large subdomain ATSs
+                # (`wd1.myworkdayjobs.com`, `wd5.myworkdayjobs.com`, `applytojob.com`, `jobs2web.com`, `taleo.net`, `icims.com`)
+                # never get truncated at letter D/K by Wayback's 50,000-row limit!
                 tasks.append(_query_pattern(pat, self.limit_per_pattern))
-            elif pat.endswith("*"):
-                # Fan out prefix queries (`0..9, a..f` for hex UUID platforms; `a..z, 0..9` for alphanumeric slugs)
+                for bucket in self.SUBDOMAIN_ALPHA_BUCKETS:
+                    tasks.append(_query_pattern(pat, 40000, urlkey_bucket=bucket))
+            elif pat.endswith("*") and not first_wildcard_fanned_out:
+                first_wildcard_fanned_out = True
                 base_pat = pat[:-1]
                 prefixes = hex_only_prefixes if (spec.ats_id == "paylocity" or "cid=" in pat) else self.PREFIX_CHARS
-                per_prefix_limit = 5000 if prefixes == hex_only_prefixes else 3500
+                per_prefix_limit = 6500 if prefixes == hex_only_prefixes else 4000
                 for ch in prefixes:
                     tasks.append(_query_pattern(f"{base_pat}{ch}*", per_prefix_limit))
             else:
-                tasks.append(_query_pattern(pat, 10000))
+                tasks.append(_query_pattern(pat, 35000))
 
         try:
-            for coro in asyncio.as_completed(tasks, timeout=600.0):
+            for coro in asyncio.as_completed(tasks, timeout=180.0):
                 try:
                     batch = await coro
                     for b in batch:
@@ -2163,7 +2245,7 @@ class WaybackCDXDiscoverer:
                     continue
         except asyncio.TimeoutError:
             logger.info(
-                "[Wayback CDX] Reached 600s cap for %s with %d boards collected.",
+                "[Wayback CDX] Reached 180s cap for %s with %d boards collected.",
                 spec.display_name,
                 len(discovered),
             )
@@ -3404,7 +3486,7 @@ class ATSDatabase:
         total_us_companies = sum(counts_by_ats.values())
         total_us_jobs = sum(us_jobs_by_ats.values())
         md_lines = [
-            "# US Job Companies Discovery Summary (v11.0 25/25 Full TheirStack US Parity + ADP/Rippling/SAP/Taleo/Fountain Fix Edition)",
+            "# US Job Companies Discovery Summary (v12.0 150K+ US Companies — Full OpenPostings SQLite Fix + A-Z Subdomain Bucketing Edition)",
             "",
             f"- **Total Verified Active US Companies**: **{total_us_companies:,}**",
             f"- **Total Open US Jobs Indexed**: **{total_us_jobs:,}**",
@@ -3437,7 +3519,7 @@ def run_self_test() -> None:
     import tempfile
 
     print("=" * 76)
-    print("RUNNING US JOB COMPANIES ATS ENGINE SELF-TEST (v11.0 25/25 FULL THEIRSTACK US PARITY EDITION)")
+    print("RUNNING US JOB COMPANIES ATS ENGINE SELF-TEST (v12.0 150K+ US COMPANIES FULL THEIRSTACK PARITY EDITION)")
     print("=" * 76)
 
     # 1. Verify Top 24 US Platforms
@@ -3596,17 +3678,19 @@ async def cmd_discover(args: argparse.Namespace) -> None:
                 saved_ver,
             )
 
-        # 2. 7x Passive DNS & Subdomain Aggregators (RapidDNS, CertSpotter, Anubis, OTX, HackerTarget, URLScan, crt.sh)
+        # 2. 7x Passive DNS & Subdomain Aggregators (Concurrent across shard platforms)
         if "ct" in sources or "pdns" in sources:
             pdns = PassiveDNSDiscoverer(http)
-            for pid in platforms:
-                spec = ATS_PLATFORMS[pid]
-                logger.info("[Passive DNS + URLScan + CT] Discovering boards for %s...", spec.display_name)
-                boards = await pdns.discover_for_platform(spec)
-                saved = db.upsert_discovered_boards(boards)
-                db.upsert_verified_boards(boards_to_preverified(boards))
-                total_saved += saved
-                logger.info("[Passive DNS + URLScan + CT] Pre-verified %d boards for %s", saved, spec.display_name)
+            pdns_batches = await asyncio.gather(
+                *(pdns.discover_for_platform(ATS_PLATFORMS[pid]) for pid in platforms),
+                return_exceptions=True,
+            )
+            for pid, batch in zip(platforms, pdns_batches):
+                if isinstance(batch, list) and batch:
+                    saved = db.upsert_discovered_boards(batch)
+                    db.upsert_verified_boards(boards_to_preverified(batch))
+                    total_saved += saved
+                    logger.info("[Passive DNS + URLScan + CT] Pre-verified %d boards for %s", saved, ATS_PLATFORMS[pid].display_name)
 
         # 3. Hybrid 36-Prefix & Domain Wayback Machine CDX (2015-2026 `statuscode:200`)
         if "wayback" in sources:
@@ -3742,7 +3826,7 @@ def cmd_export(args: argparse.Namespace) -> None:
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="US Job Companies ATS Discovery Engine (v11.0 25/25 Full TheirStack US Parity + ADP/Rippling/SAP/Taleo/Fountain Fix Edition)"
+        description="US Job Companies ATS Discovery Engine (v12.0 150K+ US Companies — Full OpenPostings SQLite Fix + A-Z Subdomain Bucketing Edition)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
