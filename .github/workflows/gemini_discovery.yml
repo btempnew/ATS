@@ -1,4 +1,5 @@
-name: Gemini Discovery (v9.0 US ATS Companies)
+name: Gemini Discovery (v12.0 150K+ US Companies — 8-Shard Edition)
+
 on:
   workflow_dispatch:
     inputs:
@@ -28,6 +29,9 @@ on:
 permissions:
   contents: read
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   discover-and-verify-shard:
     name: "US ATS Shard: ${{ matrix.shard_name }}"
@@ -40,21 +44,27 @@ jobs:
           - shard_id: "greenhouse"
             shard_name: "Greenhouse (All Industries)"
             platforms: "greenhouse"
-          - shard_id: "modern_cloud"
-            shard_name: "Ashby, Lever, Rippling, Workable, Dover, Gem"
-            platforms: "ashby,lever,rippling,workable,dover,gem"
-          - shard_id: "enterprise_core"
-            shard_name: "Workday, iCIMS, SmartRecruiters, Jobvite"
-            platforms: "workday,icims,smartrecruiters,jobvite"
+          - shard_id: "modern_cloud_1"
+            shard_name: "Ashby, Lever, Dover, Gem"
+            platforms: "ashby,lever,dover,gem"
+          - shard_id: "modern_cloud_2"
+            shard_name: "Rippling, Workable, Recruitee, Pinpoint"
+            platforms: "rippling,workable,recruitee,pinpoint"
+          - shard_id: "workday_icims"
+            shard_name: "Workday, iCIMS"
+            platforms: "workday,icims"
+          - shard_id: "enterprise_talent"
+            shard_name: "SmartRecruiters, Jobvite, Taleo, SuccessFactors, Fountain"
+            platforms: "smartrecruiters,jobvite,taleo,successfactors,fountain"
           - shard_id: "smb_hris"
             shard_name: "BambooHR, JazzHR, BreezyHR, Trakstar"
             platforms: "bamboohr,jazzhr,breezy,trakstar"
-          - shard_id: "us_midmarket_payroll"
-            shard_name: "Paylocity, Paycom, UKG, Dayforce, ADP"
-            platforms: "paylocity,paycom,ukg,dayforce,adp"
-          - shard_id: "enterprise_global"
-            shard_name: "Taleo, SuccessFactors, Fountain, Recruitee, Pinpoint"
-            platforms: "taleo,successfactors,fountain,recruitee,pinpoint"
+          - shard_id: "us_payroll_core"
+            shard_name: "Paylocity, Paycom"
+            platforms: "paylocity,paycom"
+          - shard_id: "us_enterprise_hcm"
+            shard_name: "UKG, Dayforce, ADP Workforce Now"
+            platforms: "ukg,dayforce,adp"
 
     steps:
       - name: Checkout Repository
@@ -72,17 +82,20 @@ jobs:
           pip install -r requirements.txt
           pip install "cdx_toolkit>=0.9.37" "warcio>=1.7.5" "duckdb>=1.0.0" "pyarrow>=15.0.0"
 
-      - name: Fetch OpenPostings 110K+ Pre-Verified ATS SQLite Corpus
+      - name: Fetch OpenPostings (110K+), Job-Board-Aggregator (95K+), and Daily Live Job Chunks (1M+ Jobs)
         continue-on-error: true
         run: |
           git clone --depth 1 https://github.com/Masterjx9/OpenPostings.git openpostings_repo || true
+          if [ -d "openpostings_repo" ]; then (cd openpostings_repo && git lfs pull || true); fi
+          git clone --depth 1 https://github.com/Riley-Dorrington/job-board-aggregator.git job_board_aggregator_repo || git clone --depth 1 https://github.com/Feashliaa/job-board-aggregator.git job_board_aggregator_repo || true
+          git clone --depth 1 https://github.com/Feashliaa/job-board-data.git job_board_data_repo || git clone --depth 1 https://github.com/Riley-Dorrington/job-board-data.git job_board_data_repo || true
 
       - name: Run Built-in Self-Test
         run: |
           python gemini_discovery.py self-test
 
       - name: Step 1 - Multi-Corpus Discovery & Direct Live Chunk Pre-Verification
-        timeout-minutes: 60
+        timeout-minutes: 100
         continue-on-error: true
         run: |
           python gemini_discovery.py discover \
