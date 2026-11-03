@@ -38,6 +38,7 @@ import glob
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
 from typing import List, Dict, Any, Optional, Tuple
+from collections import defaultdict
 
 try:
     import aiohttp
@@ -207,10 +208,10 @@ class AsyncHTTPClient:
     """Asynchronous HTTP client with per-host token pacing, circuit-breaker backoff on 429, and exponential jitter."""
     def __init__(
         self,
-        concurrency: int = 40,
-        per_host_concurrency: int = 8,
-        min_host_interval: float = 0.12,  # Enforce <= 8 req/sec max per host
-        timeout: float = 18.0,
+        concurrency: int = 80,
+        per_host_concurrency: int = 15,
+        min_host_interval: float = 0.03,  # Up to 33 req/sec per host
+        timeout: float = 8.0,
     ):
         self.semaphore = asyncio.Semaphore(concurrency)
         self.per_host_concurrency = per_host_concurrency
@@ -240,22 +241,21 @@ class AsyncHTTPClient:
 
     async def _wait_for_host(self, host: str):
         """Enforces host-wide cooldowns on 429 and paces inter-request intervals."""
+        # 1. Cooldown check: if host encountered a 429/503, wait until cooldown expires (outside lock)
+        now = time.monotonic()
+        cooldown = self._host_cooldown_until.get(host, 0.0)
+        if now < cooldown:
+            wait_s = cooldown - now + random.uniform(0.1, 0.3)
+            await asyncio.sleep(wait_s)
+
+        # 2. Minimum inter-request pacing
         lock = self._get_host_lock(host)
         async with lock:
             now = time.monotonic()
-            # 1. Cooldown check: if host encountered a 429/503, wait until cooldown expires
-            cooldown = self._host_cooldown_until.get(host, 0.0)
-            if now < cooldown:
-                wait_s = cooldown - now + random.uniform(0.1, 0.5)
-                await asyncio.sleep(wait_s)
-                now = time.monotonic()
-
-            # 2. Minimum inter-request pacing
             last_time = self._host_last_request_time.get(host, 0.0)
             elapsed = now - last_time
             if elapsed < self.min_host_interval:
                 await asyncio.sleep(self.min_host_interval - elapsed)
-
             self._host_last_request_time[host] = time.monotonic()
 
     def _parse_retry_after(self, retry_after_val: Optional[str]) -> Optional[float]:
@@ -283,6 +283,7 @@ class AsyncHTTPClient:
                 limit=self.semaphore._value,
                 limit_per_host=self.per_host_concurrency,
                 ssl=False,
+                ttl_dns_cache=300,
             )
             self._session = aiohttp.ClientSession(
                 timeout=timeout_cfg,
@@ -295,7 +296,7 @@ class AsyncHTTPClient:
         if self._session:
             await self._session.close()
 
-    async def get_json(self, url: str, max_retries: int = 4) -> Tuple[int, Any]:
+    async def get_json(self, url: str, max_retries: int = 2) -> Tuple[int, Any]:
         """Performs async GET and parses JSON with host-wide circuit breaker and exponential jitter on 429/503."""
         host = self._get_host(url)
         host_sem = self._get_host_sem(host)
@@ -306,7 +307,6 @@ class AsyncHTTPClient:
                     await self._wait_for_host(host)
 
                     if not HAS_AIOHTTP or not self._session:
-                        # Fallback for systems without aiohttp
                         import urllib.request
                         try:
                             req = urllib.request.Request(
@@ -320,8 +320,8 @@ class AsyncHTTPClient:
                         except urllib.error.HTTPError as e:
                             if e.code in (429, 503) and attempt < max_retries:
                                 retry_after = self._parse_retry_after(e.headers.get("Retry-After"))
-                                backoff = retry_after or (2.0 * (2 ** attempt) + random.uniform(0.5, 2.0))
-                                backoff = min(60.0, max(2.0, backoff))
+                                backoff = retry_after or (1.5 * (2 ** attempt) + random.uniform(0.3, 1.0))
+                                backoff = min(6.0, max(1.5, backoff))
                                 self._host_cooldown_until[host] = time.monotonic() + backoff
                                 await asyncio.sleep(backoff)
                                 continue
@@ -340,25 +340,21 @@ class AsyncHTTPClient:
                                     return 200, json.loads(text)
                             elif resp.status in (429, 503) and attempt < max_retries:
                                 retry_after = self._parse_retry_after(resp.headers.get("Retry-After"))
-                                backoff = retry_after or (2.5 * (2 ** attempt) + random.uniform(0.5, 2.0))
-                                backoff = min(60.0, max(2.0, backoff))
-                                # Set host-wide cooldown so all tasks hitting this host will pause
+                                backoff = retry_after or (1.5 * (2 ** attempt) + random.uniform(0.3, 1.0))
+                                backoff = min(6.0, max(1.5, backoff))
                                 self._host_cooldown_until[host] = time.monotonic() + backoff
                                 await asyncio.sleep(backoff)
                                 continue
                             else:
                                 return resp.status, None
                     except (asyncio.TimeoutError, aiohttp.ClientError):
-                        if attempt < max_retries:
-                            backoff = 1.5 * (attempt + 1) + random.uniform(0.2, 1.0)
-                            await asyncio.sleep(backoff)
-                            continue
+                        # Fail-fast on dead/unresponsive hosts: do not retry dead domains!
                         return 0, None
                     except Exception:
                         return 0, None
         return 0, None
 
-    async def get_text(self, url: str, max_retries: int = 4) -> Tuple[int, Optional[str]]:
+    async def get_text(self, url: str, max_retries: int = 2) -> Tuple[int, Optional[str]]:
         """Performs async GET and returns raw text / HTML with host pacing and circuit breaker."""
         host = self._get_host(url)
         host_sem = self._get_host_sem(host)
@@ -380,8 +376,8 @@ class AsyncHTTPClient:
                         except urllib.error.HTTPError as e:
                             if e.code in (429, 503) and attempt < max_retries:
                                 retry_after = self._parse_retry_after(e.headers.get("Retry-After"))
-                                backoff = retry_after or (2.0 * (2 ** attempt) + random.uniform(0.5, 2.0))
-                                backoff = min(60.0, max(2.0, backoff))
+                                backoff = retry_after or (1.5 * (2 ** attempt) + random.uniform(0.3, 1.0))
+                                backoff = min(6.0, max(1.5, backoff))
                                 self._host_cooldown_until[host] = time.monotonic() + backoff
                                 await asyncio.sleep(backoff)
                                 continue
@@ -396,24 +392,20 @@ class AsyncHTTPClient:
                                 return 200, text
                             elif resp.status in (429, 503) and attempt < max_retries:
                                 retry_after = self._parse_retry_after(resp.headers.get("Retry-After"))
-                                backoff = retry_after or (2.5 * (2 ** attempt) + random.uniform(0.5, 2.0))
-                                backoff = min(60.0, max(2.0, backoff))
+                                backoff = retry_after or (1.5 * (2 ** attempt) + random.uniform(0.3, 1.0))
+                                backoff = min(6.0, max(1.5, backoff))
                                 self._host_cooldown_until[host] = time.monotonic() + backoff
                                 await asyncio.sleep(backoff)
                                 continue
                             else:
                                 return resp.status, None
                     except (asyncio.TimeoutError, aiohttp.ClientError):
-                        if attempt < max_retries:
-                            backoff = 1.5 * (attempt + 1) + random.uniform(0.2, 1.0)
-                            await asyncio.sleep(backoff)
-                            continue
                         return 0, None
                     except Exception:
                         return 0, None
         return 0, None
 
-    async def post_json(self, url: str, json_data: Any, max_retries: int = 4) -> Tuple[int, Any]:
+    async def post_json(self, url: str, json_data: Any, max_retries: int = 2) -> Tuple[int, Any]:
         """Performs async POST and parses JSON with host pacing and circuit breaker."""
         host = self._get_host(url)
         host_sem = self._get_host_sem(host)
@@ -440,8 +432,8 @@ class AsyncHTTPClient:
                         except urllib.error.HTTPError as e:
                             if e.code in (429, 503) and attempt < max_retries:
                                 retry_after = self._parse_retry_after(e.headers.get("Retry-After"))
-                                backoff = retry_after or (2.0 * (2 ** attempt) + random.uniform(0.5, 2.0))
-                                backoff = min(60.0, max(2.0, backoff))
+                                backoff = retry_after or (1.5 * (2 ** attempt) + random.uniform(0.3, 1.0))
+                                backoff = min(6.0, max(1.5, backoff))
                                 self._host_cooldown_until[host] = time.monotonic() + backoff
                                 await asyncio.sleep(backoff)
                                 continue
@@ -460,18 +452,14 @@ class AsyncHTTPClient:
                                     return 200, json.loads(text)
                             elif resp.status in (429, 503) and attempt < max_retries:
                                 retry_after = self._parse_retry_after(resp.headers.get("Retry-After"))
-                                backoff = retry_after or (2.5 * (2 ** attempt) + random.uniform(0.5, 2.0))
-                                backoff = min(60.0, max(2.0, backoff))
+                                backoff = retry_after or (1.5 * (2 ** attempt) + random.uniform(0.3, 1.0))
+                                backoff = min(6.0, max(1.5, backoff))
                                 self._host_cooldown_until[host] = time.monotonic() + backoff
                                 await asyncio.sleep(backoff)
                                 continue
                             else:
                                 return resp.status, None
                     except (asyncio.TimeoutError, aiohttp.ClientError):
-                        if attempt < max_retries:
-                            backoff = 1.5 * (attempt + 1) + random.uniform(0.2, 1.0)
-                            await asyncio.sleep(backoff)
-                            continue
                         return 0, None
                     except Exception:
                         return 0, None
@@ -2263,12 +2251,12 @@ async def run_extractor(
     targets: List[Tuple[str, str]],
     output_db: str,
     export_csv: Optional[str] = None,
-    concurrency: int = 50,
+    concurrency: int = 80,
     full_content: bool = False,
     only_us: bool = False,
     days: int = 0,
     keyword: Optional[str] = None,
-    batch_size: int = 150,
+    batch_size: int = 100,
     enable_enrichment: bool = False,
 ):
     init_db(output_db)
@@ -2277,6 +2265,7 @@ async def run_extractor(
     jobs_with_post_time = 0
     boards_with_200 = 0
     boards_with_jobs = 0
+    scanned_count = 0
 
     cutoff_dt = None
     if days > 0:
@@ -2284,8 +2273,8 @@ async def run_extractor(
 
     kw_clean = keyword.lower().strip() if keyword else ""
 
-    print(f"Starting job extraction across {total_companies:,} companies...")
-    print(f"  • Concurrency: {concurrency} (Rate-limited <= 10 req/host)")
+    print(f"Starting Hyper-Parallel job extraction across {total_companies:,} companies...")
+    print(f"  • Concurrency: {concurrency} (Continuous Worker Pool, Zero-Head-of-Line-Blocking)")
     print(f"  • Database: {output_db}")
     print(f"  • Full Content (HTML): {full_content}")
     print(f"  • JD Enrichment (Salary, Skills, H-1B): {enable_enrichment and HAS_ENRICHMENT}")
@@ -2296,39 +2285,75 @@ async def run_extractor(
         print(f"  • Keyword Filter: '{kw_clean}'")
     print()
 
-    async with AsyncHTTPClient(concurrency=concurrency, per_host_concurrency=10) as http:
-        for idx in range(0, total_companies, batch_size):
-            batch = targets[idx : idx + batch_size]
-            tasks = []
-            for platform, slug in batch:
+    # 1. Round-robin interleave targets across ATS platforms to distribute network load across hosts
+    by_plat = defaultdict(list)
+    for p, s in targets:
+        by_plat[p].append((p, s))
+
+    interleaved_targets = []
+    max_plat_len = max((len(lst) for lst in by_plat.values()), default=0)
+    for i in range(max_plat_len):
+        for p, lst in by_plat.items():
+            if i < len(lst):
+                interleaved_targets.append(lst[i])
+
+    queue: asyncio.Queue[Tuple[str, str]] = asyncio.Queue()
+    for t in interleaved_targets:
+        queue.put_nowait(t)
+
+    # 2. In-memory buffer for asynchronous batched SQLite writes
+    board_buffer = []
+    job_buffer = []
+    buffer_lock = asyncio.Lock()
+    is_done = False
+
+    async def db_writer():
+        nonlocal total_jobs_saved
+        while not is_done or board_buffer or job_buffer:
+            await asyncio.sleep(1.2)
+            async with buffer_lock:
+                if board_buffer:
+                    to_write_boards = list(board_buffer)
+                    board_buffer.clear()
+                    save_boards_batch(output_db, to_write_boards)
+                if job_buffer:
+                    to_write_jobs = list(job_buffer)
+                    job_buffer.clear()
+                    save_jobs_batch(output_db, to_write_jobs, enable_enrichment=enable_enrichment)
+                    total_jobs_saved += len(to_write_jobs)
+
+    # 3. Continuous worker pool with strict per-board timeout
+    async with AsyncHTTPClient(concurrency=concurrency, per_host_concurrency=15, min_host_interval=0.03, timeout=8.0) as http:
+        db_task = asyncio.create_task(db_writer())
+
+        async def worker():
+            nonlocal boards_with_200, boards_with_jobs, jobs_with_post_time, scanned_count
+            while True:
+                try:
+                    platform, slug = queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    break
+
                 handler = PLATFORM_HANDLERS.get(platform)
+                status_code, comp_jobs = 0, []
                 if handler:
-                    tasks.append(handler(http, slug, full_content))
-                else:
-                    tasks.append(asyncio.sleep(0, result=(0, [])))
+                    try:
+                        res = await asyncio.wait_for(handler(http, slug, full_content), timeout=10.0)
+                        if isinstance(res, tuple):
+                            status_code, comp_jobs = res
+                        elif isinstance(res, list):
+                            status_code, comp_jobs = 200, res
+                    except Exception:
+                        status_code, comp_jobs = 0, []
 
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            batch_jobs = []
-            board_records = []
-            now_iso = datetime.now(timezone.utc).isoformat()
-
-            for (platform, slug), res in zip(batch, results):
-                if isinstance(res, tuple):
-                    status_code, comp_jobs = res
-                elif isinstance(res, list):
-                    status_code, comp_jobs = 200, res
-                else:
-                    status_code, comp_jobs = 0, []
-
+                now_iso = datetime.now(timezone.utc).isoformat()
                 if status_code == 200:
                     boards_with_200 += 1
 
                 valid_comp_jobs = []
                 for j in comp_jobs:
-                    if only_us and not j["is_us"]:
+                    if only_us and not j.get("is_us"):
                         continue
-
-                    # Check recency filter
                     if cutoff_dt and j.get("posted_at"):
                         try:
                             j_dt = datetime.fromisoformat(j["posted_at"].replace("Z", "+00:00"))
@@ -2336,13 +2361,10 @@ async def run_extractor(
                                 continue
                         except Exception:
                             pass
-
-                    # Check keyword filter
                     if kw_clean:
                         search_corpus = f"{j.get('title', '')} {j.get('department', '')} {j.get('location', '')}".lower()
                         if kw_clean not in search_corpus:
                             continue
-
                     valid_comp_jobs.append(j)
                     if j.get("posted_at"):
                         jobs_with_post_time += 1
@@ -2350,26 +2372,29 @@ async def run_extractor(
                 if len(comp_jobs) > 0:
                     boards_with_jobs += 1
 
-                board_records.append((
-                    platform,
-                    slug,
-                    status_code,
-                    len(comp_jobs),
-                    len(valid_comp_jobs),
-                    now_iso
-                ))
-                batch_jobs.extend(valid_comp_jobs)
+                async with buffer_lock:
+                    board_buffer.append((platform, slug, status_code, len(comp_jobs), len(valid_comp_jobs), now_iso))
+                    if valid_comp_jobs:
+                        job_buffer.extend(valid_comp_jobs)
 
-            if board_records:
-                save_boards_batch(output_db, board_records)
-            if batch_jobs:
-                save_jobs_batch(output_db, batch_jobs, enable_enrichment=enable_enrichment)
-                total_jobs_saved += len(batch_jobs)
+                queue.task_done()
+                scanned_count += 1
+                if scanned_count % 100 == 0 or scanned_count == total_companies:
+                    pct = (scanned_count / total_companies) * 100
+                    rate_200 = (boards_with_200 / max(1, scanned_count)) * 100
+                    current_jobs = total_jobs_saved + len(job_buffer)
+                    ts_rate = (jobs_with_post_time / max(1, current_jobs)) * 100
+                    print(
+                        f"[{scanned_count:,}/{total_companies:,} ({pct:.1f}%)] Scanned | Boards 200 OK: {boards_with_200:,}/{scanned_count:,} ({rate_200:.1f}%) | Live Jobs: {current_jobs:,} | Timestamp Rate: {jobs_with_post_time}/{max(1, current_jobs)} ({ts_rate:.1f}%)",
+                        flush=True,
+                    )
 
-            progress = min(idx + batch_size, total_companies)
-            pct = (progress / total_companies) * 100
-            rate_200 = (boards_with_200 / max(1, progress)) * 100
-            print(f"[{progress:,}/{total_companies:,} ({pct:.1f}%)] Scanned | Boards 200 OK: {boards_with_200:,}/{progress:,} ({rate_200:.1f}%) | Live Jobs: {total_jobs_saved:,} | Timestamp Rate: {jobs_with_post_time}/{max(1, total_jobs_saved)} ({((jobs_with_post_time / max(1, total_jobs_saved)) * 100):.1f}%)", flush=True)
+        worker_count = min(concurrency, max(10, total_companies))
+        workers = [asyncio.create_task(worker()) for _ in range(worker_count)]
+        await asyncio.gather(*workers)
+
+        is_done = True
+        await db_task
 
     print(f"\nExtraction completed successfully!", flush=True)
     print(f"Total Boards Returning HTTP 200: {boards_with_200:,} / {total_companies:,} ({((boards_with_200 / max(1, total_companies)) * 100):.1f}%)", flush=True)
@@ -2391,7 +2416,7 @@ def main():
     parser.add_argument("--shard-index", type=int, default=0, help="Zero-based index of this shard runner")
     parser.add_argument("--total-shards", type=int, default=1, help="Total number of parallel runner shards")
     parser.add_argument("--merge-dbs", nargs="+", help="Merge one or more shard databases into --output-db")
-    parser.add_argument("--concurrency", type=int, default=40, help="Max async requests concurrency")
+    parser.add_argument("--concurrency", type=int, default=80, help="Max async requests concurrency")
     parser.add_argument("--full-content", action="store_true", help="Download complete job descriptions")
     parser.add_argument("--enrich", action="store_true", help="Run deep JD enrichment (salary, skills, H-1B, experience)")
     parser.add_argument("--only-us", action="store_true", help="Only save US / US-Remote jobs")

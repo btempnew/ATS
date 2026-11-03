@@ -80,7 +80,7 @@ on:
         description: '⚡ Parallel Runner Shards (Multi-Runner Distribution)'
         required: true
         type: choice
-        default: '12'
+        default: '24'
         options:
           - '1'
           - '2'
@@ -91,6 +91,9 @@ on:
           - '12'
           - '16'
           - '20'
+          - '24'
+          - '30'
+          - '32'
       posted_within_days:
         description: '📅 Recency Filter (Keep jobs posted within last N days)'
         required: true
@@ -129,12 +132,13 @@ on:
         description: '⚡ Async Concurrency per Runner (Concurrent HTTP workers)'
         required: true
         type: choice
-        default: '40'
+        default: '80'
         options:
           - '20'
           - '40'
           - '60'
           - '80'
+          - '100'
       commit_to_git:
         description: '💾 Commit live_jobs.csv directly back to GitHub repository'
         required: true
@@ -162,13 +166,13 @@ jobs:
       - id: build-matrix
         env:
           INPUT_SLUG: ${{ github.event.inputs.single_slug }}
-          INPUT_SHARDS: ${{ github.event.inputs.runner_shards || '4' }}
+          INPUT_SHARDS: ${{ github.event.inputs.runner_shards || '24' }}
         run: |
           python3 -c '
           import json, os
 
           slug = os.environ.get("INPUT_SLUG", "").strip()
-          user_shards = os.environ.get("INPUT_SHARDS", "4").strip()
+          user_shards = os.environ.get("INPUT_SHARDS", "24").strip()
 
           # If single slug is requested, run on 1 shard only
           if slug:
@@ -177,7 +181,7 @@ jobs:
               try:
                   total = int(user_shards)
               except Exception:
-                  total = 4
+                  total = 24
 
           shards = [{"index": i, "num": i + 1, "total": total} for i in range(total)]
           matrix = {"include": shards}
@@ -198,9 +202,10 @@ jobs:
     name: "🚜 Harvest Shard ${{ matrix.num }} of ${{ matrix.total }}"
     needs: setup-shards
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 45
     strategy:
       fail-fast: false
+      max-parallel: 24
       matrix: ${{ fromJson(needs.setup-shards.outputs.matrix) }}
     env:
       PYTHONUNBUFFERED: "1"
@@ -229,7 +234,7 @@ jobs:
           OFFSET="${{ github.event.inputs.offset || '0' }}"
           DAYS="${{ github.event.inputs.posted_within_days || '0' }}"
           KEYWORD="${{ github.event.inputs.title_keyword }}"
-          CONCURRENCY="${{ github.event.inputs.concurrency || '40' }}"
+          CONCURRENCY="${{ github.event.inputs.concurrency || '80' }}"
           ONLY_US="${{ github.event.inputs.only_us }}"
           FULL_CONTENT="${{ github.event.inputs.full_content }}"
           ENRICH="${{ github.event.inputs.enrich_jobs }}"
