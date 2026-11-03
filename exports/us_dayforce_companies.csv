@@ -1,4 +1,5 @@
 company_name,resolved_domain,ats_id,ats_display_name,slug,board_url,us_job_count,active_job_count,latest_posted_at,confidence_score,us_locations,detected_tech_stack,sample_job_titles
+Questwindows,,dayforce,Dayforce (Ceridian),questwindows,https://jobs.dayforcehcm.com/questwindows/CANDIDATEPORTALCAA,3,3,,0.728,,,
 Job Board,,dayforce,Dayforce (Ceridian),aan,https://jobs.dayforcehcm.com/en-US/aan/CANDIDATEPORTAL,1,1,,0.7,,,
 Job Board,,dayforce,Dayforce (Ceridian),aba,https://jobs.dayforcehcm.com/en-US/aba/CANDIDATEPORTAL,1,1,,0.7,,,
 Job Board,,dayforce,Dayforce (Ceridian),ablelight,https://jobs.dayforcehcm.com/en-US/ablelight/CANDIDATEPORTAL,1,1,,0.7,,,
@@ -1944,3 +1945,4 @@ Job Board,,dayforce,Dayforce (Ceridian),carecloud,https://jobs.dayforcehcm.com/e
 Job Board,,dayforce,Dayforce (Ceridian),circleofcare,https://jobs.dayforcehcm.com/en-US/circleofcare/CANDIDATEPORTAL,0,0,,0.55,,,
 Job Board,,dayforce,Dayforce (Ceridian),comptiainc,https://jobs.dayforcehcm.com/en-US/comptiainc/CANDIDATEPORTAL,0,0,,0.55,,,
 Job Board,,dayforce,Dayforce (Ceridian),concerttapestry,https://jobs.dayforcehcm.com/en-US/concerttapestry/CANDIDATEPORTAL,0,0,,0.55,,,
+Qsr,,dayforce,Dayforce (Ceridian),qsr,https://jobs.dayforcehcm.com/qsr/candidateportal/jobs/190,0,0,,0.55,,,
