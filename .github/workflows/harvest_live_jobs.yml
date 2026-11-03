@@ -145,12 +145,23 @@ on:
         type: boolean
         default: false
 
+      sync_to_neon:
+        description: 'Publish harvested jobs to the Getworkin Neon catalog'
+        required: true
+        type: boolean
+        default: true
+
   # Optional daily automated job harvest at 06:00 UTC
   schedule:
     - cron: '0 6 * * *'
 
 permissions:
   contents: write
+
+# Prevent two harvests from pruning/upserting the catalog simultaneously.
+concurrency:
+  group: harvest-live-ats-jobs
+  cancel-in-progress: false
 
 jobs:
   # ============================================================================
@@ -283,7 +294,9 @@ jobs:
         with:
           name: "shard-db-${{ matrix.index }}"
           path: "live_jobs_shard_${{ matrix.index }}.db"
-          retention-days: 7
+          # Needed only until the merge job completes. Keeping 30 shard DBs for
+          # a week wastes Actions artifact storage.
+          retention-days: 1
 
   # ============================================================================
   # JOB 3: Merge All Shards, Export Final CSV, and Summarize
@@ -309,7 +322,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install aiohttp requests pydantic
+          pip install aiohttp requests pydantic "psycopg[binary]"
 
       - name: Download All Shard Databases
         uses: actions/download-artifact@v4
@@ -329,6 +342,20 @@ jobs:
         run: |
           echo "Running Deep JD Enrichment on merged database..."
           python enrich_jobs.py --db live_jobs.db --export-csv live_jobs.csv
+
+      - name: Sync Harvest to Neon Job Catalog
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.sync_to_neon == 'true' }}
+        env:
+          JOB_CATALOG_DATABASE_URL: ${{ secrets.JOB_CATALOG_DATABASE_URL }}
+        run: |
+          if [ -z "$JOB_CATALOG_DATABASE_URL" ]; then
+            echo "::error::Repository secret JOB_CATALOG_DATABASE_URL is not configured"
+            exit 1
+          fi
+          python sync_harvest_to_neon.py \
+            --db live_jobs.db \
+            --retention-days 30 \
+            --max-catalog-rows 450000
 
       - name: Generate Extraction Summary
         if: always()
@@ -464,7 +491,9 @@ jobs:
           path: |
             live_jobs.db
             live_jobs.csv
-          retention-days: 90
+          # Neon is the serving store; retain a one-week recovery copy without
+          # accumulating ~250 MB per daily run for 90 days.
+          retention-days: 7
 
       - name: Commit and Push Results to Repository
         if: ${{ github.event.inputs.commit_to_git == 'true' }}
