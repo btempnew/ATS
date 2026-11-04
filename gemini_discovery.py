@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ATS Company Discovery & Entity Resolution Engine (US Job Companies — v13.0 150K+ US Companies — Full ADP/Paycom/Workday Uncapped + 1.3M+ Jobs Edition)
+ATS Company Discovery & Entity Resolution Engine (US Job Companies — v14.0 150K+ US Companies — Workday/iCIMS Log-Verified Fix + 1.3M+ Jobs Edition)
 ============================================================================================
 
 Upgraded based on real GitHub Actions telemetry from Run #2 and Common Crawl's
@@ -1924,11 +1924,12 @@ class PublicATSCatalogVerifier:
         if raw_str.startswith("http://") or raw_str.startswith("https://"):
             return extract_ats_from_url(raw_str, discovery_source="cc_harvester_json", platforms=[pid])
 
-        if pid == "workday" and "|" in raw_str:
-            parts = [p.strip() for p in raw_str.split("|")]
+        if pid == "workday" and ("|" in raw_str or "/" in raw_str):
+            sep = "|" if "|" in raw_str else "/"
+            parts = [p.strip() for p in raw_str.split(sep) if p.strip()]
             tenant = parts[0] if len(parts) > 0 else ""
-            shard = parts[1] if len(parts) > 1 and parts[1] else "wd1"
-            site = parts[2] if len(parts) > 2 and parts[2] else "External"
+            shard = parts[1] if len(parts) > 1 and re.match(r"^wd\d+$", parts[1].lower()) else "wd1"
+            site = parts[2] if len(parts) > 2 else (parts[1] if len(parts) > 1 and not re.match(r"^wd\d+$", parts[1].lower()) else "External")
             if not tenant or tenant.lower() in RESERVED_SLUGS or re.match(r"^wd\d+$", tenant.lower()):
                 return None
             return DiscoveredBoard(
@@ -1950,8 +1951,7 @@ class PublicATSCatalogVerifier:
             slug = m_uuid.group(1)
         if slug.isdigit() and pid not in ("paycom", "ukg"):
             return None
-        if pid == "icims" and not slug.lower().startswith(("careers-", "jobs-", "internal-", "talent-", "us-", "global-", "hub-")):
-            slug = f"careers-{slug}"
+        # Preserve exact iCIMS subdomain from `icims_companies.json` (10,102 boards) without colliding `acme` into `careers-acme`
         return DiscoveredBoard(
             ats_id=pid,
             slug=slug,
@@ -2008,10 +2008,12 @@ class WhirlwindCDXToolkitDiscoverer:
                 cc_indexes = await self._get_latest_cc_indexes(http)
 
                 async def _run_queries() -> None:
-                    for pat in spec.cdx_patterns[:2]:
-                        query_url = f"*.{pat}" if spec.is_subdomain_ats and not pat.startswith("*.") else pat
+                    cc_pats = ["careers-*.icims.com/*", "jobs-*.icims.com/*", "*.icims.com/jobs/*"] if spec.ats_id == "icims" else list(spec.cdx_patterns[:3])
+                    for pat in cc_pats:
+                        is_dom_only = ("/" not in pat and not pat.endswith("*"))
+                        query_url = f"*.{pat}/*" if (spec.is_subdomain_ats or is_dom_only) and not pat.startswith("*.") else pat
                         for idx_api in cc_indexes:
-                            req_url = f"{idx_api}?url={quote_plus(query_url)}&output=json&fl=url&limit={min(self.limit_per_pattern, 1500)}"
+                            req_url = f"{idx_api}?url={quote_plus(query_url)}&output=json&fl=url&limit={min(self.limit_per_pattern, 3000)}"
                             status, body, _ = await http.request("GET", req_url, timeout_override=12.0)
                             if status != 200 or not body:
                                 continue
@@ -2204,7 +2206,7 @@ class WaybackCDXDiscoverer:
 
     async def discover_for_platform(self, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
         discovered: Dict[str, DiscoveredBoard] = {}
-        sem = asyncio.Semaphore(6)
+        sem = asyncio.Semaphore(5)
 
         async def _query_pattern(pattern: str, limit_val: int, urlkey_bucket: str = "") -> List[DiscoveredBoard]:
             async with sem:
@@ -2215,19 +2217,19 @@ class WaybackCDXDiscoverer:
                     status, body, _ = await self.http.request("GET", wb_url, timeout_override=35.0)
                     if status == 200 and body.strip():
                         return self.parse_wayback_json(body, spec)
-                    await asyncio.sleep(0.8 * (attempt + 1))
+                    await asyncio.sleep(0.6 * (attempt + 1))
                 return []
 
         tasks = []
         hex_only_prefixes = tuple("0123456789abcdef")
-        fanned_out_count = 0
+        first_wildcard_fanned_out = False
         for pat in spec.cdx_patterns:
             if spec.is_subdomain_ats or ("/" not in pat and not pat.endswith("*")):
-                tasks.append(_query_pattern(pat, self.limit_per_pattern))
-                for bucket in self.SUBDOMAIN_ALPHA_BUCKETS:
-                    tasks.append(_query_pattern(pat, 45000, urlkey_bucket=bucket))
-            elif pat.endswith("*") and fanned_out_count < 2:
-                fanned_out_count += 1
+                # 1 single collapsed `matchType=domain&collapse=urlkey:N&limit=90000` query per domain
+                # (avoids firing 137 queries that trigger web.archive.org IP rate-limiting!)
+                tasks.append(_query_pattern(pat, max(self.limit_per_pattern, 90000)))
+            elif pat.endswith("*") and not first_wildcard_fanned_out:
+                first_wildcard_fanned_out = True
                 tasks.append(_query_pattern(pat, self.limit_per_pattern))
                 base_pat = pat[:-1]
                 prefixes = hex_only_prefixes if (spec.ats_id == "paylocity" or "cid=" in pat) else self.PREFIX_CHARS
@@ -2235,10 +2237,10 @@ class WaybackCDXDiscoverer:
                 for ch in prefixes:
                     tasks.append(_query_pattern(f"{base_pat}{ch}*", per_prefix_limit))
             else:
-                tasks.append(_query_pattern(pat, 40000))
+                tasks.append(_query_pattern(pat, 45000))
 
         try:
-            for coro in asyncio.as_completed(tasks, timeout=260.0):
+            for coro in asyncio.as_completed(tasks, timeout=240.0):
                 try:
                     batch = await coro
                     for b in batch:
@@ -3488,7 +3490,7 @@ class ATSDatabase:
         total_us_companies = sum(counts_by_ats.values())
         total_us_jobs = sum(us_jobs_by_ats.values())
         md_lines = [
-            "# US Job Companies Discovery Summary (v13.0 150K+ US Companies — Full ADP/Paycom/Workday Uncapped + 1.3M+ Jobs Edition)",
+            "# US Job Companies Discovery Summary (v14.0 150K+ US Companies — Workday/iCIMS Log-Verified Fix + 1.3M+ Jobs Edition)",
             "",
             f"- **Total Verified Active US Companies**: **{total_us_companies:,}**",
             f"- **Total Open US Jobs Indexed**: **{total_us_jobs:,}**",
@@ -3828,7 +3830,7 @@ def cmd_export(args: argparse.Namespace) -> None:
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="US Job Companies ATS Discovery Engine (v13.0 150K+ US Companies — Full ADP/Paycom/Workday Uncapped + 1.3M+ Jobs Edition)"
+        description="US Job Companies ATS Discovery Engine (v14.0 150K+ US Companies — Workday/iCIMS Log-Verified Fix + 1.3M+ Jobs Edition)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
