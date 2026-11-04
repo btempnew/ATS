@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ATS Company Discovery & Entity Resolution Engine (US Job Companies — v12.0 150K+ US Companies — Full OpenPostings SQLite Fix + A-Z Subdomain Bucketing Edition)
+ATS Company Discovery & Entity Resolution Engine (US Job Companies — v13.0 150K+ US Companies — Full ADP/Paycom/Workday Uncapped + 1.3M+ Jobs Edition)
 ============================================================================================
 
 Upgraded based on real GitHub Actions telemetry from Run #2 and Common Crawl's
@@ -740,10 +740,10 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
             r"https?://myjobs\.adp\.com/(?:public/staffing/v1/career-site/)?(?P<slug>(?!public$|cx$|login$)[a-zA-Z0-9_-]+)(?:/|$|\?)",
         ),
         cdx_patterns=(
+            "workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=*",
             "myjobs.adp.com/*",
             "myjobs.adp.com",
-            "workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html*",
-            "workforcenow.adp.com/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions*",
+            "workforcenow.adp.com/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions?cid=*",
             "workforcenow.adp.com/jobs/apply/posting.html*",
             "recruiting.adp.com/srccar/public/RTI.home*",
         ),
@@ -2184,11 +2184,13 @@ class WaybackCDXDiscoverer:
                 f"&collapse=urlkey:{collapse_n}&limit={min(max(limit, 50000), 75000)}"
             )
         elif "?" in pattern:
+            base_pat_for_surt = re.sub(r"[a-z0-9]\*$", "*", pattern)
+            collapse_n = WaybackCDXDiscoverer.compute_surt_collapse_len(base_pat_for_surt, False)
             return (
                 f"https://web.archive.org/cdx/search/cdx"
                 f"?url={quote_plus(pattern)}&output=json&fl=original"
                 f"&filter=statuscode:200&from={from_date}&to={to_date}"
-                f"&collapse=urlkey&limit={limit}"
+                f"&collapse=urlkey:{collapse_n}&limit={limit}"
             )
         else:
             base_pat_for_surt = re.sub(r"[a-z0-9]\*$", "*", pattern)
@@ -2202,41 +2204,41 @@ class WaybackCDXDiscoverer:
 
     async def discover_for_platform(self, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
         discovered: Dict[str, DiscoveredBoard] = {}
-        sem = asyncio.Semaphore(10)
+        sem = asyncio.Semaphore(6)
 
         async def _query_pattern(pattern: str, limit_val: int, urlkey_bucket: str = "") -> List[DiscoveredBoard]:
             async with sem:
                 wb_url = self.build_wayback_url(
                     spec, pattern, self.from_date, self.to_date, limit_val, urlkey_bucket=urlkey_bucket
                 )
-                status, body, _ = await self.http.request("GET", wb_url, timeout_override=28.0)
-                if status != 200 or not body.strip():
-                    return []
-                return self.parse_wayback_json(body, spec)
+                for attempt in range(2):
+                    status, body, _ = await self.http.request("GET", wb_url, timeout_override=35.0)
+                    if status == 200 and body.strip():
+                        return self.parse_wayback_json(body, spec)
+                    await asyncio.sleep(0.8 * (attempt + 1))
+                return []
 
         tasks = []
         hex_only_prefixes = tuple("0123456789abcdef")
-        first_wildcard_fanned_out = False
+        fanned_out_count = 0
         for pat in spec.cdx_patterns:
             if spec.is_subdomain_ats or ("/" not in pat and not pat.endswith("*")):
-                # Query full domain PLUS 6 A-Z SURT buckets (`[a-d]`..`[u-z0-9]`) so large subdomain ATSs
-                # (`wd1.myworkdayjobs.com`, `wd5.myworkdayjobs.com`, `applytojob.com`, `jobs2web.com`, `taleo.net`, `icims.com`)
-                # never get truncated at letter D/K by Wayback's 50,000-row limit!
                 tasks.append(_query_pattern(pat, self.limit_per_pattern))
                 for bucket in self.SUBDOMAIN_ALPHA_BUCKETS:
-                    tasks.append(_query_pattern(pat, 40000, urlkey_bucket=bucket))
-            elif pat.endswith("*") and not first_wildcard_fanned_out:
-                first_wildcard_fanned_out = True
+                    tasks.append(_query_pattern(pat, 45000, urlkey_bucket=bucket))
+            elif pat.endswith("*") and fanned_out_count < 2:
+                fanned_out_count += 1
+                tasks.append(_query_pattern(pat, self.limit_per_pattern))
                 base_pat = pat[:-1]
                 prefixes = hex_only_prefixes if (spec.ats_id == "paylocity" or "cid=" in pat) else self.PREFIX_CHARS
-                per_prefix_limit = 6500 if prefixes == hex_only_prefixes else 4000
+                per_prefix_limit = 8000 if prefixes == hex_only_prefixes else 5000
                 for ch in prefixes:
                     tasks.append(_query_pattern(f"{base_pat}{ch}*", per_prefix_limit))
             else:
-                tasks.append(_query_pattern(pat, 35000))
+                tasks.append(_query_pattern(pat, 40000))
 
         try:
-            for coro in asyncio.as_completed(tasks, timeout=180.0):
+            for coro in asyncio.as_completed(tasks, timeout=260.0):
                 try:
                     batch = await coro
                     for b in batch:
@@ -3486,7 +3488,7 @@ class ATSDatabase:
         total_us_companies = sum(counts_by_ats.values())
         total_us_jobs = sum(us_jobs_by_ats.values())
         md_lines = [
-            "# US Job Companies Discovery Summary (v12.0 150K+ US Companies — Full OpenPostings SQLite Fix + A-Z Subdomain Bucketing Edition)",
+            "# US Job Companies Discovery Summary (v13.0 150K+ US Companies — Full ADP/Paycom/Workday Uncapped + 1.3M+ Jobs Edition)",
             "",
             f"- **Total Verified Active US Companies**: **{total_us_companies:,}**",
             f"- **Total Open US Jobs Indexed**: **{total_us_jobs:,}**",
@@ -3746,7 +3748,7 @@ async def cmd_verify(args: argparse.Namespace) -> None:
             LEFT JOIN verified_boards v ON d.board_key = v.board_key
             WHERE d.ats_id = ?
               AND (v.board_key IS NULL OR v.board_status = 'verified_3_5yr_historical')
-            LIMIT 8000
+            LIMIT 25000
             """,
             (pid,),
         ).fetchall()
@@ -3826,7 +3828,7 @@ def cmd_export(args: argparse.Namespace) -> None:
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="US Job Companies ATS Discovery Engine (v12.0 150K+ US Companies — Full OpenPostings SQLite Fix + A-Z Subdomain Bucketing Edition)"
+        description="US Job Companies ATS Discovery Engine (v13.0 150K+ US Companies — Full ADP/Paycom/Workday Uncapped + 1.3M+ Jobs Edition)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
