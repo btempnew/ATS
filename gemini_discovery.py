@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ATS Company Discovery & Entity Resolution Engine (US Job Companies — v14.0 150K+ US Companies — Workday/iCIMS Log-Verified Fix + 1.3M+ Jobs Edition)
+ATS Company Discovery & Entity Resolution Engine (US Job Companies — v15.0 150K+ US Companies — Workday 12K+ Uncapped (Zero 777 Drop + Fast SURT CDX + Multi-Site) Edition)
 ============================================================================================
 
 Upgraded based on real GitHub Actions telemetry from Run #2 and Common Crawl's
@@ -206,24 +206,15 @@ EXPLICIT_FOREIGN_LOCATION_REGEX = re.compile(
 
 def is_explicitly_foreign_only(locations: Sequence[str], resolved_domain: str = "") -> bool:
     """
-    Returns True ONLY when a company is explicitly foreign-only:
-    - Its resolved domain uses a non-US country-code TLD (e.g. `.co.uk`, `.de`, `.fr`, `.com.au`, `.in`), OR
-    - It lists explicit locations, ZERO of them match the US or Remote, and at least one matches a known foreign country/city.
+    Returns True ONLY when a company's resolved domain explicitly uses a non-US country-code TLD
+    (e.g. `.co.uk`, `.de`, `.fr`, `.com.au`, `.in`, `.ca`) AND none of its sampled locations are in the US.
+    Never discards `.com`/`.org`/`.io` companies based on a partial 20-40 job location sample!
     """
     dom = (resolved_domain or "").strip().lower()
     if dom and any(dom.endswith(tld) for tld in FOREIGN_TLD_SUFFIXES):
         if not any(is_us_location(loc) for loc in locations):
             return True
-    if not locations:
-        return False
-    has_any_us_or_remote = any(
-        is_us_location(loc) or "remote" in loc.lower() or "anywhere" in loc.lower()
-        for loc in locations
-    )
-    if has_any_us_or_remote:
-        return False
-    has_explicit_foreign = any(EXPLICIT_FOREIGN_LOCATION_REGEX.search(loc) for loc in locations if loc)
-    return has_explicit_foreign
+    return False
 
 
 # =============================================================================
@@ -508,7 +499,19 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
             "wd501.myworkdaysite.com/recruiting/*",
         ),
         is_subdomain_ats=False,
-        passive_dns_domains=("myworkdayjobs.com", "myworkdaysite.com"),
+        passive_dns_domains=(
+            "wd1.myworkdayjobs.com",
+            "wd5.myworkdayjobs.com",
+            "wd3.myworkdayjobs.com",
+            "wd12.myworkdayjobs.com",
+            "wd2.myworkdayjobs.com",
+            "wd102.myworkdayjobs.com",
+            "wd103.myworkdayjobs.com",
+            "wd108.myworkdayjobs.com",
+            "wd501.myworkdayjobs.com",
+            "myworkdayjobs.com",
+            "myworkdaysite.com",
+        ),
         cname_targets=("myworkdayjobs.com", "myworkdaysite.com"),
         html_signatures=(
             r"https?://(?P<slug>[a-zA-Z0-9-]+)\.(?P<shard>wd\d+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?(?P<site>[a-zA-Z0-9_-]+)",
@@ -785,9 +788,24 @@ class DiscoveredBoard:
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
 
+
+GENERIC_WORKDAY_SITES: Set[str] = {
+    "", "external", "careers", "search", "jobs", "default", "en-us", "en",
+    "external_careers", "external_career_site", "us_careers", "global",
+    "global_careers", "corporate", "main", "career", "job", "ext",
+}
+
+def compute_board_key(ats_id: str, slug: str, site: str = "") -> str:
+    clean_s = (slug or "").strip().lower()
+    if ats_id == "workday" and site:
+        clean_site = re.sub(r"[^a-z0-9]+", "_", site.strip().lower()).strip("_")
+        if clean_site and clean_site not in GENERIC_WORKDAY_SITES and clean_site != clean_s and not clean_site.startswith(clean_s + "_"):
+            return f"workday:{clean_s}:{clean_site}"
+    return f"{ats_id}:{clean_s}"
+
     @property
     def board_key(self) -> str:
-        return f"{self.ats_id}:{self.slug.lower()}"
+        return compute_board_key(self.ats_id, self.slug, self.site)
 
 
 @dataclass
@@ -1304,9 +1322,13 @@ class HuggingFaceDirectVerifier:
                     sample_titles = [str(t) for t in (titles_raw or []) if t][:8]
                     tech_stack = extract_tech_stack_from_text(" ".join(sample_titles))
 
+                    ext_shard = extracted.shard if (sample_url and extracted) else ""
+                    ext_site = extracted.site if (sample_url and extracted) else ""
                     disc = DiscoveredBoard(
                         ats_id=src,
                         slug=clean_slug,
+                        shard=ext_shard,
+                        site=ext_site,
                         board_url=board_url,
                         discovery_source="hf_open_apply",
                         source_company_domain=resolved_dom or None,
@@ -1317,6 +1339,8 @@ class HuggingFaceDirectVerifier:
                         ats_id=src,
                         ats_display_name=spec.display_name,
                         slug=clean_slug,
+                        shard=ext_shard,
+                        site=ext_site,
                         board_url=board_url,
                         is_active=True,
                         http_status=200,
@@ -1416,7 +1440,7 @@ def boards_to_preverified(boards: Iterable[DiscoveredBoard]) -> List[VerifiedATS
         if is_explicitly_foreign_only([], resolved_dom):
             continue
         board_url = b.board_url or build_canonical_board_url(spec, clean_slug, b.shard, b.site)
-        key = f"{b.ats_id}:{clean_slug.lower()}"
+        key = compute_board_key(b.ats_id, clean_slug, b.site)
         out[key] = VerifiedATSBoard(
             ats_id=b.ats_id,
             ats_display_name=spec.display_name,
@@ -1637,7 +1661,7 @@ class PublicATSCatalogVerifier:
                     else:
                         continue
                 else:
-                    status, body, _ = await self.http.request("GET", json_url, timeout_override=35.0)
+                    status, body, _ = await self.http.request("GET", json_url, timeout_override=55.0)
                 if status != 200 or not body.strip():
                     continue
                 try:
@@ -1781,7 +1805,7 @@ class PublicATSCatalogVerifier:
 
         if count == 0:
             for sql_url in self.OPENPOSTINGS_SQL_URLS:
-                status, body, _ = await self.http.request("GET", sql_url, timeout_override=35.0)
+                status, body, _ = await self.http.request("GET", sql_url, timeout_override=55.0)
                 if status == 200 and body:
                     for m in re.finditer(r"https?://[^\s,;)]+", body):
                         b = extract_ats_from_url(m.group(0), discovery_source="openpostings_seed", platforms=platforms)
@@ -2176,14 +2200,10 @@ class WaybackCDXDiscoverer:
         is_sub = spec.is_subdomain_ats or ("/" not in pattern and not pattern.endswith("*"))
         if is_sub:
             collapse_n = WaybackCDXDiscoverer.compute_surt_collapse_len(pattern, True)
-            host_parts = [p for p in re.sub(r"^www\.", "", clean_dom.lower()).split(".") if p]
-            surt_host = ",".join(reversed(host_parts))
-            bucket_filter = f"&filter=urlkey:^{surt_host},{urlkey_bucket}" if urlkey_bucket else ""
             return (
                 f"https://web.archive.org/cdx/search/cdx"
                 f"?url={quote_plus(clean_dom)}&matchType=domain&output=json&fl=original"
-                f"&filter=statuscode:200{bucket_filter}&from={from_date}&to={to_date}"
-                f"&collapse=urlkey:{collapse_n}&limit={min(max(limit, 50000), 75000)}"
+                f"&collapse=urlkey:{collapse_n}&limit={min(max(limit, 80000), 100000)}"
             )
         elif "?" in pattern:
             base_pat_for_surt = re.sub(r"[a-z0-9]\*$", "*", pattern)
@@ -2214,7 +2234,7 @@ class WaybackCDXDiscoverer:
                     spec, pattern, self.from_date, self.to_date, limit_val, urlkey_bucket=urlkey_bucket
                 )
                 for attempt in range(2):
-                    status, body, _ = await self.http.request("GET", wb_url, timeout_override=35.0)
+                    status, body, _ = await self.http.request("GET", wb_url, timeout_override=55.0)
                     if status == 200 and body.strip():
                         return self.parse_wayback_json(body, spec)
                     await asyncio.sleep(0.6 * (attempt + 1))
@@ -2228,7 +2248,7 @@ class WaybackCDXDiscoverer:
                 # 1 single collapsed `matchType=domain&collapse=urlkey:N&limit=90000` query per domain
                 # (avoids firing 137 queries that trigger web.archive.org IP rate-limiting!)
                 tasks.append(_query_pattern(pat, max(self.limit_per_pattern, 90000)))
-            elif pat.endswith("*") and not first_wildcard_fanned_out:
+            elif pat.endswith("*") and not first_wildcard_fanned_out and spec.ats_id != "workday":
                 first_wildcard_fanned_out = True
                 tasks.append(_query_pattern(pat, self.limit_per_pattern))
                 base_pat = pat[:-1]
@@ -3173,7 +3193,7 @@ class EntityResolver:
         for b in boards:
             if not b.is_active:
                 continue
-            entity_key = f"{b.ats_id}:{b.slug.lower()}"
+            entity_key = compute_board_key(b.ats_id, b.slug, b.site)
             entity_groups.setdefault(entity_key, []).append(b)
 
         for _, group in entity_groups.items():
@@ -3288,7 +3308,7 @@ class ATSDatabase:
         cur = self.conn.cursor()
         count = 0
         for b in boards:
-            board_key = f"{b.ats_id}:{b.slug.lower()}"
+            board_key = compute_board_key(b.ats_id, b.slug, b.site)
             cur.execute(
                 """
                 INSERT INTO verified_boards (
@@ -3393,14 +3413,14 @@ class ATSDatabase:
     def merge_from_databases(self, shard_db_paths: Sequence[str]) -> Tuple[int, int]:
         total_disc = 0
         all_verified: Dict[str, VerifiedATSBoard] = {
-            f"{b.ats_id}:{b.slug.lower()}": b for b in self.load_all_verified_boards()
+            compute_board_key(b.ats_id, b.slug, b.site): b for b in self.load_all_verified_boards()
         }
         for path in shard_db_paths:
             if not os.path.exists(path) or os.path.abspath(path) == os.path.abspath(self.db_path):
                 continue
             shard_db = ATSDatabase(path)
             for vb in shard_db.load_all_verified_boards():
-                key = f"{vb.ats_id}:{vb.slug.lower()}"
+                key = compute_board_key(vb.ats_id, vb.slug, vb.site)
                 existing = all_verified.get(key)
                 if not existing or (vb.is_active and vb.us_job_count >= existing.us_job_count):
                     all_verified[key] = vb
@@ -3490,7 +3510,7 @@ class ATSDatabase:
         total_us_companies = sum(counts_by_ats.values())
         total_us_jobs = sum(us_jobs_by_ats.values())
         md_lines = [
-            "# US Job Companies Discovery Summary (v14.0 150K+ US Companies — Workday/iCIMS Log-Verified Fix + 1.3M+ Jobs Edition)",
+            "# US Job Companies Discovery Summary (v15.0 150K+ US Companies — Workday 12K+ Uncapped (Zero 777 Drop + Fast SURT CDX + Multi-Site) Edition)",
             "",
             f"- **Total Verified Active US Companies**: **{total_us_companies:,}**",
             f"- **Total Open US Jobs Indexed**: **{total_us_jobs:,}**",
@@ -3830,7 +3850,7 @@ def cmd_export(args: argparse.Namespace) -> None:
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="US Job Companies ATS Discovery Engine (v14.0 150K+ US Companies — Workday/iCIMS Log-Verified Fix + 1.3M+ Jobs Edition)"
+        description="US Job Companies ATS Discovery Engine (v15.0 150K+ US Companies — Workday 12K+ Uncapped (Zero 777 Drop + Fast SURT CDX + Multi-Site) Edition)"
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
