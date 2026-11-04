@@ -1,4 +1,4 @@
-name: Gemini Discovery (v12.0 150K+ US Companies — 8-Shard Edition)
+name: Gemini Discovery (v14.0 150K+ US Companies — 12-Shard Dedicated IP Edition)
 
 on:
   workflow_dispatch:
@@ -18,11 +18,11 @@ on:
       wayback_limit:
         description: "Max collapsed URLs per Wayback CDX query"
         required: false
-        default: "50000"
+        default: "90000"
       concurrency:
         description: "Async HTTP concurrency per runner"
         required: false
-        default: "80"
+        default: "100"
   schedule:
     - cron: "0 2 * * 0"
 
@@ -44,27 +44,39 @@ jobs:
           - shard_id: "greenhouse"
             shard_name: "Greenhouse (All Industries)"
             platforms: "greenhouse"
+          - shard_id: "workday"
+            shard_name: "Workday (Dedicated IP)"
+            platforms: "workday"
+          - shard_id: "icims"
+            shard_name: "iCIMS (Dedicated IP)"
+            platforms: "icims"
           - shard_id: "modern_cloud_1"
             shard_name: "Ashby, Lever, Dover, Gem"
             platforms: "ashby,lever,dover,gem"
           - shard_id: "modern_cloud_2"
             shard_name: "Rippling, Workable, Recruitee, Pinpoint"
             platforms: "rippling,workable,recruitee,pinpoint"
-          - shard_id: "workday_icims"
-            shard_name: "Workday, iCIMS"
-            platforms: "workday,icims"
           - shard_id: "enterprise_talent"
             shard_name: "SmartRecruiters, Jobvite, Taleo, SuccessFactors, Fountain"
             platforms: "smartrecruiters,jobvite,taleo,successfactors,fountain"
-          - shard_id: "smb_hris"
-            shard_name: "BambooHR, JazzHR, BreezyHR, Trakstar"
-            platforms: "bamboohr,jazzhr,breezy,trakstar"
-          - shard_id: "us_payroll_core"
-            shard_name: "Paylocity, Paycom"
-            platforms: "paylocity,paycom"
-          - shard_id: "us_enterprise_hcm"
-            shard_name: "UKG, Dayforce, ADP Workforce Now"
-            platforms: "ukg,dayforce,adp"
+          - shard_id: "bamboohr_breezy"
+            shard_name: "BambooHR, BreezyHR"
+            platforms: "bamboohr,breezy"
+          - shard_id: "jazzhr_trakstar"
+            shard_name: "JazzHR, Trakstar"
+            platforms: "jazzhr,trakstar"
+          - shard_id: "paylocity"
+            shard_name: "Paylocity (Dedicated IP)"
+            platforms: "paylocity"
+          - shard_id: "paycom"
+            shard_name: "Paycom (Dedicated IP)"
+            platforms: "paycom"
+          - shard_id: "adp"
+            shard_name: "ADP Workforce Now (Dedicated IP)"
+            platforms: "adp"
+          - shard_id: "ukg_dayforce"
+            shard_name: "UKG, Dayforce"
+            platforms: "ukg,dayforce"
 
     steps:
       - name: Checkout Repository
@@ -78,11 +90,10 @@ jobs:
 
       - name: Install Dependencies (DuckDB, PyArrow, cdx_toolkit, warcio, aiohttp)
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install "cdx_toolkit>=0.9.37" "warcio>=1.7.5" "duckdb>=1.0.0" "pyarrow>=15.0.0"
+          pip install uv --quiet
+          uv pip install --system -r requirements.txt "cdx_toolkit>=0.9.37" "warcio>=1.7.5" "duckdb>=1.0.0" "pyarrow>=15.0.0"
 
-      - name: Fetch OpenPostings (110K+), Job-Board-Aggregator (95K+), and Daily Live Job Chunks (1M+ Jobs)
+      - name: Fetch OpenPostings (110K+), Job-Board-Aggregator (95K+), and Daily Live Job Chunks (1.3M+ Jobs)
         continue-on-error: true
         run: |
           git clone --depth 1 https://github.com/Masterjx9/OpenPostings.git openpostings_repo || true
@@ -104,8 +115,8 @@ jobs:
             --sources "${{ github.event.inputs.sources || 'hf,catalogs,pdns,wayback,commoncrawl' }}" \
             --from-date "${{ github.event.inputs.from_date || '20150101' }}" \
             --to-date "${{ github.event.inputs.to_date || '20261231' }}" \
-            --wayback-limit "${{ github.event.inputs.wayback_limit || '50000' }}" \
-            --concurrency "${{ github.event.inputs.concurrency || '80' }}"
+            --wayback-limit "${{ github.event.inputs.wayback_limit || '90000' }}" \
+            --concurrency "${{ github.event.inputs.concurrency || '100' }}"
 
       - name: Step 2 - Rate-Limit-Aware HTTP 200 Verification & US Job Count Extraction
         timeout-minutes: 250
@@ -114,7 +125,7 @@ jobs:
           python gemini_discovery.py verify \
             --db "ats_${{ matrix.shard_id }}.db" \
             --platforms "${{ matrix.platforms }}" \
-            --concurrency "${{ github.event.inputs.concurrency || '80' }}"
+            --concurrency "${{ github.event.inputs.concurrency || '100' }}"
 
       - name: Export Shard Summary & Partial US CSVs
         if: always()
@@ -155,8 +166,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install uv --quiet
+          uv pip install --system -r requirements.txt
 
       - name: Download All Shard Databases
         uses: actions/download-artifact@v4
