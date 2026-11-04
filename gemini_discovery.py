@@ -775,6 +775,22 @@ RESERVED_SLUGS: Set[str] = {
 # 3. DATA MODELS WITH US JOB COUNTING
 # =============================================================================
 
+GENERIC_WORKDAY_SITES: Set[str] = {
+    "", "external", "careers", "search", "jobs", "default", "en-us", "en",
+    "external_careers", "external_career_site", "us_careers", "global",
+    "global_careers", "corporate", "main", "career", "job", "ext",
+}
+
+
+def compute_board_key(ats_id: str, slug: str, site: str = "") -> str:
+    clean_s = (slug or "").strip().lower()
+    if ats_id == "workday" and site:
+        clean_site = re.sub(r"[^a-z0-9]+", "_", site.strip().lower()).strip("_")
+        if clean_site and clean_site not in GENERIC_WORKDAY_SITES and clean_site != clean_s and not clean_site.startswith(clean_s + "_"):
+            return f"workday:{clean_s}:{clean_site}"
+    return f"{ats_id}:{clean_s}"
+
+
 @dataclass
 class DiscoveredBoard:
     ats_id: str
@@ -787,21 +803,6 @@ class DiscoveredBoard:
     discovered_at: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
-
-
-GENERIC_WORKDAY_SITES: Set[str] = {
-    "", "external", "careers", "search", "jobs", "default", "en-us", "en",
-    "external_careers", "external_career_site", "us_careers", "global",
-    "global_careers", "corporate", "main", "career", "job", "ext",
-}
-
-def compute_board_key(ats_id: str, slug: str, site: str = "") -> str:
-    clean_s = (slug or "").strip().lower()
-    if ats_id == "workday" and site:
-        clean_site = re.sub(r"[^a-z0-9]+", "_", site.strip().lower()).strip("_")
-        if clean_site and clean_site not in GENERIC_WORKDAY_SITES and clean_site != clean_s and not clean_site.startswith(clean_s + "_"):
-            return f"workday:{clean_s}:{clean_site}"
-    return f"{ats_id}:{clean_s}"
 
     @property
     def board_key(self) -> str:
@@ -3623,6 +3624,9 @@ def run_self_test() -> None:
     )
     assert paylocity_ok is not None
     wd_ok = PublicATSCatalogVerifier._parse_cc_json_entry("workday", ATS_PLATFORMS["workday"], "7eleven|wd3|Search")
+    assert wd_ok is not None and wd_ok.board_key == "workday:7eleven"
+    wd_sub = PublicATSCatalogVerifier._parse_cc_json_entry("workday", ATS_PLATFORMS["workday"], "disney|wd5|espn")
+    assert wd_sub is not None and wd_sub.board_key == "workday:disney:espn"
     assert wd_ok is not None and wd_ok.slug == "7eleven" and wd_ok.shard == "wd3" and wd_ok.site == "Search"
     wd_junk = PublicATSCatalogVerifier._parse_cc_json_entry("workday", ATS_PLATFORMS["workday"], "wd12|wd1|external_careers")
     assert wd_junk is None, "Expected Workday instance placeholder wd12 to be rejected"
