@@ -2207,13 +2207,11 @@ class WaybackCDXDiscoverer:
                 f"&collapse=urlkey:{collapse_n}&limit={min(max(limit, 80000), 100000)}"
             )
         elif "?" in pattern:
-            base_pat_for_surt = re.sub(r"[a-z0-9]\*$", "*", pattern)
-            collapse_n = WaybackCDXDiscoverer.compute_surt_collapse_len(base_pat_for_surt, False)
             return (
                 f"https://web.archive.org/cdx/search/cdx"
                 f"?url={quote_plus(pattern)}&output=json&fl=original"
                 f"&filter=statuscode:200&from={from_date}&to={to_date}"
-                f"&collapse=urlkey:{collapse_n}&limit={limit}"
+                f"&collapse=urlkey&limit={limit}"
             )
         else:
             base_pat_for_surt = re.sub(r"[a-z0-9]\*$", "*", pattern)
