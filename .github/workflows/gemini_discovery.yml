@@ -1,4 +1,4 @@
-name: Gemini Discovery (v14.0 150K+ US Companies — 12-Shard Dedicated IP Edition)
+name: Gemini Discovery (v16.1 150K+ US Companies — Cumulative Monotonic Cache + 12-Shard Dedicated IP Edition)
 
 on:
   workflow_dispatch:
@@ -93,7 +93,15 @@ jobs:
           pip install uv --quiet
           uv pip install --system -r requirements.txt "cdx_toolkit>=0.9.37" "warcio>=1.7.5" "duckdb>=1.0.0" "pyarrow>=15.0.0"
 
-      - name: Fetch OpenPostings (110K+), Job-Board-Aggregator (95K+), and Daily Live Job Chunks (1.3M+ Jobs)
+      - name: Restore Previous Run's Cumulative Shard SQLite DB (Guarantees Counts Never Decrease!)
+        uses: actions/cache/restore@v4
+        with:
+          path: ats_${{ matrix.shard_id }}.db
+          key: ats-discovery-v16-shard-${{ matrix.shard_id }}-${{ github.run_id }}
+          restore-keys: |
+            ats-discovery-v16-shard-${{ matrix.shard_id }}-
+
+      - name: Fetch OpenPostings (110K+), Job-Board-Aggregator (95K+), and Daily Live Job Chunks (1.77M+ Jobs)
         continue-on-error: true
         run: |
           git clone --depth 1 https://github.com/Masterjx9/OpenPostings.git openpostings_repo || true
@@ -126,6 +134,13 @@ jobs:
             --db "ats_${{ matrix.shard_id }}.db" \
             --platforms "${{ matrix.platforms }}" \
             --concurrency "${{ github.event.inputs.concurrency || '100' }}"
+
+      - name: Save Cumulative Shard SQLite DB to Cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ats_${{ matrix.shard_id }}.db
+          key: ats-discovery-v16-shard-${{ matrix.shard_id }}-${{ github.run_id }}
 
       - name: Export Shard Summary & Partial US CSVs
         if: always()
@@ -169,6 +184,14 @@ jobs:
           pip install uv --quiet
           uv pip install --system -r requirements.txt
 
+      - name: Restore Previous Master Merged SQLite DB (Cumulative Across All Runs)
+        uses: actions/cache/restore@v4
+        with:
+          path: ats_companies_merged.db
+          key: ats-discovery-v16-master-${{ github.run_id }}
+          restore-keys: |
+            ats-discovery-v16-master-
+
       - name: Download All Shard Databases
         uses: actions/download-artifact@v4
         with:
@@ -176,13 +199,20 @@ jobs:
           pattern: "shard-db-*"
           merge-multiple: true
 
-      - name: Merge All SQLite Shards
+      - name: Merge All SQLite Shards Into Cumulative Master DB
         run: |
           SHARD_DBS=$(ls ./shards/ats_*.db | paste -sd "," -)
           echo "Merging shard databases: $SHARD_DBS"
           python gemini_discovery.py merge-dbs \
             --inputs "$SHARD_DBS" \
             --output ats_companies_merged.db
+
+      - name: Save Cumulative Master Merged SQLite DB to Cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ats_companies_merged.db
+          key: ats-discovery-v16-master-${{ github.run_id }}
 
       - name: Export Platform-Wise US Company CSVs
         run: |
@@ -198,8 +228,6 @@ jobs:
         with:
           name: "us-ats-job-companies-dataset"
           path: |
-            ./exports/*.csv
-            ./exports/*.jsonl
-            ./exports/SUMMARY.md
             ats_companies_merged.db
-          retention-days: 90
+            exports/*
+          retention-days: 30
