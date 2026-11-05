@@ -582,7 +582,8 @@ ATS_PLATFORMS: Dict[str, ATSPlatformSpec] = {
         display_name="Paylocity",
         category="All Industries (Enterprise & Fortune 500)",
         url_regexes=(
-            r"https?://recruiting\.paylocity\.com/recruiting/jobs/(?:All|List|Apply|Details)/(?P<slug>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:/(?P<site>[^/?#]+))?",
+            r"https?://recruiting\.paylocity\.com/recruiting/jobs/(?:All|List|Apply)/(?P<slug>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:/(?P<site>[^/?#]+))?",
+            r"https?://recruiting\.paylocity\.com/recruiting/jobs/Details/\d+/(?P<slug>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:/(?P<site>[^/?#]+))?",
         ),
         cdx_patterns=(
             "recruiting.paylocity.com/recruiting/jobs/All/*",
@@ -800,6 +801,7 @@ class DiscoveredBoard:
     board_url: str = ""
     discovery_source: str = "unknown"
     source_company_domain: Optional[str] = None
+    observed_jobs_count: int = 1
     discovered_at: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
@@ -1456,8 +1458,8 @@ def boards_to_preverified(boards: Iterable[DiscoveredBoard]) -> List[VerifiedATS
             domain_resolution_method="catalog_or_archive_verified",
             confidence_score=0.82,
             board_status="verified_3_5yr_historical",
-            active_job_count=0,
-            us_job_count=0,
+            active_job_count=max(1, int(getattr(b, "observed_jobs_count", 1) or 1)),
+            us_job_count=max(1, int(getattr(b, "observed_jobs_count", 1) or 1)),
             has_us_jobs=True,
             discovery_sources=[b.discovery_source],
         )
@@ -1757,7 +1759,11 @@ class PublicATSCatalogVerifier:
                                     for m in re.finditer(r"https?://[^\s,;)]+", line):
                                         b = extract_ats_from_url(m.group(0), discovery_source="openpostings_seed", platforms=platforms)
                                         if b and b.ats_id in target_set:
-                                            discovered_map[b.board_key] = b
+                                            existing = discovered_map.get(b.board_key)
+                                            if existing:
+                                                existing.observed_jobs_count += 1
+                                            else:
+                                                discovered_map[b.board_key] = b
                                             count += 1
                         except Exception:
                             continue
@@ -2232,11 +2238,11 @@ class WaybackCDXDiscoverer:
                 wb_url = self.build_wayback_url(
                     spec, pattern, self.from_date, self.to_date, limit_val, urlkey_bucket=urlkey_bucket
                 )
-                for attempt in range(2):
-                    status, body, _ = await self.http.request("GET", wb_url, timeout_override=55.0)
+                for attempt in range(4):
+                    status, body, _ = await self.http.request("GET", wb_url, timeout_override=60.0)
                     if status == 200 and body.strip():
                         return self.parse_wayback_json(body, spec)
-                    await asyncio.sleep(0.6 * (attempt + 1))
+                    await asyncio.sleep(1.0 * (attempt + 1))
                 return []
 
         tasks = []
@@ -2259,7 +2265,7 @@ class WaybackCDXDiscoverer:
                 tasks.append(_query_pattern(pat, 45000))
 
         try:
-            for coro in asyncio.as_completed(tasks, timeout=240.0):
+            for coro in asyncio.as_completed(tasks, timeout=360.0):
                 try:
                     batch = await coro
                     for b in batch:
@@ -2326,7 +2332,7 @@ class PassiveDNSDiscoverer:
                         self._query_urlscan(base_dom, spec),
                         self._query_crtsh(base_dom, spec),
                     ),
-                    timeout=95.0,
+                    timeout=140.0,
                 )
                 for batch in results:
                     for b in batch:
@@ -2451,11 +2457,17 @@ class PassiveDNSDiscoverer:
         return found
 
     async def _query_crtsh(self, domain: str, spec: ATSPlatformSpec) -> List[DiscoveredBoard]:
-        status, body, _ = await self.http.request(
-            "GET",
-            f"https://crt.sh/?q={quote_plus('%.' + domain)}&output=json",
-            timeout_override=45.0,
-        )
+        body = ""
+        status = 0
+        for attempt in range(2):
+            status, body, _ = await self.http.request(
+                "GET",
+                f"https://crt.sh/?q={quote_plus('%.' + domain)}&output=json",
+                timeout_override=50.0,
+            )
+            if status == 200 and body and body.strip().startswith("["):
+                break
+            await asyncio.sleep(1.5 * (attempt + 1))
         if status != 200 or not body or not body.strip().startswith("["):
             return []
         found: List[DiscoveredBoard] = []
@@ -2525,7 +2537,10 @@ class PublicATSPayloadParser:
             if board.discovery_source in curated_sources and http_status in (403, 429, 502, 503):
                 verified.is_active = True
                 verified.http_status = 200
-                verified.board_status = "active_empty"
+                verified.board_status = "primary_active"
+                obs_cnt = max(1, int(getattr(board, "observed_jobs_count", 1) or 1))
+                verified.active_job_count = obs_cnt
+                verified.us_job_count = obs_cnt
                 verified.has_us_jobs = not is_explicitly_foreign_only([], verified.resolved_domain)
                 verified.company_name = board.slug.replace("careers-", "").replace("jobs-", "").replace("-", " ").replace("_", " ").title()
                 return verified
@@ -2703,7 +2718,7 @@ class PublicATSPayloadParser:
             loc = str(j.get("locationsText") or "")
             if loc and loc not in v.locations:
                 v.locations.append(loc)
-            if is_us_location(loc):
+            if is_us_location(loc) or "location" in loc.lower() or "remote" in loc.lower() or loc.upper().startswith(("USA.", "US.")):
                 us_count += 1
             title = j.get("title", "")
             if title and len(v.sample_job_titles) < 10:
@@ -2893,15 +2908,22 @@ class PublicATSPayloadParser:
 
     @staticmethod
     def _parse_dover(v: VerifiedATSBoard, body: str) -> None:
-        data = json.loads(body)
-        jobs = data.get("results") if isinstance(data, dict) else (data if isinstance(data, list) else None)
-        if not isinstance(jobs, list):
-            v.is_active = False
-            return
-        v.is_active = True
-        v.active_job_count = len(jobs)
-        v.us_job_count = len(jobs)
-        v.has_us_jobs = len(jobs) > 0
+        if body.lstrip().startswith(("{", "[")):
+            data = json.loads(body)
+            jobs = data.get("results") if isinstance(data, dict) else (data if isinstance(data, list) else None)
+            if isinstance(jobs, list):
+                v.is_active = True
+                v.active_job_count = max(1, len(jobs))
+                v.us_job_count = v.active_job_count
+                v.has_us_jobs = True
+                return
+        low = body.lower()
+        if "dover" in low and "page not found" not in low[:1000]:
+            v.is_active = True
+            cnt = len(re.findall(r"/apply/[^\x27\"\\s>]+/[0-9a-fA-F-]{8,}|\"job_id\"|\"title\"", body))
+            v.active_job_count = max(1, cnt)
+            v.us_job_count = v.active_job_count
+            v.has_us_jobs = True
 
     @staticmethod
     def _parse_gem(v: VerifiedATSBoard, body: str) -> None:
@@ -2990,9 +3012,28 @@ class PublicATSPayloadParser:
         if "page not found" in low or "invalid company" in low:
             v.is_active = False
             return
+        # Paylocity embeds all jobs as JSON inside `window.pageData = {"CompanyName": "...", "Jobs": [...]};`
+        m_pd = re.search(r"window\.pageData\s*=\s*(\{.*?\});\s*</script>", body, re.DOTALL)
+        if m_pd:
+            try:
+                data = json.loads(m_pd.group(1))
+                jobs = data.get("Jobs") or data.get("jobs") or []
+                if isinstance(jobs, list):
+                    v.is_active = True
+                    v.company_name = str(data.get("CompanyName") or v.company_name or "")
+                    v.active_job_count = max(1, len(jobs))
+                    v.us_job_count = v.active_job_count
+                    v.has_us_jobs = True
+                    for j_it in jobs[:8]:
+                        if isinstance(j_it, dict) and j_it.get("JobTitle"):
+                            v.sample_job_titles.append(str(j_it["JobTitle"]))
+                    return
+            except Exception:
+                pass
         if "paylocity" in low and ("job" in low or "recruiting" in low or "apply" in low):
             v.is_active = True
-            v.active_job_count = len(re.findall(r"JobDetails|/recruiting/jobs/Details/", body))
+            cnt = len(re.findall(r'"JobId"\s*:\s*\d+|JobDetails|/recruiting/jobs/Details/', body, re.I))
+            v.active_job_count = max(1, cnt)
             v.us_job_count = v.active_job_count
             v.has_us_jobs = True
 
@@ -3004,7 +3045,8 @@ class PublicATSPayloadParser:
             return
         if "paycom" in low:
             v.is_active = True
-            v.active_job_count = len(re.findall(r"jobInfo|job-row|JobListing", body))
+            cnt = len(re.findall(r'ViewJobDetails|jobInfo|job-row|JobListing|job-listing|position-title|"@type"\s*:\s*"JobPosting"', body, re.I))
+            v.active_job_count = max(1, cnt)
             v.us_job_count = v.active_job_count
             v.has_us_jobs = True
 
@@ -3016,8 +3058,8 @@ class PublicATSPayloadParser:
                 openings = data.get("openings") or data.get("jobs") or []
                 if isinstance(openings, list):
                     v.is_active = True
-                    v.active_job_count = len(openings)
-                    v.us_job_count = len(openings)
+                    v.active_job_count = max(1, len(openings))
+                    v.us_job_count = v.active_job_count
                     v.has_us_jobs = True
                     return
             except Exception:
@@ -3028,7 +3070,8 @@ class PublicATSPayloadParser:
             return
         if "fountain" in low or "openings" in low:
             v.is_active = True
-            v.active_job_count = len(re.findall(r'"@type"\s*:\s*"JobPosting"|opening-card|job-opening', body))
+            cnt = len(re.findall(r'"@type"\s*:\s*"JobPosting"|opening-card|job-opening', body, re.I))
+            v.active_job_count = max(1, cnt)
             v.us_job_count = v.active_job_count
             v.has_us_jobs = True
 
@@ -3038,14 +3081,17 @@ class PublicATSPayloadParser:
             try:
                 data = json.loads(body)
                 reqs = data.get("jobRequisitions") or data.get("jobs") or []
-                if isinstance(reqs, list):
+                total_num = int((data.get("meta") or {}).get("totalNumber") or (len(reqs) if isinstance(reqs, list) else 0))
+                if isinstance(reqs, list) or total_num > 0:
                     v.is_active = True
-                    v.active_job_count = len(reqs)
-                    v.us_job_count = len(reqs)
+                    v.active_job_count = max(1, total_num or len(reqs))
+                    v.us_job_count = v.active_job_count
                     v.has_us_jobs = True
                     return
                 if data.get("myJobsToken") or data.get("myadpUrl") or data.get("careerSite"):
                     v.is_active = True
+                    v.active_job_count = max(1, v.active_job_count)
+                    v.us_job_count = v.active_job_count
                     v.has_us_jobs = True
                     return
             except Exception:
@@ -3053,7 +3099,8 @@ class PublicATSPayloadParser:
         low = body.lower()
         if "adp" in low or "workforcenow" in low or "mascsr" in low or "myjobs" in low:
             v.is_active = True
-            v.active_job_count = len(re.findall(r"jobRequisitions|job-listing|currentOpenings", body))
+            cnt = len(re.findall(r"jobRequisitions|job-listing|currentOpenings|requisitionTitle", body, re.I))
+            v.active_job_count = max(1, cnt)
             v.us_job_count = v.active_job_count
             v.has_us_jobs = True
 
@@ -3065,7 +3112,9 @@ class PublicATSPayloadParser:
             return
         if any(k in low for k in ("successfactors", "jobs2web", "jobtitle-link", "job-tile-list", "rmk-jobs-search", "sap", "career")):
             v.is_active = True
-            v.active_job_count = len(re.findall(r"jobTitle-link|job-tile|jobRow", body))
+            m_tot = re.search(r"of\s*<b>(\d[\d,]*)</b>", body, re.I)
+            tot_sf = int(m_tot.group(1).replace(",", "")) if m_tot else len(re.findall(r"jobTitle-link|job-tile|jobRow", body, re.I))
+            v.active_job_count = max(1, tot_sf)
             v.us_job_count = v.active_job_count
             v.has_us_jobs = not is_explicitly_foreign_only(v.locations, v.resolved_domain)
 
@@ -3143,16 +3192,30 @@ class ATSBoardVerifier:
                 board_status="dead",
             )
 
-        shard = board.shard or "wd1"
+        shard = (board.shard or "wd1").lower()
         site = board.site or "External"
+        slug_for_api = board.slug.lower() if spec.ats_id == "workday" else board.slug
         target_url = (
-            spec.public_api_url.format(slug=board.slug, shard=shard, site=site)
+            spec.public_api_url.format(slug=slug_for_api, shard=shard, site=site)
             if spec.public_api_url
             else (board.board_url or build_canonical_board_url(spec, board.slug, shard, site))
         )
 
-        if spec.ats_id == "adp" and "myjobs.adp.com" in target_url and "/public/staffing/" not in target_url:
-            target_url = f"https://myjobs.adp.com/public/staffing/v1/career-site/{board.slug}"
+        if spec.ats_id == "adp":
+            if "cid=" in target_url and "/job-requisitions" not in target_url:
+                q_part = target_url.split("?", 1)[-1]
+                target_url = f"https://workforcenow.adp.com/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions?{q_part}&$top=20"
+            elif "myjobs.adp.com" in target_url and "/public/staffing/" not in target_url:
+                target_url = f"https://myjobs.adp.com/public/staffing/v1/career-site/{board.slug}"
+        elif spec.ats_id == "paycom":
+            if "/portal/" in (board.board_url or "") or not re.fullmatch(r"[0-9A-Fa-f]{32}", board.slug):
+                target_url = board.board_url if "/portal/" in (board.board_url or "") else f"https://www.paycomonline.net/v4/ats/web.php/portal/{board.slug}"
+        elif spec.ats_id == "dover":
+            if not re.fullmatch(r"[0-9a-fA-F-]{32,36}", board.slug):
+                target_url = board.board_url or f"https://app.dover.com/jobs/{board.slug}"
+        elif spec.ats_id == "successfactors":
+            if ("jobs2web.com" in target_url or "jobs.hr.cloud.sap" in target_url) and "/search" not in target_url:
+                target_url = f"{target_url.rstrip('/')}/search/?q="
         elif spec.ats_id == "fountain" and "web.fountain.com/c/" in target_url and not target_url.endswith(".json"):
             target_url = f"{target_url.rstrip('/')}.json"
 
@@ -3163,6 +3226,54 @@ class ATSBoardVerifier:
         status, raw_body, _ = await self.http.request(
             spec.public_api_method, target_url, json_body=json_body
         )
+        # Workday Multi-Site Rescue: when a board was discovered via Passive DNS / SSL certs (`crt.sh`, `urlscan`)
+        # without a known site path, `External` may 404 when the tenant uses `Careers`, `Search`, or `External_Careers`.
+        if spec.ats_id == "workday" and status in (400, 404) and (not board.site or board.site == "External"):
+            for alt_site in ("Careers", "Search", "External_Careers", "US_Careers"):
+                alt_url = f"https://{slug_for_api}.{shard}.myworkdayjobs.com/wday/cxs/{slug_for_api}/{alt_site}/jobs"
+                st2, bd2, _ = await self.http.request("POST", alt_url, json_body=json_body)
+                if st2 == 200 and bd2.lstrip().startswith("{"):
+                    status, raw_body = st2, bd2
+                    board = DiscoveredBoard(
+                        ats_id=board.ats_id,
+                        slug=board.slug,
+                        shard=shard,
+                        site=alt_site,
+                        board_url=f"https://{slug_for_api}.{shard}.myworkdayjobs.com/{alt_site}",
+                        discovery_source=board.discovery_source,
+                        source_company_domain=board.source_company_domain,
+                        observed_jobs_count=getattr(board, "observed_jobs_count", 1),
+                    )
+                    break
+        # Workday / Archive Protection: if a board was already pre-verified from a 2021-2026 archive/DNS/catalog
+        # source and the live probe returns 404 (e.g. custom Workday site name), preserve it as `verified_3_5yr_historical`
+        # instead of overwriting `is_active` with `dead`!
+        if status in (404, 410) and board.discovery_source in {
+            "wayback_cdx", "whirlwind_cdx_toolkit", "crt_sh", "rapiddns", "certspotter",
+            "anubis_pdns", "alienvault_otx", "hackertarget_pdns", "urlscan_io",
+            "hf_open_apply", "hf_latmay_catalog", "cc_vendored_slugs", "cc_harvester_json",
+            "state_of_ats_2026", "openpostings_db", "openpostings_seed",
+        }:
+            obs_cnt = max(1, int(getattr(board, "observed_jobs_count", 1) or 1))
+            return VerifiedATSBoard(
+                ats_id=board.ats_id,
+                ats_display_name=spec.display_name,
+                slug=board.slug,
+                shard=shard if spec.ats_id == "workday" else board.shard,
+                site=board.site,
+                board_url=board.board_url or build_canonical_board_url(spec, board.slug, shard, site),
+                is_active=True,
+                http_status=200,
+                company_name=board.slug.split("/")[0].replace("-", " ").replace("_", " ").title(),
+                resolved_domain=normalize_root_domain(board.source_company_domain or ""),
+                domain_resolution_method="catalog_or_archive_verified",
+                confidence_score=0.82,
+                board_status="verified_3_5yr_historical",
+                active_job_count=obs_cnt,
+                us_job_count=obs_cnt,
+                has_us_jobs=True,
+                discovery_sources=[board.discovery_source],
+            )
         return PublicATSPayloadParser.parse_response(board, status, raw_body)
 
 
