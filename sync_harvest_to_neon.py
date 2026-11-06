@@ -47,6 +47,22 @@ ON CONFLICT (catalog_key) DO UPDATE SET
   canonical_identity=EXCLUDED.canonical_identity,
   content_hash=EXCLUDED.content_hash,
   source_updated_at=EXCLUDED.source_updated_at, synced_at=now()
+WHERE (job_catalog.job_title, job_catalog.company, job_catalog.location,
+       job_catalog.country, job_catalog.posted_at, job_catalog.source_board,
+       job_catalog.job_type, job_catalog.work_mode, job_catalog.salary_min,
+       job_catalog.salary_max, job_catalog.salary_currency,
+       job_catalog.salary_period, job_catalog.industry, job_catalog.h1b_status,
+       job_catalog.visa_sponsorship_status, job_catalog.job_url,
+       job_catalog.apply_url, job_catalog.status,
+       job_catalog.canonical_identity, job_catalog.content_hash)
+  IS DISTINCT FROM
+      (EXCLUDED.job_title, EXCLUDED.company, EXCLUDED.location,
+       EXCLUDED.country, COALESCE(EXCLUDED.posted_at, job_catalog.posted_at),
+       EXCLUDED.source_board, EXCLUDED.job_type, EXCLUDED.work_mode,
+       EXCLUDED.salary_min, EXCLUDED.salary_max, EXCLUDED.salary_currency,
+       EXCLUDED.salary_period, EXCLUDED.industry, EXCLUDED.h1b_status,
+       EXCLUDED.visa_sponsorship_status, EXCLUDED.job_url, EXCLUDED.apply_url,
+       'active'::text, EXCLUDED.canonical_identity, EXCLUDED.content_hash)
 """
 
 DETAIL_CONFLICT = """
@@ -60,7 +76,20 @@ ON CONFLICT (catalog_key) DO UPDATE SET
   experience_max=EXCLUDED.experience_max,
   raw_salary=EXCLUDED.raw_salary,
   content_hash=EXCLUDED.content_hash, updated_at=now()
+WHERE (job_details.extraction, job_details.skills_required,
+       job_details.skills_preferred, job_details.experience_min,
+       job_details.experience_max, job_details.raw_salary,
+       job_details.content_hash)
+  IS DISTINCT FROM
+      (EXCLUDED.extraction, EXCLUDED.skills_required,
+       EXCLUDED.skills_preferred, EXCLUDED.experience_min,
+       EXCLUDED.experience_max, EXCLUDED.raw_salary, EXCLUDED.content_hash)
 """
+
+# How many of the oldest jobs to remove each time the Neon project fills up,
+# and how many times one batch may ask for room before the sync gives up.
+ROOM_ROWS = 5_000
+ROOM_ATTEMPTS = 5
 
 
 def text(value: Any) -> str:
@@ -263,6 +292,65 @@ def prune_overflow(connection, max_rows: int) -> int:
     return removed
 
 
+def vacuum(connection) -> None:
+    """Make deleted rows' space reusable.
+
+    Neon suspends idle computes, so autovacuum can't be relied on. Without this,
+    deleted rows keep their space and the project size limit is still reached.
+    """
+    from psycopg.errors import DiskFull
+
+    connection.commit()
+    connection.autocommit = True
+    try:
+        connection.execute("VACUUM public.job_catalog")
+        connection.execute("VACUUM public.job_details")
+    except DiskFull as error:
+        print(f"VACUUM could not finish on a full project: {error}", flush=True)
+    finally:
+        connection.autocommit = False
+
+
+def make_room(connection, rows: int = ROOM_ROWS) -> int:
+    """Remove the oldest jobs and reclaim their space."""
+    removed = connection.execute(
+        "DELETE FROM public.job_catalog WHERE catalog_key IN ("
+        "SELECT catalog_key FROM public.job_catalog "
+        "ORDER BY coalesce(posted_at, first_seen_at, synced_at) ASC NULLS FIRST "
+        "LIMIT %s) RETURNING 1", (rows,)
+    ).rowcount
+    connection.commit()
+    vacuum(connection)
+    print(json.dumps({"project_full_removed_oldest": removed}), flush=True)
+    return removed
+
+
+def write_batch(connection, cards: list[dict[str, Any]],
+                details: list[dict[str, Any]]) -> int:
+    """Write one batch, removing the oldest jobs if the project is full.
+
+    Returns how many jobs had to be removed to fit it.
+    """
+    from psycopg.errors import DiskFull
+
+    removed = 0
+    for attempt in range(ROOM_ATTEMPTS + 1):
+        try:
+            bulk_upsert(connection, "job_catalog", CATALOG_COLUMNS, cards, CATALOG_CONFLICT)
+            bulk_upsert(connection, "job_details", DETAIL_COLUMNS, details, DETAIL_CONFLICT)
+            connection.commit()
+            return removed
+        except DiskFull:
+            connection.rollback()
+            if attempt == ROOM_ATTEMPTS:
+                raise
+            freed = make_room(connection)
+            if not freed:
+                raise
+            removed += freed
+    return removed
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", default="live_jobs.db")
@@ -291,6 +379,8 @@ def main() -> int:
         if required != 2:
             raise RuntimeError("Neon job_catalog/job_details schema is missing")
         cleanup = prune(target, args.retention_days, args.max_catalog_rows)
+        vacuum(target)
+        full_removed = 0
         total = inserted = duplicates = 0
         cursor = source.execute("SELECT * FROM live_jobs ORDER BY job_id")
         while True:
@@ -301,23 +391,27 @@ def main() -> int:
             cards = [item[0] for item in transformed]
             details = [item[1] for item in transformed]
             cards, details, skipped = new_or_owned_cards(target, cards, details)
-            bulk_upsert(target, "job_catalog", CATALOG_COLUMNS, cards, CATALOG_CONFLICT)
-            bulk_upsert(target, "job_details", DETAIL_COLUMNS, details, DETAIL_CONFLICT)
-            target.commit()
+            full_removed += write_batch(target, cards, details)
             total += len(raw_rows)
             inserted += len(cards)
             duplicates += skipped
             if inserted and inserted % 10_000 < len(cards):
-                cleanup["overflow"] += prune_overflow(target, args.max_catalog_rows)
+                overflow = prune_overflow(target, args.max_catalog_rows)
+                cleanup["overflow"] += overflow
+                if overflow:
+                    vacuum(target)
             print(json.dumps({"processed": total, "written": inserted,
                               "duplicates_skipped": duplicates}), flush=True)
         final_cleanup = prune(target, args.retention_days, args.max_catalog_rows)
+        vacuum(target)
         stats = target.execute(
             "SELECT count(*) AS catalog_rows, pg_database_size(current_database()) AS database_bytes "
             "FROM public.job_catalog"
         ).fetchone()
         report = {"harvest_rows": total, "upserted": inserted,
-                  "duplicates_skipped": duplicates, "cleanup_before": cleanup,
+                  "duplicates_skipped": duplicates,
+                  "removed_because_project_full": full_removed,
+                  "cleanup_before": cleanup,
                   "cleanup_after": final_cleanup,
                   **dict(stats)}
         print(json.dumps(report, default=str), flush=True)
@@ -326,7 +420,7 @@ def main() -> int:
             with open(summary, "a", encoding="utf-8") as handle:
                 handle.write("\n### Neon catalog sync\n\n")
                 handle.write(f"- Harvest rows upserted: **{inserted:,}**\n")
-                removed = sum(cleanup.values()) + sum(final_cleanup.values())
+                removed = sum(cleanup.values()) + sum(final_cleanup.values()) + full_removed
                 handle.write(f"- Existing duplicates skipped: **{duplicates:,}**\n")
                 handle.write(f"- Old/inactive rows pruned: **{removed:,}**\n")
                 handle.write(f"- Catalog rows after sync: **{stats['catalog_rows']:,}**\n")
